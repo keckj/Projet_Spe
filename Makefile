@@ -13,8 +13,8 @@ VIEWER_INCLUDEPATH = -I/usr/include/Qt -I/usr/include/QtCore -I/usr/include/QtGu
 VIEWER_LIBS = -lGLU -lglut -lGL -lQtXml -lQtOpenGL -lQtGui -lQtCore -lpthread -lGLEW
 VIEWER_DEFINES = -D_REENTRANT -DQT_NO_DEBUG -DQT_XML_LIB -DQT_OPENGL_LIB -DQT_GUI_LIB -DQT_CORE_LIB -DQT_SHARED
 
-CUDA_INCLUDEPATH = -I/usr/local/cuda-5.5/include -I/usr/local/cuda-6.0/include
-CUDA_LIBPATH = -L/usr/local/cuda-5.5/lib64 -L/usr/lib/nvidia-331 -L/usr/local/cuda-6.0/lib64
+CUDA_INCLUDEPATH = -I/usr/local/cuda/include
+CUDA_LIBPATH = -L/usr/lib/nvidia-331 -L/usr/local/cuda/lib64
 CUDA_LIBS = -lcuda -lcudart
 NVCC=nvcc
 
@@ -23,13 +23,34 @@ OPENCL_LIBPATH =
 OPENCL_LIBS = -lOpenCL
 
 DISTRIB=$(filter-out Distributor ID:, $(shell lsb_release -i))
-#Ubuntu
+
 ifeq ($(DISTRIB), Ubuntu)
-else #Centos
+###### Ubuntu
+else 
+###### Centos
 endif
 
 endif
-###############################################################
+# Fin Linux ####################################################
+
+# Pomme ###############################################
+ifeq ($(OS), Darwin)
+VIEWER_LIBPATH = -L/usr/local/Cellar/qt/4.8.5/lib -L/usr/local/Cellar/qt/4.8.5/lib  -L/opt/X11/lib -L/usr/local/Cellar/qt/4.8.5/lib -L/usr/local/Cellar/qt/4.8.5/lib
+VIEWER_INCLUDEPATH       = -I/usr/local/Cellar/qt/4.8.5/mkspecs/macx-g++ -I. -I/usr/local/Cellar/qt/4.8.5/lib/QtCore.framework/Versions/4/Headers -I/usr/local/Cellar/qt/4.8.5/lib/QtCore.framework/Versions/4/Headers -I/usr/local/Cellar/qt/4.8.5/lib/QtGui.framework/Versions/4/Headers -I/usr/local/Cellar/qt/4.8.5/lib/QtGui.framework/Versions/4/Headers -I/usr/local/Cellar/qt/4.8.5/lib/QtOpenGL.framework/Versions/4/Headers -I/usr/local/Cellar/qt/4.8.5/lib/QtOpenGL.framework/Versions/4/Headers -I/usr/local/Cellar/qt/4.8.5/lib/QtXml.framework/Versions/4/Headers -I/usr/local/Cellar/qt/4.8.5/lib/QtXml.framework/Versions/4/Headers -I/usr/local/Cellar/qt/4.8.5/include -I/System/Library/Frameworks/OpenGL.framework/Versions/A/Headers -I/System/Library/Frameworks/AGL.framework/Headers -I. -L/usr/local/Cellar/qt/4.8.5/lib
+VIEWER_LIBS = -framework Glut -framework OpenGL -framework AGL -framework QtXml -framework QtCore -framework QtOpenGL -framework QtGui -lGLEW
+VIEWER_DEFINES = -D_REENTRANT -DQT_NO_DEBUG -DQT_XML_LIB -DQT_OPENGL_LIB -DQT_GUI_LIB -DQT_CORE_LIB -DQT_SHARED
+
+CUDA_INCLUDEPATH = -I/Developer/NVIDIA/CUDA/include
+CUDA_LIBPATH = -L/Developer/NVIDIA/CUDA/lib 
+CUDA_LIBS = -lcudart
+NVCC=/Developer/NVIDIA/CUDA-5.5/bin/nvcc -ccbin /usr/bin/clang
+
+OPENCL_INCLUDEPATH =
+OPENCL_LIBPATH =
+OPENCL_LIBS =
+endif
+##Fin Pomme ####################################################
+
 
 #Compilateurs
 LINK= g++
