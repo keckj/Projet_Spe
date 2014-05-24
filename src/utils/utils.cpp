@@ -1,4 +1,8 @@
 #include "utils.hpp"
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <cstring>
 
 using namespace log4cpp;
 
@@ -28,9 +32,13 @@ namespace utils {
 			) 
 
 	{
+		nTotGpuDevices = 0;
+		nTotCpuDevices = 0;
+		nTotAccDevices = 0;
 
 		CHK_ERROR_RET(cl::Platform::get(&platforms));
 		nPlatforms = platforms.size();
+
 		*nGpuDevices = new unsigned int[nPlatforms];
 		*nCpuDevices = new unsigned int[nPlatforms];
 		*nAccDevices = new unsigned int[nPlatforms];
@@ -107,9 +115,32 @@ namespace utils {
 		}	
 	}
 
+	cl::Program::Sources loadSourcesFromFile(const std::string &srcFile) {
+		log_console->debugStream() << "Loading sources from file '" << srcFile << "'.";
+		std::ifstream sourceFile(srcFile);
+		
+		if(!sourceFile.good()) {
+			log_console->errorStream() << "Error while loading sources from file '" << srcFile << "'.";
+			exit(EXIT_FAILURE);
+		}
+
+        sourceFile.seekg(0,std::ios::end);
+        unsigned int length = sourceFile.tellg();
+        sourceFile.seekg(0,std::ios::beg);
+		char *buffer = new char[length+1];
+		sourceFile.read(buffer,length);
+		buffer[length] = '\0';
+
+		cl::Program::Sources sources(1, std::make_pair(buffer, length+1));
+
+		return sources;
+	}
+
 
 	void openclContextCallback(const char *errorInfo, const void *privateInfoSize, size_t cb, void *userData) {
 		struct UserData *data = (struct UserData *) userData;
+		
+		log_console->debugStream() << "Context Call Back";
 
 		std::string platformName;
 		data->platform->getInfo(CL_PLATFORM_NAME, &platformName);
@@ -122,16 +153,75 @@ namespace utils {
 
 		exit(EXIT_FAILURE);
 	}
+	
+	void openclBuildCallback(cl_program program, void *user_data) {
+
+		log_console->debugStream() << "Build Call Back";
+		
+		cl_int err;
+		cl::Program pgm(program);
+		std::string srcName = pgm.getInfo<CL_PROGRAM_SOURCE>(&err); CHK_ERRORS(err);
+		std::vector<cl::Device> devices = pgm.getInfo<CL_PROGRAM_DEVICES>(&err); CHK_ERRORS(err);
+		
+		std::vector<std::string> buildLogs, buildOptions;
+		std::vector<cl_build_status> buildStatus;
+	
+		for (auto it = devices.begin(); it < devices.end(); ++it) {
+			buildOptions.push_back(pgm.getBuildInfo<CL_PROGRAM_BUILD_OPTIONS>(*it, &err)); CHK_ERRORS(err);
+			buildLogs.push_back(pgm.getBuildInfo<CL_PROGRAM_BUILD_LOG>(*it, &err)); CHK_ERRORS(err);
+		}
+
+		bool error = false;
+	
+		std::stringstream ss;
+		ss << "Building sources from file '" << srcName << "' for devices ";
+		for (unsigned int i = 0; i < devices.size(); i++) {
+			ss << devices[i].getInfo<CL_DEVICE_NAME>(&err); CHK_ERRORS(err);
+			if(i!=devices.size()-1) ss << ",";
+			else ss << ":";
+		}
+
+		for (unsigned int i = 0; i < devices.size(); i++) {
+			ss << "\n\tDevice " << devices[i].getInfo<CL_DEVICE_NAME>();
+			ss << " : " << toStringBuildStatus(buildStatus[i]);
+
+			if(buildStatus[i] != CL_BUILD_SUCCESS) {
+				error = true;
+				
+				ss << "\n\tBuild options : " << buildOptions[i];
+				ss << "\n\tBuild logs : " << buildLogs[i];
+				ss << "\n";	
+			}
+		}
+		
+		log_console->infoStream() << ss;
+
+		if(error) {
+			log_console->errorStream() << "There were errors while building from '" << srcName << "', aborting !";
+			exit(EXIT_FAILURE);
+		}
+	}
 
 	const std::string toStringDeviceType(cl_device_type deviceType) {
 		switch(deviceType) {
 			case(CL_DEVICE_TYPE_ALL): return "CL_DEVICE_TYPE_ALL"; break;
-	    	  //case(CL_DEVICE_TYPE_CUSTOM): return "CL_DEVICE_TYPE_CUSTOM"; break;
+		  //case(CL_DEVICE_TYPE_CUSTOM): return "CL_DEVICE_TYPE_CUSTOM"; break;
 			case(CL_DEVICE_TYPE_DEFAULT): return "CL_DEVICE_TYPE_DEFAULT"; break;
 			case(CL_DEVICE_TYPE_CPU): return "CL_DEVICE_TYPE_CPU"; break;
 			case(CL_DEVICE_TYPE_GPU): return "CL_DEVICE_TYPE_GPU"; break;
 			case(CL_DEVICE_TYPE_ACCELERATOR): return "CL_DEVICE_TYPE_ACCELERATOR"; break;
 			default: return "Unknown OpenCL Device Type";
+		}
+	}
+	
+	const std::string toStringBuildStatus(cl_build_status buildStatus) {
+		
+		switch(buildStatus) {
+			case(CL_BUILD_NONE): return "CL_BUILD_NONE"; break;
+			case(CL_BUILD_ERROR): return "CL_BUILD_ERROR"; break;
+			case(CL_BUILD_SUCCESS): return "CL_BUILD_SUCCESS"; break;
+			case(CL_BUILD_IN_PROGRESS): return "CL_BUILD_IN_PROGRESS"; break;
+			default: return "Unknown OpenCL Build Status";
 		}
 	}
 }

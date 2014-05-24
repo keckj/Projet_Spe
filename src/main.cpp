@@ -1,5 +1,6 @@
 
 #include "headers.hpp"
+#include "utils.hpp"
 
 #include <cassert>
 #include <ctime>
@@ -16,12 +17,12 @@ int main(int argc, char** argv) {
 	log_console->infoStream() << "Program launch !";
 	log_console->infoStream() << "[Logs Init] ";
 	log_console->infoStream() << "[Rand Init] ";
-    log_console->infoStream() << "[Glut Init] ";
-    glutInit(&argc, argv);
-	log_console->infoStream() << "[Qt Init] ";
-	QApplication application(argc,argv);
-	log_console->infoStream() << "[Glew Init] " << glewGetErrorString(glewInit());
-	log_console->infoStream()<< "";
+    //log_console->infoStream() << "[Glut Init] ";
+    //glutInit(&argc, argv);
+	//log_console->infoStream() << "[Qt Init] ";
+	//QApplication application(argc,argv);
+	//log_console->infoStream() << "[Glew Init] " << glewGetErrorString(glewInit());
+	//log_console->infoStream()<< "";
 
 	//Check platforms, create contexts and load devices
 	log_console->infoStream() << "Listing platforms..";
@@ -50,8 +51,25 @@ int main(int argc, char** argv) {
 		log_console->warnStream() << "No CPUs were found on your computer.";
 	}
 
-	//Create queues
+	//Load sources
+	cl::Program::Sources sources = utils::loadSourcesFromFile("src/kernels/demo.cl");	
+
+	//Make program
+	cl_int err;
+	cl::Program program(gpuContexts[0], sources, &err); CHK_ERRORS(err);
+	const char *buildOptions = "";
+
+	log_console->infoStream() << sources[0].first;
+
+	//program.build(gpuDevices[0], buildOptions, utils::openclBuildCallback, NULL);
+	program.build(gpuDevices[0]);
+
+	//Make kernel
+	//cl::Kernel kernel(program, "vectorAdd");
 	
+	//Create a command queue for first device
+	//cl::CommandQueue queue(gpuContexts[0], gpuDevices[0][0]);
+
 
 	return EXIT_SUCCESS;
 }

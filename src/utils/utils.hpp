@@ -24,9 +24,13 @@ namespace utils {
 			);
 
 
+	cl::Program::Sources loadSourcesFromFile(const std::string &srcFile);
+
 	void openclContextCallback(const char *errorInfo, const void *privateInfoSize, size_t cb, void *userData);
+	void openclBuildCallback(cl_program program, void *user_data);
 	
 	const std::string toStringDeviceType(cl_device_type deviceType);
+	const std::string toStringBuildStatus(cl_build_status buildStatus);
 }
 
 
