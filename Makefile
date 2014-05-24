@@ -44,7 +44,7 @@ CC=gcc
 CFLAGS= -W -Wall -Wextra -pedantic -std=c99 -m64
 
 CXX=g++
-CXXFLAGS= -W -Wall -Wextra -Wno-unused-parameter -pedantic -std=c++0x -m64 -Wshadow -Wstrict-aliasing -Weffc++ -Werror -Wno-unused
+CXXFLAGS= -W -Wall -Wextra -Wno-unused-parameter -pedantic -std=c++0x -m64 -Wshadow -Wstrict-aliasing -Werror -Wno-unused
 
 #preprocesseur QT
 MOC=moc

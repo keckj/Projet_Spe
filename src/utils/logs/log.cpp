@@ -14,28 +14,29 @@
 #include "log4cpp/BasicLayout.hh"
 #include "log4cpp/Priority.hh"
 
-using namespace log4cpp;
+namespace log4cpp {
 
-Category& log_console = Category::getRoot();
-Category& log_file = Category::getInstance(std::string("log_file"));
+	Category *log_console = &Category::getRoot();
+	Category *log_file = &Category::getInstance(std::string("log_file"));
 
-void initLogs() {
+	void initLogs() {
 
-	log_console.setPriority(Priority::__CONSOLE_LOG_LEVEL);
-	log_file.setPriority(Priority::__FILE_LOG_LEVEL);
-	
-	log4cpp::Appender *appender_console = new log4cpp::OstreamAppender("console", &std::cout);
-	appender_console->setLayout(new log4cpp::BasicLayout());
-	appender_console->setThreshold(Priority::DEBUG);
-	log_console.addAppender(appender_console);
+		log_console->setPriority(Priority::__CONSOLE_LOG_LEVEL);
+		log_file->setPriority(Priority::__FILE_LOG_LEVEL);
 
-	log4cpp::Appender *appender_file = new log4cpp::FileAppender("default", "program.log");
-	appender_file->setLayout(new log4cpp::BasicLayout());
-	appender_file->setThreshold(Priority::DEBUG);
-	//log_file.addAppender(appender_file);
-	
-	//console redirected to file
-	log_console.addAppender(appender_file);
+		log4cpp::Appender *appender_console = new log4cpp::OstreamAppender("console", &std::cout);
+		appender_console->setLayout(new log4cpp::BasicLayout());
+		appender_console->setThreshold(Priority::DEBUG);
+		log_console->addAppender(appender_console);
 
+		log4cpp::Appender *appender_file = new log4cpp::FileAppender("default", "program.log");
+		appender_file->setLayout(new log4cpp::BasicLayout());
+		appender_file->setThreshold(Priority::DEBUG);
+		//log_file->addAppender(appender_file);
+
+		//console redirected to file
+		log_console->addAppender(appender_file);
+
+	}
 }
 
