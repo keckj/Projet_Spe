@@ -18,7 +18,7 @@ CUDA_LIBPATH = -L/usr/local/cuda-5.5/lib64 -L/usr/lib/nvidia-331 -L/usr/local/cu
 CUDA_LIBS = -lcuda -lcudart
 NVCC=nvcc
 
-OPENCL_INCLUDEPATH =
+OPENCL_INCLUDEPATH = -I/usr/include/boost
 OPENCL_LIBPATH =
 OPENCL_LIBS = -lOpenCL
 
@@ -35,7 +35,7 @@ endif
 LINK= g++
 LINKFLAGS= -W -Wall -Wextra -pedantic -std=c++0x
 LDFLAGS= $(VIEWER_LIBS) $(CUDA_LIBS) $(OPENCL_LIBS) -llog4cpp
-INCLUDE = -Ilocal/include/ -I$(SRCDIR) $(foreach dir, $(call subdirs, $(SRCDIR)), -I$(dir)) $(VIEWER_INCLUDEPATH) $(CUDA_INCLUDEPATH) $(OPENAl_INCLUDEPATH)
+INCLUDE = -Ilocal/include/ -I$(SRCDIR) $(foreach dir, $(call subdirs, $(SRCDIR)), -I$(dir)) $(VIEWER_INCLUDEPATH) $(CUDA_INCLUDEPATH) $(OPENCL_INCLUDEPATH)
 LIBS = $(VIEWER_LIBPATH) $(CUDA_LIBPATH) $(OPENCL_LIBPATH)
 DEFINES= $(VIEWER_DEFINES) $(OPT)
 
@@ -44,7 +44,7 @@ CC=gcc
 CFLAGS= -W -Wall -Wextra -pedantic -std=c99 -m64
 
 CXX=g++
-CXXFLAGS= -W -Wall -Wextra -Wno-unused-parameter -pedantic -std=c++0x -m64 -Wshadow -Wstrict-aliasing -Weffc++ -Werror
+CXXFLAGS= -W -Wall -Wextra -Wno-unused-parameter -pedantic -std=c++0x -m64 -Wshadow -Wstrict-aliasing -Weffc++ -Werror -Wno-unused
 
 #preprocesseur QT
 MOC=moc
