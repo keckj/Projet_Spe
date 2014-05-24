@@ -80,7 +80,7 @@ clean:
 	-@rm -f $(OBJ) 
 
 cleanall:
-	-@rm -rf $(TARGET) $(TARGET).out $(OBJDIR) $(MOCOUTPUT) tags types_c.taghl
+	-@rm -rf $(TARGET) $(TARGET).out $(OBJDIR) $(MOCOUTPUT) tags types_c.taghl program.log
 
 create_dirs:
 	@mkdir -p $(subst $(SRCDIR), $(OBJDIR), $(SUBDIRS))

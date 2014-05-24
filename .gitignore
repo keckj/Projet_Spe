@@ -12,3 +12,5 @@ program.log
 qglviewer.mk
 local/
 obj/
+:w
+<
