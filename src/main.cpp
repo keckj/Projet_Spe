@@ -65,8 +65,37 @@ int main(int argc, char** argv) {
 	//Make kernel
 	cl::Kernel kernel(program, "vectorAdd");
 	
-	//Create a command queue for first device
+	//Create a command queue for first gpu device from first gpu context
 	cl::CommandQueue queue(gpuContexts[0], gpuDevices[0][0]);
+
+	//Buffers
+	cl::Buffer bufferA(gpuContexts[0], CL_MEM_READ_ONLY, 16 * sizeof(int));
+	cl::Buffer bufferB(gpuContexts[0], CL_MEM_READ_ONLY, 16 * sizeof(int));
+	cl::Buffer bufferC(gpuContexts[0], CL_MEM_WRITE_ONLY, 16 * sizeof(int));
+
+	int *dataA = new int[16];
+	int *dataB = new int[16];
+	for (int i = 0; i < 16; i++) {
+		dataA[i] = i;
+		dataB[i] = 16-i;
+	}
+
+	queue.enqueueWriteBuffer(bufferA, CL_TRUE, 0, 16 * sizeof(int), dataA);
+	queue.enqueueWriteBuffer(bufferB, CL_TRUE, 0, 16 * sizeof(int), dataB);
+
+	kernel.setArg(0, bufferA);
+	kernel.setArg(1, bufferB);
+	kernel.setArg(2, bufferC);
+
+	cl::NDRange global(16);
+	cl::NDRange local(1);
+	queue.enqueueNDRangeKernel(kernel, cl::NullRange, global, local);
+
+	int *dataC = new int[16];
+	queue.enqueueReadBuffer(bufferC, CL_TRUE, 0, 16*sizeof(int), dataC);
+
+	for(int i = 0; i < 16; i++)
+             std::cout << dataA[i] << " + " << dataB[i] << " = " << dataC[i] << std::endl;
 
 
 	return EXIT_SUCCESS;
