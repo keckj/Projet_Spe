@@ -26,8 +26,10 @@ int main(int argc, char** argv) {
 	//log_console->infoStream()<< "";
 
 	//Check platforms, create contexts and load devices
-	log_console->infoStream() << "Listing platforms..";
+	
+	cl_int err;
 
+	log_console->infoStream() << "Listing platforms..";
 
 	std::vector<cl::Platform> platforms;	
 	std::vector<cl::Context> gpuContexts, cpuContexts, accContexts;
@@ -57,7 +59,6 @@ int main(int argc, char** argv) {
 	cl::Program::Sources sources = utils::loadSourcesFromFile("src/kernels/demo.cl");	
 
 	//Make program
-	cl_int err;
 	cl::Program program(gpuContexts[0], sources, &err); CHK_ERRORS(err);
 	
 	utils::buildProgram(program, gpuDevices[0], "", "demo.cl");
@@ -80,8 +81,8 @@ int main(int argc, char** argv) {
 		dataB[i] = 16-i;
 	}
 
-	queue.enqueueWriteBuffer(bufferA, CL_TRUE, 0, 16 * sizeof(int), dataA);
-	queue.enqueueWriteBuffer(bufferB, CL_TRUE, 0, 16 * sizeof(int), dataB);
+	CHK_ERROR_RET(queue.enqueueWriteBuffer(bufferA, CL_TRUE, 0, 16 * sizeof(int), dataA));
+	CHK_ERROR_RET(queue.enqueueWriteBuffer(bufferB, CL_TRUE, 0, 16 * sizeof(int), dataB));
 
 	kernel.setArg(0, bufferA);
 	kernel.setArg(1, bufferB);
@@ -89,10 +90,10 @@ int main(int argc, char** argv) {
 
 	cl::NDRange global(16);
 	cl::NDRange local(1);
-	queue.enqueueNDRangeKernel(kernel, cl::NullRange, global, local);
+	CHK_ERROR_RET(queue.enqueueNDRangeKernel(kernel, cl::NullRange, global, local));
 
 	int *dataC = new int[16];
-	queue.enqueueReadBuffer(bufferC, CL_TRUE, 0, 16*sizeof(int), dataC);
+	CHK_ERROR_RET(queue.enqueueReadBuffer(bufferC, CL_TRUE, 0, 16*sizeof(int), dataC));
 
 	for(int i = 0; i < 16; i++)
              std::cout << dataA[i] << " + " << dataB[i] << " = " << dataC[i] << std::endl;
