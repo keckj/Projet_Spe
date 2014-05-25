@@ -21,7 +21,7 @@
 #endif
 
 //wrapper C++ pour opencl 1.1 (nvidia supporte pas mieux !) 
-#include "utils/opencl/cl.hpp"
+#include "utils/opencl/cl_1_1.hpp"
 
 #include <QApplication>
 #pragma GCC diagnostic pop
