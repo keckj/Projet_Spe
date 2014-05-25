@@ -8,17 +8,23 @@
 
 
 //ORDRE IMPORTANT GL CL QT
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wshadow"
+#pragma GCC diagnostic ignored "-Weffc++"
+
 #include <GL/glew.h>
 
 #if defined(__APPLE__) || defined(__MACOSX)
 #include <GLUT/glut.h>
-#include <OpenCL/cl.hpp>
 #else
 #include <GL/glut.h>
-#include <CL/cl.hpp>
 #endif
 
+//wrapper C++ pour opencl 1.1 (nvidia supporte pas mieux !) 
+#include "utils/opencl/cl.hpp"
+
 #include <QApplication>
+#pragma GCC diagnostic pop
 //////////////////////////
 
 

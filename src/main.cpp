@@ -27,6 +27,7 @@ int main(int argc, char** argv) {
 	//Check platforms, create contexts and load devices
 	log_console->infoStream() << "Listing platforms..";
 
+
 	std::vector<cl::Platform> platforms;	
 	std::vector<cl::Context> gpuContexts, cpuContexts, accContexts;
 	std::vector<std::vector<cl::Device>> gpuDevices, cpuDevices, accDevices;
@@ -61,8 +62,8 @@ int main(int argc, char** argv) {
 
 	log_console->infoStream() << sources[0].first;
 
-	//program.build(gpuDevices[0], buildOptions, utils::openclBuildCallback, NULL);
-	program.build(gpuDevices[0]);
+	//program.build(cpuDevices[0], buildOptions, utils::openclBuildCallback, NULL);
+	//program.build(gpuDevices[0]);
 
 	//Make kernel
 	//cl::Kernel kernel(program, "vectorAdd");

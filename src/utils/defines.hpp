@@ -5,9 +5,7 @@
 #define __DEBUG 
 #endif
 
-//exceptions du wrapper C++, obligation de try catch
-//#define __CL_ENABLE_EXCEPTIONS
-
+//passe en DEBUG avec make debug
 #ifndef __CONSOLE_LOG_LEVEL
 #define __CONSOLE_LOG_LEVEL INFO
 #endif
@@ -16,3 +14,7 @@
 #define __FILE_LOG_LEVEL DEBUG
 #endif
 
+//wrapper opencl c++
+#define __CL_ENABLE_EXCEPTIONS
+#define __CL_CALLBACK
+#define CL_USE_DEPRECATED_OPENCL_1_1_APIS

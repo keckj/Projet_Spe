@@ -67,66 +67,73 @@ namespace utils {
 				0 
 			};
 
-			cl::Context gpu_context(CL_DEVICE_TYPE_GPU, contextProperties, openclContextCallback, userData[0], &err);
-			if(err != CL_DEVICE_NOT_FOUND) {
-				CHK_ERRORS(err);
-				std::vector<cl::Device> gpu_devices = gpu_context.getInfo<CL_CONTEXT_DEVICES>(&err);
-				CHK_ERRORS(err);
-				if(gpu_devices.size() != 0) {
-					log_console->infoStream() << "\tFound " << gpu_devices.size() << " GPUs.";
-					nTotGpuDevices += gpu_devices.size();
-					(*nGpuDevices)[i_gpu] = gpu_devices.size();
-					gpuDevices.push_back(gpu_devices);
-					gpuContexts.push_back(gpu_context);
-					i_gpu++;
-				}
-			}
 
-			cl::Context cpu_context(CL_DEVICE_TYPE_CPU, contextProperties, openclContextCallback, userData[1], &err);
-			if(err != CL_DEVICE_NOT_FOUND) {
-				CHK_ERRORS(err);
-				std::vector<cl::Device> cpu_devices = cpu_context.getInfo<CL_CONTEXT_DEVICES>(&err);
-				CHK_ERRORS(err);
-				if(cpu_devices.size() != 0) {
-					log_console->infoStream() << "\tFound " << cpu_devices.size() << " CPUs.";
-					nTotCpuDevices += cpu_devices.size();
-					(*nCpuDevices)[i_cpu] = cpu_devices.size();
-					cpuDevices.push_back(cpu_devices);
-					cpuContexts.push_back(cpu_context);
-					i_cpu++;
+			try{
+				cl::Context gpu_context(CL_DEVICE_TYPE_GPU, contextProperties, &openclContextCallback, userData[0], &err);
+				if(err != CL_DEVICE_NOT_FOUND) {
+					CHK_ERRORS(err);
+					std::vector<cl::Device> gpu_devices = gpu_context.getInfo<CL_CONTEXT_DEVICES>(&err);
+					CHK_ERRORS(err);
+					if(gpu_devices.size() != 0) {
+						log_console->infoStream() << "\tFound " << gpu_devices.size() << " GPUs.";
+						nTotGpuDevices += gpu_devices.size();
+						(*nGpuDevices)[i_gpu] = gpu_devices.size();
+						gpuDevices.push_back(gpu_devices);
+						gpuContexts.push_back(gpu_context);
+						i_gpu++;
+					}
 				}
-			}
+			} catch(cl::Error e) { log_console->warnStream() << e.what() << "\t" << e.err(); std::cout << std::flush;};
 
-			cl::Context acc_context(CL_DEVICE_TYPE_ACCELERATOR, contextProperties, openclContextCallback, userData[2], &err);
-			if(err != CL_DEVICE_NOT_FOUND) {
-				CHK_ERRORS(err);
-
-				std::vector<cl::Device> acc_devices = acc_context.getInfo<CL_CONTEXT_DEVICES>(&err);
-				CHK_ERRORS(err);
-				if(acc_devices.size() != 0) {
-					log_console->infoStream() << "\tFound " << acc_devices.size() << " accelerator devices.";
-					nTotAccDevices += acc_devices.size();
-					(*nAccDevices)[i_acc] = acc_devices.size();
-					accDevices.push_back(acc_devices);
-					accContexts.push_back(acc_context);
-					i_acc++;
+			try{
+				cl::Context cpu_context(CL_DEVICE_TYPE_CPU, contextProperties, openclContextCallback, userData[1], &err);
+				if(err != CL_DEVICE_NOT_FOUND) {
+					CHK_ERRORS(err);
+					std::vector<cl::Device> cpu_devices = cpu_context.getInfo<CL_CONTEXT_DEVICES>(&err);
+					CHK_ERRORS(err);
+					if(cpu_devices.size() != 0) {
+						log_console->infoStream() << "\tFound " << cpu_devices.size() << " CPUs.";
+						nTotCpuDevices += cpu_devices.size();
+						(*nCpuDevices)[i_cpu] = cpu_devices.size();
+						cpuDevices.push_back(cpu_devices);
+						cpuContexts.push_back(cpu_context);
+						i_cpu++;
+					}
 				}
-			}
+			} catch(cl::Error e) { log_console->warnStream() << e.what() << "\t" << e.err(); std::cout << std::flush;};
+
+			try{
+				cl::Context acc_context(CL_DEVICE_TYPE_ACCELERATOR, contextProperties, openclContextCallback, userData[2], &err);
+				if(err != CL_DEVICE_NOT_FOUND) {
+					CHK_ERRORS(err);
+
+					std::vector<cl::Device> acc_devices = acc_context.getInfo<CL_CONTEXT_DEVICES>(&err);
+					CHK_ERRORS(err);
+					if(acc_devices.size() != 0) {
+						log_console->infoStream() << "\tFound " << acc_devices.size() << " accelerator devices.";
+						nTotAccDevices += acc_devices.size();
+						(*nAccDevices)[i_acc] = acc_devices.size();
+						accDevices.push_back(acc_devices);
+						accContexts.push_back(acc_context);
+						i_acc++;
+					}
+				}
+			} catch(cl::Error e) { log_console->warnStream() << e.what() << "\t" << openCLGetErrorString(e.err()); std::cout << std::flush;};
 		}	
 	}
 
 	cl::Program::Sources loadSourcesFromFile(const std::string &srcFile) {
 		log_console->debugStream() << "Loading sources from file '" << srcFile << "'.";
 		std::ifstream sourceFile(srcFile);
-		
+
 		if(!sourceFile.good()) {
 			log_console->errorStream() << "Error while loading sources from file '" << srcFile << "'.";
 			exit(EXIT_FAILURE);
 		}
 
-        sourceFile.seekg(0,std::ios::end);
-        unsigned int length = sourceFile.tellg();
-        sourceFile.seekg(0,std::ios::beg);
+		sourceFile.seekg(0,std::ios::end);
+		unsigned int length = sourceFile.tellg();
+		sourceFile.seekg(0,std::ios::beg);
 		char *buffer = new char[length+1];
 		sourceFile.read(buffer,length);
 		buffer[length] = '\0';
@@ -137,9 +144,9 @@ namespace utils {
 	}
 
 
-	void openclContextCallback(const char *errorInfo, const void *privateInfoSize, size_t cb, void *userData) {
+	void CL_CALLBACK openclContextCallback(const char *errorInfo, const void *privateInfoSize, size_t cb, void *userData) {
 		struct UserData *data = (struct UserData *) userData;
-		
+
 		log_console->debugStream() << "Context Call Back";
 
 		std::string platformName;
@@ -151,61 +158,61 @@ namespace utils {
 			<< ",id=" << data->contextId
 			<< ")\n\t\t" << errorInfo;
 
-		exit(EXIT_FAILURE);
+		//exit(EXIT_FAILURE);
 	}
-	
-	void openclBuildCallback(cl_program program, void *user_data) {
+
+	void CL_CALLBACK openclBuildCallback(cl_program program, void *user_data) {
 
 		log_console->debugStream() << "Build Call Back";
-		
-		cl_int err;
-		cl::Program pgm(program);
-		std::string srcName = pgm.getInfo<CL_PROGRAM_SOURCE>(&err); CHK_ERRORS(err);
-		std::vector<cl::Device> devices = pgm.getInfo<CL_PROGRAM_DEVICES>(&err); CHK_ERRORS(err);
-		
-		std::vector<std::string> buildLogs, buildOptions;
-		std::vector<cl_build_status> buildStatus;
-	
-		for (auto it = devices.begin(); it < devices.end(); ++it) {
-			buildOptions.push_back(pgm.getBuildInfo<CL_PROGRAM_BUILD_OPTIONS>(*it, &err)); CHK_ERRORS(err);
-			buildLogs.push_back(pgm.getBuildInfo<CL_PROGRAM_BUILD_LOG>(*it, &err)); CHK_ERRORS(err);
-		}
 
-		bool error = false;
-	
-		std::stringstream ss;
-		ss << "Building sources from file '" << srcName << "' for devices ";
-		for (unsigned int i = 0; i < devices.size(); i++) {
-			ss << devices[i].getInfo<CL_DEVICE_NAME>(&err); CHK_ERRORS(err);
-			if(i!=devices.size()-1) ss << ",";
-			else ss << ":";
-		}
+		//cl_int err;
+		//cl::Program pgm(program);
+		//std::string srcName = pgm.getInfo<CL_PROGRAM_SOURCE>(&err); CHK_ERRORS(err);
+		//std::vector<cl::Device> devices = pgm.getInfo<CL_PROGRAM_DEVICES>(&err); CHK_ERRORS(err);
 
-		for (unsigned int i = 0; i < devices.size(); i++) {
-			ss << "\n\tDevice " << devices[i].getInfo<CL_DEVICE_NAME>();
-			ss << " : " << toStringBuildStatus(buildStatus[i]);
+		//std::vector<std::string> buildLogs, buildOptions;
+		//std::vector<cl_build_status> buildStatus;
 
-			if(buildStatus[i] != CL_BUILD_SUCCESS) {
-				error = true;
-				
-				ss << "\n\tBuild options : " << buildOptions[i];
-				ss << "\n\tBuild logs : " << buildLogs[i];
-				ss << "\n";	
-			}
-		}
-		
-		log_console->infoStream() << ss;
+		//for (auto it = devices.begin(); it < devices.end(); ++it) {
+			//buildOptions.push_back(pgm.getBuildInfo<CL_PROGRAM_BUILD_OPTIONS>(*it, &err)); CHK_ERRORS(err);
+			//buildLogs.push_back(pgm.getBuildInfo<CL_PROGRAM_BUILD_LOG>(*it, &err)); CHK_ERRORS(err);
+		//}
 
-		if(error) {
-			log_console->errorStream() << "There were errors while building from '" << srcName << "', aborting !";
-			exit(EXIT_FAILURE);
-		}
+		//bool error = false;
+
+		//std::stringstream ss;
+		//ss << "Building sources from file '" << srcName << "' for devices ";
+		//for (unsigned int i = 0; i < devices.size(); i++) {
+			//ss << devices[i].getInfo<CL_DEVICE_NAME>(&err); CHK_ERRORS(err);
+			//if(i!=devices.size()-1) ss << ",";
+			//else ss << ":";
+		//}
+
+		//for (unsigned int i = 0; i < devices.size(); i++) {
+			//ss << "\n\tDevice " << devices[i].getInfo<CL_DEVICE_NAME>();
+			//ss << " : " << toStringBuildStatus(buildStatus[i]);
+
+			//if(buildStatus[i] != CL_BUILD_SUCCESS) {
+				//error = true;
+
+				//ss << "\n\tBuild options : " << buildOptions[i];
+				//ss << "\n\tBuild logs : " << buildLogs[i];
+				//ss << "\n";	
+			//}
+		//}
+
+		//log_console->infoStream() << ss;
+
+		//if(error) {
+			//log_console->errorStream() << "There were errors while building from '" << srcName << "', aborting !";
+			//exit(EXIT_FAILURE);
+		//}
 	}
 
 	const std::string toStringDeviceType(cl_device_type deviceType) {
 		switch(deviceType) {
 			case(CL_DEVICE_TYPE_ALL): return "CL_DEVICE_TYPE_ALL"; break;
-		  //case(CL_DEVICE_TYPE_CUSTOM): return "CL_DEVICE_TYPE_CUSTOM"; break;
+									  //case(CL_DEVICE_TYPE_CUSTOM): return "CL_DEVICE_TYPE_CUSTOM"; break;
 			case(CL_DEVICE_TYPE_DEFAULT): return "CL_DEVICE_TYPE_DEFAULT"; break;
 			case(CL_DEVICE_TYPE_CPU): return "CL_DEVICE_TYPE_CPU"; break;
 			case(CL_DEVICE_TYPE_GPU): return "CL_DEVICE_TYPE_GPU"; break;
@@ -213,9 +220,9 @@ namespace utils {
 			default: return "Unknown OpenCL Device Type";
 		}
 	}
-	
+
 	const std::string toStringBuildStatus(cl_build_status buildStatus) {
-		
+
 		switch(buildStatus) {
 			case(CL_BUILD_NONE): return "CL_BUILD_NONE"; break;
 			case(CL_BUILD_ERROR): return "CL_BUILD_ERROR"; break;
