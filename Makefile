@@ -56,7 +56,7 @@ endif
 LINK= g++
 LINKFLAGS= -W -Wall -Wextra -pedantic -std=c++0x
 LDFLAGS= $(VIEWER_LIBS) $(CUDA_LIBS) $(OPENCL_LIBS) -llog4cpp
-INCLUDE = -Ilocal/include/ -I$(SRCDIR) $(foreach dir, $(call subdirs, $(SRCDIR)), -I$(dir)) $(VIEWER_INCLUDEPATH) $(CUDA_INCLUDEPATH) $(OPENCL_INCLUDEPATH)
+INCLUDE = -I$(SRCDIR) $(foreach dir, $(call subdirs, $(SRCDIR)), -I$(dir)) $(VIEWER_INCLUDEPATH) $(CUDA_INCLUDEPATH) $(OPENCL_INCLUDEPATH)
 LIBS = $(VIEWER_LIBPATH) $(CUDA_LIBPATH) $(OPENCL_LIBPATH)
 DEFINES= $(VIEWER_DEFINES) $(OPT)
 
@@ -65,7 +65,7 @@ CC=gcc
 CFLAGS= -W -Wall -Wextra -pedantic -std=c99 -m64
 
 CXX=g++
-CXXFLAGS= -W -Wall -Wextra -Wno-unused-parameter -pedantic -std=c++0x -m64 -Wshadow -Wstrict-aliasing -Wno-unused -Wno-comment -Werror
+CXXFLAGS= -W -Wall -Wextra -Wshadow -Wstrict-aliasing -Wno-unused-parameter -Wno-comment -Werror -pedantic -std=c++0x -m64 
 
 #preprocesseur QT
 MOC=moc

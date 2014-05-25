@@ -6,7 +6,6 @@
 //Defines custom (debug, log, ...)
 #include "defines.hpp"
 
-
 //ORDRE IMPORTANT GL CL QT
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wshadow"

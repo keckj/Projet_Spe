@@ -5,7 +5,7 @@
 #define __DEBUG 
 #endif
 
-//passe en DEBUG avec make debug
+//tout passe en DEBUG avec make debug
 #ifndef __CONSOLE_LOG_LEVEL
 #define __CONSOLE_LOG_LEVEL INFO
 #endif
