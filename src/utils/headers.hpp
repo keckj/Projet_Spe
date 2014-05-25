@@ -39,7 +39,7 @@
 #ifdef __DEBUG
 #define CHK_ERROR_RET(ans) { clAssert((ans), __FILE__, __LINE__); }
 #else
-#define CHK_ERROR_RET(ans) (ans)
+#define CHK_ERROR_RET(ans) {ans}
 #endif
 
 //A utiliser pour check les erreurs sur une variable de type cl_int err;
@@ -48,6 +48,14 @@
 #else
 #define CHK_ERRORS(ans) {;}
 #endif
+
+//Si jamais on veux des exceptions non bloquantes
+#ifdef __CL_ENABLE_EXCEPTIONS
+#define TRY(ans) {try{ans} catch(cl::Error e) {log_console->errorStream() << e.what() << "\t" << openCLGetErrorString(e.err());};}
+#else
+#define TRY(ans) {ans}
+#endif
+	
 
 inline void clAssert(cl_int err, const std::string &file, int line, bool abort = true) {
 	if (err != CL_SUCCESS)

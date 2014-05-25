@@ -15,6 +15,6 @@
 #endif
 
 //wrapper opencl c++
-#define __CL_ENABLE_EXCEPTIONS
-#define __CL_CALLBACK
+#define CL_CALLBACK
 #define CL_USE_DEPRECATED_OPENCL_1_1_APIS
+//#define __CL_ENABLE_EXCEPTIONS

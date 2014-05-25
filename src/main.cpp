@@ -8,6 +8,7 @@
 #include <iostream>
 
 using namespace log4cpp;
+using namespace utils;
 
 int main(int argc, char** argv) {
 
@@ -58,18 +59,14 @@ int main(int argc, char** argv) {
 	//Make program
 	cl_int err;
 	cl::Program program(gpuContexts[0], sources, &err); CHK_ERRORS(err);
-	const char *buildOptions = "";
-
-	log_console->infoStream() << sources[0].first;
-
-	//program.build(cpuDevices[0], buildOptions, utils::openclBuildCallback, NULL);
-	//program.build(gpuDevices[0]);
+	
+	utils::buildProgram(program, gpuDevices[0], "", "demo.cl");
 
 	//Make kernel
-	//cl::Kernel kernel(program, "vectorAdd");
+	cl::Kernel kernel(program, "vectorAdd");
 	
 	//Create a command queue for first device
-	//cl::CommandQueue queue(gpuContexts[0], gpuDevices[0][0]);
+	cl::CommandQueue queue(gpuContexts[0], gpuDevices[0][0]);
 
 
 	return EXIT_SUCCESS;

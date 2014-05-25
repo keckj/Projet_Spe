@@ -25,6 +25,7 @@ namespace utils {
 
 
 	cl::Program::Sources loadSourcesFromFile(const std::string &srcFile);
+	void buildProgram(cl::Program &program, std::vector<cl::Device> &targetDevices, const char *buildOptions, const std::string &programName);
 
 	void openclContextCallback(const char *errorInfo, const void *privateInfoSize, size_t cb, void *userData);
 	void openclBuildCallback(cl_program program, void *user_data);
