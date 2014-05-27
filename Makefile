@@ -94,7 +94,7 @@ SUBDIRS =  $(filter-out $(EXCLUDED_SUBDIRS), $(call subdirs, $(SRCDIR)))
 SRC_EXTENSIONS = c C cc cpp s S asm cu
 WEXT = $(addprefix *., $(SRC_EXTENSIONS))
 
-MOCSRC = $(shell grep -rlw $(SRCDIR)/ -e 'Q_OBJECT' --include=*.h | xargs) #need QT preprocessor
+MOCSRC = $(shell grep -rlw $(SRCDIR) -e 'Q_OBJECT' --include=*.hpp | xargs) #need QT preprocessor
 MOCOUTPUT = $(addsuffix .moc, $(basename $(MOCSRC)))
 SRC = $(foreach DIR, $(SUBDIRS), $(foreach EXT, $(WEXT), $(wildcard $(DIR)/$(EXT))))
 OBJ = $(subst $(SRCDIR), $(OBJDIR), $(addsuffix .o, $(basename $(SRC))))

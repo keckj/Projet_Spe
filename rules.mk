@@ -29,9 +29,9 @@ release: CFLAGS += $(RELEASEFLAGS)
 release: CXXFLAGS += $(RELEASEFLAGS)
 release: all
 
-all: create_dirs $(TARGET)
+all: create_dirs moc $(TARGET)
 
-$(TARGET): $(MOCOUTPUT) $(OBJ)
+$(TARGET): $(OBJ)
 	@echo
 	@echo
 	$(LINK) $(LIBS) $(OBJ) -o $@ $(LDFLAGS) $(LINKFLAGS) $(DEFINES)
@@ -74,7 +74,9 @@ $(OBJDIR)%.o: $(SRCDIR)%.cu
 
 # "-" pour enlever les messages d'erreurs
 # "@" pour silent
-.PHONY: clean cleanall create_dirs all distrib
+.PHONY: clean cleanall create_dirs all distrib moc
+
+moc: $(MOCOUTPUT)
 
 clean:
 	-@rm -f $(OBJ) 
