@@ -87,14 +87,14 @@ TARGET = main
 
 SRCDIR = $(realpath .)/src
 OBJDIR = $(realpath .)/obj
-EXCL=#excluded dirs in src
+EXCL=deprecated#excluded dirs in src
 EXCLUDED_SUBDIRS = $(foreach DIR, $(EXCL), $(call subdirs, $(SRCDIR)/$(DIR)))
 SUBDIRS =  $(filter-out $(EXCLUDED_SUBDIRS), $(call subdirs, $(SRCDIR)))
 
 SRC_EXTENSIONS = c C cc cpp s S asm cu
 WEXT = $(addprefix *., $(SRC_EXTENSIONS))
 
-MOCSRC = $(shell grep -rlw $(SRCDIR) -e 'Q_OBJECT' --include=*.hpp | xargs) #need QT preprocessor
+MOCSRC = $(shell grep -rlw $(SRCDIR) -e 'Q_OBJECT' --include=*.h --include=*.hpp | xargs) #need QT preprocessor
 MOCOUTPUT = $(addsuffix .moc, $(basename $(MOCSRC)))
 SRC = $(foreach DIR, $(SUBDIRS), $(foreach EXT, $(WEXT), $(wildcard $(DIR)/$(EXT))))
 OBJ = $(subst $(SRCDIR), $(OBJDIR), $(addsuffix .o, $(basename $(SRC))))

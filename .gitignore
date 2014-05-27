@@ -1,4 +1,5 @@
 *.o
+*.moc
 *~
 .*.swp
 .DS_Store
