@@ -1,6 +1,7 @@
 
 #include "headers.hpp"
 #include "utils.hpp"
+#include "mainWindow.hpp"
 
 #include <cassert>
 #include <ctime>
@@ -26,8 +27,13 @@ int main(int argc, char** argv) {
 	log_console->infoStream() << "[Glew Init] " << glewGetErrorString(glewInit());
 	log_console->infoStream()<< "";
 
-    application.exec();
+    MainWindow win;
+    win.show();
 
+    return application.exec();
+
+
+    //TODO la suite dans computeThread
 	//Check platforms, create contexts and load devices
 	
 	cl_int err;
