@@ -22,7 +22,11 @@
 //wrapper C++ pour opencl 1.1 (nvidia supporte pas mieux !) 
 #include "utils/opencl/cl_1_1.hpp"
 
+// QT
 #include <QApplication>
+#include <QThread>
+#include <QMutex>
+#include <QWaitCondition>
 #pragma GCC diagnostic pop
 //////////////////////////
 

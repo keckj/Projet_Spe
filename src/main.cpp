@@ -18,12 +18,14 @@ int main(int argc, char** argv) {
 	log_console->infoStream() << "Program launch !";
 	log_console->infoStream() << "[Logs Init] ";
 	log_console->infoStream() << "[Rand Init] ";
-    //log_console->infoStream() << "[Glut Init] ";
-    //glutInit(&argc, argv);
-	//log_console->infoStream() << "[Qt Init] ";
-	//QApplication application(argc,argv);
-	//log_console->infoStream() << "[Glew Init] " << glewGetErrorString(glewInit());
-	//log_console->infoStream()<< "";
+    log_console->infoStream() << "[Glut Init] ";
+    glutInit(&argc, argv);
+	log_console->infoStream() << "[Qt Init] ";
+	QApplication application(argc,argv);
+	log_console->infoStream() << "[Glew Init] " << glewGetErrorString(glewInit());
+	log_console->infoStream()<< "";
+
+    application.exec();
 
 	//Check platforms, create contexts and load devices
 	
