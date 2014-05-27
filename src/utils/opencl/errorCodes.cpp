@@ -52,6 +52,14 @@ const std::string openCLGetErrorString(int err) {
 		case -61: return "CL_INVALID_BUFFER_SIZE";
 		case -62: return "CL_INVALID_MIP_LEVEL";
 		case -63: return "CL_INVALID_GLOBAL_WORK_SIZE";
+		case -64: return "CL_INVALID_PROPERTY";
+		case -65: return "CL_INVALID_IMAGE_DESCRIPTOR";
+		case -66: return "CL_INVALID_COMPILER_OPTIONS";
+		case -67: return "CL_INVALID_LINKER_OPTIONS";
+		case -68: return "CL_INVALID_DEVICE_PARTITION_COUNT";
+
+		case -1000: return "CL_INVALID_GL_SHAREGROUP_REFERENCE_KHR";
+		case -1001: return "CL_INVALID_ICD";
 		default: return "Unknown OpenCL error";
 	}
 }
