@@ -10,6 +10,7 @@
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wshadow"
 #pragma GCC diagnostic ignored "-Weffc++"
+#pragma GCC diagnostic ignored "-Wunused-local-typedefs" 
 
 #include <GL/glew.h>
 
@@ -24,9 +25,22 @@
 
 // QT
 #include <QApplication>
+#include <QtGui>
 #include <QThread>
 #include <QMutex>
 #include <QWaitCondition>
+#include <QMainWindow>
+#include <QObject>
+#include <QWidget>
+#include <QKeyEvent>
+#include <QMenuBar>
+#include <QStatusBar>
+#include <QLabel>
+#include <QBoxLayout>
+#include <QHBoxLayout>
+#include <QCheckBox>
+#include <QComboBox>
+#include <QSlider>
 #pragma GCC diagnostic pop
 //////////////////////////
 
