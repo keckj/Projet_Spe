@@ -1,9 +1,4 @@
 
-# Macros
-containing = $(foreach v,$2,$(if $(findstring $1,$v),$v))
-not_containing = $(foreach v,$2,$(if $(findstring $1,$v),,$v))
-subdirs = $(shell find $1 -type d)
-
 # Règles
 
 ifeq ($(LINK), NVCC)

@@ -15,7 +15,7 @@ class ComputeThread : public QThread {
         void compute(); // todo, starts the compute thread
 
     signals:
-        void stepComputed(const Grid &grid);
+        void stepComputed(const Grid<float> &grid);
 
     public slots:
         void stop();

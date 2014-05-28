@@ -51,12 +51,34 @@ OPENCL_LIBS =
 endif
 ##Fin Pomme ####################################################
 
+# Macros
+containing = $(foreach v,$2,$(if $(findstring $1,$v),$v))
+not_containing = $(foreach v,$2,$(if $(findstring $1,$v),,$v))
+subdirs = $(shell find $1 -type d)
+
+# Source et destination des fichiers
+SRCDIR = $(realpath .)/src
+OBJDIR = $(realpath .)/obj
+EXCL=deprecated/ #excluded dirs 
+EXCLUDED_SUBDIRS = $(foreach DIR, $(EXCL), $(call subdirs, $(SRCDIR)/$(DIR)))
+
+SUBDIRS =  $(filter-out $(EXCLUDED_SUBDIRS), $(call subdirs, $(SRCDIR)))
+TARGET = main
+SRC_EXTENSIONS = c C cc cpp s S asm cu #cl
+WEXT = $(addprefix *., $(SRC_EXTENSIONS))
+
+MOCSRC = $(shell grep -rlw $(SRCDIR) -e 'Q_OBJECT' --include=*.h --include=*.hpp | xargs) #need QT preprocessor
+MOCOUTPUT = $(addsuffix .moc, $(basename $(MOCSRC)))
+
+SRC = $(foreach DIR, $(SUBDIRS), $(foreach EXT, $(WEXT), $(wildcard $(DIR)/$(EXT))))
+OBJ = $(subst $(SRCDIR), $(OBJDIR), $(addsuffix .o, $(basename $(SRC))))
+
 
 #Compilateurs
 LINK= g++
 LINKFLAGS= -W -Wall -Wextra -pedantic -std=c++0x
 LDFLAGS= $(VIEWER_LIBS) $(CUDA_LIBS) $(OPENCL_LIBS) -llog4cpp
-INCLUDE = -I$(SRCDIR) $(foreach dir, $(call subdirs, $(SRCDIR)), -I$(dir)) $(VIEWER_INCLUDEPATH) $(CUDA_INCLUDEPATH) $(OPENCL_INCLUDEPATH)
+INCLUDE = -I$(SRCDIR) $(foreach dir, $(SUBDIRS), -I$(dir)) $(VIEWER_INCLUDEPATH) $(CUDA_INCLUDEPATH) $(OPENCL_INCLUDEPATH)
 LIBS = $(VIEWER_LIBPATH) $(CUDA_LIBPATH) $(OPENCL_LIBPATH)
 DEFINES= $(VIEWER_DEFINES) $(OPT)
 
@@ -81,22 +103,5 @@ DEBUGFLAGS= -g -O0
 CUDADEBUGFLAGS= -Xcompiler -Wall -m64 -G -g -arch sm_$(NARCH) -Xptxas="-v"
 PROFILINGFLAGS= -pg
 RELEASEFLAGS= -O3
-
-# Source et destination des fichiers
-TARGET = main
-
-SRCDIR = $(realpath .)/src
-OBJDIR = $(realpath .)/obj
-EXCL=deprecated#excluded dirs in src
-EXCLUDED_SUBDIRS = $(foreach DIR, $(EXCL), $(call subdirs, $(SRCDIR)/$(DIR)))
-SUBDIRS =  $(filter-out $(EXCLUDED_SUBDIRS), $(call subdirs, $(SRCDIR)))
-
-SRC_EXTENSIONS = c C cc cpp s S asm cu
-WEXT = $(addprefix *., $(SRC_EXTENSIONS))
-
-MOCSRC = $(shell grep -rlw $(SRCDIR) -e 'Q_OBJECT' --include=*.h --include=*.hpp | xargs) #need QT preprocessor
-MOCOUTPUT = $(addsuffix .moc, $(basename $(MOCSRC)))
-SRC = $(foreach DIR, $(SUBDIRS), $(foreach EXT, $(WEXT), $(wildcard $(DIR)/$(EXT))))
-OBJ = $(subst $(SRCDIR), $(OBJDIR), $(addsuffix .o, $(basename $(SRC))))
 
 include rules.mk

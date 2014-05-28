@@ -1,8 +1,8 @@
-#include "../utils/headers.hpp"
+#include "headers.hpp"
 #include "mainWindow.hpp"
 #include "mainWindow.moc"
-#include "../grid.hpp"
-#include "../computeThread.hpp"
+#include "grid.hpp"
+#include "computeThread.hpp"
 
 MainWindow::MainWindow() /*:
     //slider(0), voxelViewer(0), sidePanel(0), menuBar(0), statusBar(0) */{
@@ -50,7 +50,7 @@ MainWindow::MainWindow() /*:
 MainWindow::~MainWindow() {
 }
 
-void MainWindow::updateGrid(const Grid &grid) {
+void MainWindow::updateGrid(const Grid<float> &grid) {
     //TODO
 }
 

@@ -1,9 +1,9 @@
 #ifndef MAINWINDOW_HPP
 #define MAINWINDOW_HPP
 
-#include "../utils/headers.hpp"
-#include "../grid.hpp"
-#include "../computeThread.hpp"
+#include "headers.hpp"
+#include "grid.hpp"
+#include "computeThread.hpp"
 
 class MainWindow : public QMainWindow {
 	Q_OBJECT
@@ -24,7 +24,7 @@ class MainWindow : public QMainWindow {
 	
 	private slots:
 		void childKeyEvent(QKeyEvent *k);
-        void updateGrid(const Grid &grid);
+        void updateGrid(const Grid<float> &grid);
 };
 
 

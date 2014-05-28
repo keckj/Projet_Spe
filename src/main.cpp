@@ -3,6 +3,10 @@
 #include "utils.hpp"
 #include "mainWindow.hpp"
 
+#include "grid1D.hpp"
+#include "grid2D.hpp"
+#include "grid3D.hpp"
+
 #include <cassert>
 #include <ctime>
 #include <vector>
@@ -12,6 +16,11 @@ using namespace log4cpp;
 using namespace utils;
 
 int main(int argc, char** argv) {
+
+	Grid3D<float> g3d(1.0,1.0,1.0,100u,100u,100u,false);
+	Grid2D<float> g2d(1.0,1.0,100u,100u,false);
+	Grid1D<float> g1d(1.0,100u,false);
+
 
 	//Init
 	log4cpp::initLogs();
