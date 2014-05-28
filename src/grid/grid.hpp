@@ -19,7 +19,7 @@ class Grid {
 		virtual unsigned long size() const = 0;
 		virtual unsigned long bytes() const = 0;
 		
-		double dh();
+		double dh() const;
 		unsigned int dim() const;
 		bool isAllocated() const;
 		
@@ -32,10 +32,16 @@ class Grid {
 		T *data();
 
 		virtual void allocateOnCpu() = 0;
+		
 		void freeOnCpu();
-
+	
+		//ne copie pas le pointeur, il reste à NULL
+		virtual Grid<T> *clone() const = 0;
 
 	protected:
+		//Ne copie pas les données, laisse le pointeur à NULL
+		Grid(const Grid &grid);
+		
 		explicit Grid(double realWidth_, double realHeight_, double realLength_,
 				unsigned int width_, unsigned int height_, unsigned int length_,
 				unsigned int dim_, bool allocate = true);
@@ -47,7 +53,7 @@ class Grid {
 		explicit Grid(unsigned int width_, unsigned int height_, unsigned int length_,
 				double dh_,
 				unsigned int dim_, bool allocate = true);
-		
+
 		double _realWidth, _realHeight, _realLength;
 		unsigned int _width,_height,_length;
 

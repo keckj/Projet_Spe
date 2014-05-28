@@ -1,4 +1,18 @@
 
+//ne copie pas les données, pointeur NULL
+template <typename T>
+Grid1D<T>::Grid1D(const Grid1D<T> &grid) :
+	Grid<T>(grid)
+{
+}
+		
+//ne copie pas les données, pointeur NULL
+template <typename T>
+Grid1D<T> *Grid1D<T>::clone() const {
+	Grid1D<T> *grid = new Grid1D<T>(*this);
+	return grid;
+}
+
 template <typename T>
 Grid1D<T>::Grid1D(double realWidth_, unsigned int width_, bool allocate) :
 	Grid<T>(realWidth_, 0.0, 0.0,

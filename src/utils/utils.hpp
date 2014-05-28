@@ -1,5 +1,7 @@
 
 #ifndef UTILS_H
+	
+#define SQUARE(X) ((X)*(X))
 
 #include "headers.hpp"
 #include <vector>

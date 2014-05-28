@@ -1,4 +1,18 @@
 
+//ne copie pas les données, pointeur NULL
+template <typename T>
+Grid2D<T>::Grid2D(const Grid2D<T> &grid) :
+	Grid<T>(grid)
+{
+}
+		
+//ne copie pas les données, pointeur NULL
+template <typename T>
+Grid2D<T> *Grid2D<T>::clone() const {
+	Grid2D<T> *grid = new Grid2D<T>(*this);
+	return grid;
+}
+
 
 template <typename T>
 Grid2D<T>::Grid2D(double realWidth_, double realHeight_,

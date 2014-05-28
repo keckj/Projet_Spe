@@ -3,6 +3,18 @@
 #include "log.hpp"
 
 using namespace log4cpp;
+		
+
+template <typename T>
+Grid<T>::Grid(const Grid<T> &grid) :
+	_realWidth(grid.realWidth()), _realHeight(grid.realHeight()), _realLength(grid.realLength()),
+	_width(grid.width()), _height(grid.height()), _length(grid.length()),
+	_dh(grid.dh()),
+	_dim(grid.dim()),
+	_isAllocated(false),
+	_data(0)
+{
+}
 
 template <typename T>
 Grid<T>::Grid(double realWidth_, double realHeight_, double realLength_,
@@ -104,28 +116,47 @@ T * Grid<T>::data() {
 	return _data;
 }
 template <typename T>
-double Grid<T>::dh() {
+double Grid<T>::dh() const {
 	return _dh;
 }
 
 template <typename T>
 T Grid<T>::operator()(unsigned int i, unsigned int j, unsigned int k) const {
-	return data[k*_height*_width+j*_width+i];
+	return _data[k*_height*_width+j*_width+i];
 } 
 
 template <typename T>
 T& Grid<T>::operator()(unsigned int i, unsigned int j, unsigned int k) {
-	return data[k*_height*_width+j*_width+i];
+	return _data[k*_height*_width+j*_width+i];
 } 
 
 template <typename T>
 T Grid<T>::operator[](unsigned int n) const {
-	return data[n];
+	return _data[n];
 }
 
 template <typename T>
 T& Grid<T>::operator[](unsigned int n) {
-	return data[n];
+	return _data[n];
 }
 
 		
+template <typename T>
+void Grid<T>::freeOnCpu() {
+	delete [] _data;
+	_data = 0;
+	_isAllocated = false;
+}
+		
+//template <typename T>
+//void setData(T *data_);
+	//if(isAllocated()) {
+		//log_console.warnStream() << "Changing already existing grid data pointer, freeing old memory !";
+		//freeOnCpu();
+	//}
+
+	//_data = data_;
+
+	//if(_data != NULL)
+		//_isAllocated = true;
+//}

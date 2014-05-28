@@ -2,7 +2,8 @@
 #ifndef FUNCTOR_H
 #define FUNCTOR_H
 
-#include <vector>
+#include <map>
+#include <string>
 
 template <typename T>
 class Functor {
@@ -11,7 +12,7 @@ class Functor {
 		Functor();
 		~Functor();
 
-		virtual T operator(std::vector<Grid<T> *>, unsigned int i, unsigned int j, unsigned int k) = 0;
+		virtual T operator(std::map<std::string,Grid<T> *> grids, unsigned int i, unsigned int j, unsigned int k) = 0;
 }
 
 #endif /* end of include guard: FUNCTOR_H */

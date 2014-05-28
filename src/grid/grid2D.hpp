@@ -8,6 +8,8 @@ template <typename T>
 class Grid2D : public Grid<T> {
 
 	public:
+		Grid2D(const Grid2D &grid); //ne copie pas les données
+
 		explicit Grid2D(double realWidth_, double realHeight_,
 				unsigned int width_, unsigned int height_,
 				bool allocate = true);
@@ -21,6 +23,9 @@ class Grid2D : public Grid<T> {
 				bool allocate = true);
 		
 		~Grid2D();
+		
+		//ne copie pas les données
+		Grid2D<T> *clone() const;
 
 		unsigned long size() const;
 		unsigned long bytes() const;

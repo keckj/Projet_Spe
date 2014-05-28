@@ -6,11 +6,13 @@
 #include "grid1D.hpp"
 #include "grid2D.hpp"
 #include "grid3D.hpp"
+#include "simpleSystem2D.hpp"
 
 #include <cassert>
 #include <ctime>
 #include <vector>
 #include <iostream>
+#include <map>
 
 using namespace log4cpp;
 using namespace utils;
@@ -20,6 +22,9 @@ int main(int argc, char** argv) {
 	Grid3D<float> g3d(1.0,1.0,1.0,100u,100u,100u,false);
 	Grid2D<float> g2d(1.0,1.0,100u,100u,false);
 	Grid1D<float> g1d(1.0,100u,false);
+	std::map<std::string, Grid2D<float> *> map;
+	map["g2d"] = &g2d;
+	SimpleSystem2D<float> system(&map, 0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f);
 
 
 	//Init
