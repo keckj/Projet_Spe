@@ -26,7 +26,7 @@ int main(int argc, char** argv) {
 	//Grid3D<float> g3d(1.0,1.0,1.0,100u,100u,100u,false);
 	//Grid2D<float> g2d(1.0,1.0,100u,100u,false);
 	//
-	std::cout << "Je suis le main 0 !" << std::endl;
+	/*std::cout << "Je suis le main 0 !" << std::endl;
 	
 	std::map<std::string, Grid<float> *> map;
 	Grid1D<float> e(1.0,100u);
@@ -43,7 +43,7 @@ int main(int argc, char** argv) {
 
 	exit(EXIT_SUCCESS);
 
-
+*/
 	//Init
 	log4cpp::initLogs();
     srand(time(NULL));
@@ -60,10 +60,10 @@ int main(int argc, char** argv) {
 
     MainWindow win;
     win.show();
-
+    
     return application.exec();
 
-
+    /*
     //TODO la suite dans computeThread
 	//Check platforms, create contexts and load devices
 	
@@ -139,7 +139,7 @@ int main(int argc, char** argv) {
              std::cout << dataA[i] << " + " << dataB[i] << " = " << dataC[i] << std::endl;
 
 
-	return EXIT_SUCCESS;
+	return EXIT_SUCCESS;*/
 }
 
 #endif /* _N_MAIN == 0 */

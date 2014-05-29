@@ -3,7 +3,7 @@
 #define COMPUTETHREAD_HPP
 
 #include "utils/headers.hpp"
-#include "grid.hpp"
+#include "grid2D.hpp"
 
 class ComputeThread : public QThread {
     Q_OBJECT
@@ -15,7 +15,7 @@ class ComputeThread : public QThread {
         void compute(); // todo, starts the compute thread
 
     signals:
-        void stepComputed(const Grid<float> &grid);
+        void stepComputed(const Grid2D<float> &grid);
 
     public slots:
         void stop();

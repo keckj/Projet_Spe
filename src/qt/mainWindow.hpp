@@ -2,7 +2,8 @@
 #define MAINWINDOW_HPP
 
 #include "headers.hpp"
-#include "grid.hpp"
+#include <vector>
+#include "grid2D.hpp"
 #include "computeThread.hpp"
 
 class MainWindow : public QMainWindow {
@@ -12,19 +13,19 @@ class MainWindow : public QMainWindow {
 		MainWindow();
 		~MainWindow();
 
+    signals:
+        void textureUpdate(GLuint newTexture);
+
 	private:
-        //QSplitter *splitter;
-		//Viewer *viewer;
-		//SidePanel *sidePanel;
-		//MenuBar *menuBar;
-		//StatusBar *statusBar;
-        ComputeThread *thread;
+        ComputeThread *m_thread;
+        std::vector<Grid2D<float>> *m_stored_grids;
+        float m_min_val, m_max_val;
 
 		void keyPressEvent(QKeyEvent *k);
-	
+
 	private slots:
 		void childKeyEvent(QKeyEvent *k);
-        void updateGrid(const Grid<float> &grid);
+        void updateGrid(const Grid2D<float> &grid);
 };
 
 

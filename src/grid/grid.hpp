@@ -31,7 +31,7 @@ class Grid {
 		T operator()(unsigned int i, unsigned int j, unsigned int k) const; 
 		T& operator()(unsigned int i, unsigned int j, unsigned int k); 
 		
-		T *data();
+		T *data() const;
 
 		virtual void allocateOnCpu() = 0;
 		

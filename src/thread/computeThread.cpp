@@ -2,7 +2,7 @@
 #include "utils/headers.hpp"
 #include "computeThread.hpp"
 #include "computeThread.moc"
-#include "grid.hpp"
+#include "grid2D.hpp"
 
 ComputeThread::ComputeThread(QObject *parent_) : 
     QThread(parent_) {

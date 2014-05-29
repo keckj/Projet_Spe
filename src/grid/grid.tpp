@@ -107,7 +107,7 @@ bool Grid<T>::isAllocated() const {
 	return _isAllocated;
 }
 template <typename T>
-T * Grid<T>::data() {
+T * Grid<T>::data() const {
 	return _data;
 }
 template <typename T>

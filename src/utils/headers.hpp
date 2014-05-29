@@ -41,6 +41,16 @@
 #include <QCheckBox>
 #include <QComboBox>
 #include <QSlider>
+#include <QGraphicsView>
+#include <QGLWidget>
+#include <QGLFormat>
+#include <QGraphicsScene>
+#include <QPainter>
+#include <QPaintEngine>
+#include <QRect>
+#include <QRectF>
+#include <QResizeEvent>
+#include <QTimer>
 #pragma GCC diagnostic pop
 //////////////////////////
 
