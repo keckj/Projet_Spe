@@ -1,10 +1,23 @@
 
 #include <cassert>
 #include <typeinfo>
+#include <fstream>
+
 #include "log.hpp"
 #include "utils.hpp"
 
 using namespace log4cpp;
+
+template <typename T>
+Grid<T>::Grid() :
+	_realWidth(0), _realHeight(0), _realLength(0),
+	_width(0), _height(0), _length(0),
+	_dh(0),
+	_dim(0),
+	_isAllocated(false),
+	_data(0)
+{
+}
 		
 
 template <typename T>
@@ -19,7 +32,7 @@ Grid<T>::Grid(const Grid<T> &grid) :
 }
 
 template <typename T>
-Grid<T>::Grid(double realWidth_, double realHeight_, double realLength_,
+Grid<T>::Grid(T realWidth_, T realHeight_, T realLength_,
 		unsigned int width_, unsigned int height_, unsigned int length_,
 		unsigned int dim_, bool allocate) :
 	_realWidth(realWidth_), _realHeight(realHeight_), _realLength(realLength_),
@@ -35,11 +48,11 @@ Grid<T>::Grid(double realWidth_, double realHeight_, double realLength_,
 }
 
 template <typename T>
-Grid<T>::Grid(double width_, double height_, double length_,
-		double dh_,
+Grid<T>::Grid(T realWidth_, T realHeight_, T realLength_,
+		T dh_,
 		unsigned int dim_, bool allocate) :
-	_width(width_), _height(height_), _length(length_),
-	_width(width_/dh_), _height(height_/dh_), _length(length_/dh_),
+	_realWidth(realWidth_), _realHeight(realHeight_), _realLength(realLength_),
+	_width(realWidth_/dh_), _height(realHeight_/dh_), _length(realLength_/dh_),
 	_dh(dh_),
 	_dim(dim_),
 	_isAllocated(false),
@@ -52,9 +65,9 @@ Grid<T>::Grid(double width_, double height_, double length_,
 
 template <typename T>
 Grid<T>::Grid(unsigned int width_, unsigned int height_, unsigned int length_,
-		double dh_,
+		T dh_,
 		unsigned int dim_, bool allocate) :
-	_width(width_*dh_), _height(height_*dh_), _length(length_*dh_),
+	_realWidth(width_*dh_), _realHeight(height_*dh_), _realLength(length_*dh_),
 	_width(width_), _height(height_), _length(length_),
 	_dh(dh_),
 	_dim(dim_),
@@ -73,15 +86,15 @@ Grid<T>::~Grid() {
 }
 
 template <typename T>
-double Grid<T>::realWidth() const {
+T Grid<T>::realWidth() const {
 	return _realWidth;
 }
 template <typename T>
-double Grid<T>::realHeight() const {
+T Grid<T>::realHeight() const {
 	return _realHeight;
 }
 template <typename T>
-double Grid<T>::realLength() const {
+T Grid<T>::realLength() const {
 	return _realLength;
 }
 
@@ -111,7 +124,7 @@ T * Grid<T>::data() const {
 	return _data;
 }
 template <typename T>
-double Grid<T>::dh() const {
+T Grid<T>::dh() const {
 	return _dh;
 }
 
@@ -143,18 +156,41 @@ void Grid<T>::freeOnCpu() {
 	_isAllocated = false;
 }
 		
-//template <typename T>
-//void setData(T *data_);
-	//if(isAllocated()) {
-		//log_console.warnStream() << "Changing already existing grid data pointer, freeing old memory !";
-		//freeOnCpu();
-	//}
+template <typename T>
+void Grid<T>::save(const std::string &dst) {
+	std::ofstream file(dst, std::ios::out | std::ios::trunc);
 
-	//_data = data_;
+	if(!file.good()) {
+		log_console->errorStream() << "Failed to open file " << dst << " !";
+		file.close();
+		exit(EXIT_FAILURE);
+	}
+	
+	size_t typeHash = typeid(T).hash_code();
+	size_t typeNameLength = strlen(typeid(T).name());
+	file.write((char*) &typeHash, sizeof(size_t)); 
+	file.write((char*) &typeNameLength, sizeof(size_t)); 
+	file.write(typeid(T).name(), typeNameLength*sizeof(char)); 
+	file.write((char*) &this->_realWidth, sizeof(T)); 
+	file.write((char*) &this->_realHeight, sizeof(T)); 
+	file.write((char*) &this->_realLength, sizeof(T)); 
+	file.write((char*) &this->_width, sizeof(unsigned int)); 
+	file.write((char*) &this->_height, sizeof(unsigned int)); 
+	file.write((char*) &this->_length, sizeof(unsigned int)); 
+	file.write((char*) &this->_dh, sizeof(T)); 
+	file.write((char*) &this->_dim, sizeof(unsigned int)); 
+	file.write((char*) &this->_isAllocated, sizeof(bool)); 
+	if(this->_isAllocated)
+		file.write((char*) _data, this->bytes());
+	
+	if(!file.good()) {
+		log_console->errorStream() << "Failed to write file " << dst << " !";
+		file.close();
+		exit(EXIT_FAILURE);
+	}
 
-	//if(_data != NULL)
-		//_isAllocated = true;
-//}
+	file.close();
+}
 
 template <typename T>
 std::ostream & operator <<(std::ostream &out, const Grid<T> &grid) {

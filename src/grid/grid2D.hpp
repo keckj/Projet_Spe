@@ -8,18 +8,20 @@ template <typename T>
 class Grid2D : public Grid<T> {
 
 	public:
+		
+		Grid2D(const std::string &src);
 		Grid2D(const Grid2D &grid); //ne copie pas les données
 
-		explicit Grid2D(double realWidth_, double realHeight_,
+		explicit Grid2D(T realWidth_, T realHeight_,
 				unsigned int width_, unsigned int height_,
 				bool allocate = true);
 		
-		explicit Grid2D(double realWidth_, double realHeight_, 
-				double dh_,
+		explicit Grid2D(T realWidth_, T realHeight_, 
+				T dh_,
 				bool allocate = true);
 		
 		explicit Grid2D(unsigned int width_, unsigned int height_,
-				double dh_,
+				T dh_,
 				bool allocate = true);
 		
 		~Grid2D();

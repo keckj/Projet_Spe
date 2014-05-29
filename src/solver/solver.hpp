@@ -3,6 +3,7 @@
 #define SOLVER_H
 
 #include <map>
+#include <string>
 #include "grid.hpp" 
 
 template <typename T>
@@ -12,11 +13,13 @@ public:
 	virtual ~Solver();
 
 	void solve(System<T> &system, unsigned int maxSteps);
+	void solve(System<T> &system, T maxTime);
 
 protected:
 	virtual void display(std::map<std::string, Grid<T> *> *grids) {};
-	virtual bool stopCond() {return false;};
+	virtual void writeData(std::map<std::string, Grid<T> *> *grids) {};
 
+	virtual bool stopCond() {return false;};
 };
 
 #include "solver.tpp"

@@ -49,7 +49,7 @@ T SimpleSystem<T>::computeOptimalTimestep() {
 	T rhs = 1 /
 		(_epsilon + _mu_1/_mu_2 * SQUARE(dh)/4 * SQUARE(_alpha_1 + 1));
 
-	return std::min(lhs, rhs);
+	return 0.95*std::min(lhs, rhs);
 }
 
 template <typename T>
