@@ -14,7 +14,7 @@ Grid1D<T> *Grid1D<T>::clone() const {
 }
 
 template <typename T>
-Grid1D<T>::Grid1D(double realWidth_, unsigned int width_, bool allocate) :
+Grid1D<T>::Grid1D(T realWidth_, unsigned int width_, bool allocate) :
 	Grid<T>(realWidth_, realWidth_/width_, realWidth_/width_,
 			width_, 1u, 1u,
 			1u, allocate)
@@ -26,7 +26,7 @@ Grid1D<T>::Grid1D(double realWidth_, unsigned int width_, bool allocate) :
 }
 
 template <typename T>
-Grid1D<T>::Grid1D(double realWidth_, double dh_, bool allocate) : 
+Grid1D<T>::Grid1D(T realWidth_, T dh_, bool allocate) : 
 	Grid<T>(realWidth_, dh_, dh_,
 			dh_,
 			1u, allocate)
@@ -38,7 +38,7 @@ Grid1D<T>::Grid1D(double realWidth_, double dh_, bool allocate) :
 }
 
 template <typename T>
-Grid1D<T>::Grid1D(unsigned int width_, double dh_, bool allocate) :
+Grid1D<T>::Grid1D(unsigned int width_, T dh_, bool allocate) :
 	Grid<T>(width_, 1u, 1u,
 			dh_,
 			1u, allocate)

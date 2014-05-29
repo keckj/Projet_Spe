@@ -23,9 +23,9 @@ using namespace utils;
 
 int main(int argc, char** argv) {
 
-	//Grid3D<float> g3d(1.0,1.0,1.0,100u,100u,100u,false);
-	//Grid2D<float> g2d(1.0,1.0,100u,100u,false);
-	//
+	Grid3D<float> g3d(1.0,1.0,1.0,100u,100u,100u,false);
+	Grid2D<float> g2d(1.0,1.0,100u,100u,false);
+
 	std::cout << "Je suis le main 0 !" << std::endl;
 	
 	std::map<std::string, Grid<float> *> map;
@@ -35,6 +35,8 @@ int main(int argc, char** argv) {
 	map["r"] = &r;
 
 	std::cout << e << std::endl;
+	std::cout << g2d << std::endl;
+	std::cout << g3d << std::endl;
 
 	SimpleSystem<float> system(&map, 0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f);
 	Solver<float> solver;

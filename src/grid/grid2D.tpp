@@ -15,7 +15,7 @@ Grid2D<T> *Grid2D<T>::clone() const {
 
 
 template <typename T>
-Grid2D<T>::Grid2D(double realWidth_, double realHeight_,
+Grid2D<T>::Grid2D(T realWidth_, T realHeight_,
 		unsigned int width_, unsigned int height_,
 		bool allocate) :
 	Grid<T>(realWidth_, realHeight_, realWidth_/width_,
@@ -32,8 +32,8 @@ Grid2D<T>::Grid2D(double realWidth_, double realHeight_,
 }
 
 template <typename T>
-Grid2D<T>::Grid2D(double realWidth_, double realHeight_, 
-		double dh_, bool allocate) : 
+Grid2D<T>::Grid2D(T realWidth_, T realHeight_, 
+		T dh_, bool allocate) : 
 	Grid<T>(realWidth_, realHeight_, dh_,
 			dh_,
 			2u, allocate)
@@ -41,11 +41,13 @@ Grid2D<T>::Grid2D(double realWidth_, double realHeight_,
 	assert(realWidth_ > 0.0);
 	assert(realHeight_ > 0.0);
 	assert(dh_ > 0.0);
+	if(allocate)
+		allocateOnCpu();
 }
 
 template <typename T>
 Grid2D<T>::Grid2D(unsigned int width_, unsigned int height_,
-		double dh_,
+		T dh_,
 		bool allocate) :
 	Grid<T>(width_, height_, 1u,
 			dh_,
@@ -54,6 +56,8 @@ Grid2D<T>::Grid2D(unsigned int width_, unsigned int height_,
 	assert(width_ > 0u);
 	assert(height_ > 0u);
 	assert(dh_ > 0.0);
+	if(allocate)
+		allocateOnCpu();
 }
 
 template <typename T>

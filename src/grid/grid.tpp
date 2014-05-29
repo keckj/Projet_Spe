@@ -19,7 +19,7 @@ Grid<T>::Grid(const Grid<T> &grid) :
 }
 
 template <typename T>
-Grid<T>::Grid(double realWidth_, double realHeight_, double realLength_,
+Grid<T>::Grid(T realWidth_, T realHeight_, T realLength_,
 		unsigned int width_, unsigned int height_, unsigned int length_,
 		unsigned int dim_, bool allocate) :
 	_realWidth(realWidth_), _realHeight(realHeight_), _realLength(realLength_),
@@ -35,11 +35,11 @@ Grid<T>::Grid(double realWidth_, double realHeight_, double realLength_,
 }
 
 template <typename T>
-Grid<T>::Grid(double width_, double height_, double length_,
-		double dh_,
+Grid<T>::Grid(T realWidth_, T realHeight_, T realLength_,
+		T dh_,
 		unsigned int dim_, bool allocate) :
-	_width(width_), _height(height_), _length(length_),
-	_width(width_/dh_), _height(height_/dh_), _length(length_/dh_),
+	_realWidth(realWidth_), _realHeight(realHeight_), _realLength(realLength_),
+	_width(realWidth_/dh_), _height(realHeight_/dh_), _length(realLength_/dh_),
 	_dh(dh_),
 	_dim(dim_),
 	_isAllocated(false),
@@ -52,9 +52,9 @@ Grid<T>::Grid(double width_, double height_, double length_,
 
 template <typename T>
 Grid<T>::Grid(unsigned int width_, unsigned int height_, unsigned int length_,
-		double dh_,
+		T dh_,
 		unsigned int dim_, bool allocate) :
-	_width(width_*dh_), _height(height_*dh_), _length(length_*dh_),
+	_realWidth(width_*dh_), _realHeight(height_*dh_), _realLength(length_*dh_),
 	_width(width_), _height(height_), _length(length_),
 	_dh(dh_),
 	_dim(dim_),
@@ -73,15 +73,15 @@ Grid<T>::~Grid() {
 }
 
 template <typename T>
-double Grid<T>::realWidth() const {
+T Grid<T>::realWidth() const {
 	return _realWidth;
 }
 template <typename T>
-double Grid<T>::realHeight() const {
+T Grid<T>::realHeight() const {
 	return _realHeight;
 }
 template <typename T>
-double Grid<T>::realLength() const {
+T Grid<T>::realLength() const {
 	return _realLength;
 }
 
@@ -111,7 +111,7 @@ T * Grid<T>::data() {
 	return _data;
 }
 template <typename T>
-double Grid<T>::dh() const {
+T Grid<T>::dh() const {
 	return _dh;
 }
 

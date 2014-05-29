@@ -1,10 +1,12 @@
 
 #ifndef UTILS_H
+#define UTILS_H
 	
 #define SQUARE(X) ((X)*(X))
 
 #include "headers.hpp"
 #include <vector>
+#include <limits>
 
 namespace utils {
 
@@ -35,7 +37,16 @@ namespace utils {
 	const std::string toStringDeviceType(cl_device_type deviceType);
 	const std::string toStringBuildStatus(cl_build_status buildStatus);
 	const std::string toStringMemory(unsigned long bytes);
+	
+	template <typename T>
+	T abs(T val) {
+		return (val < T(0) ? -val : val);
+	}
+	
+	template <typename T>
+	bool areEqual(T val1, T val2) {
+		return (abs<T>(val2 - val1) <= std::numeric_limits<T>::epsilon() * std::max(abs<T>(val1), abs<T>(val2)));
+	}
 }
-
 
 #endif /* end of include guard: UTILS_H */

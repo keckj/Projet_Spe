@@ -10,9 +10,9 @@ class Grid {
 	public:
 		virtual ~Grid();
 
-		double realWidth() const;
-		double realHeight() const;
-		double realLength() const;
+		T realWidth() const;
+		T realHeight() const;
+		T realLength() const;
 
 		unsigned int width() const;
 		unsigned int height() const;
@@ -21,7 +21,7 @@ class Grid {
 		virtual unsigned long size() const = 0;
 		virtual unsigned long bytes() const = 0;
 		
-		double dh() const;
+		T dh() const;
 		unsigned int dim() const;
 		bool isAllocated() const;
 		
@@ -44,22 +44,22 @@ class Grid {
 		//Ne copie pas les données, laisse le pointeur à NULL
 		Grid(const Grid &grid);
 		
-		explicit Grid(double realWidth_, double realHeight_, double realLength_,
+		explicit Grid(T realWidth_, T realHeight_, T realLength_,
 				unsigned int width_, unsigned int height_, unsigned int length_,
 				unsigned int dim_, bool allocate = true);
 		
-		explicit Grid(double realWidth_, double realHeight_, double realLength_,
-				double dh_,
+		explicit Grid(T realWidth_, T realHeight_, T realLength_,
+				T dh_,
 				unsigned int dim_, bool allocate = true);
 		
 		explicit Grid(unsigned int width_, unsigned int height_, unsigned int length_,
-				double dh_,
+				T dh_,
 				unsigned int dim_, bool allocate = true);
 
-		double _realWidth, _realHeight, _realLength;
+		T _realWidth, _realHeight, _realLength;
 		unsigned int _width,_height,_length;
 
-		double _dh;
+		T _dh;
 
 		unsigned int _dim;
 		bool _isAllocated;

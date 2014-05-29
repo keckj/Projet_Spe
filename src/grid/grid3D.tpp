@@ -14,7 +14,7 @@ Grid3D<T> *Grid3D<T>::clone() const {
 }
 
 template <typename T>
-Grid3D<T>::Grid3D(double realWidth_, double realHeight_, double realLength_,
+Grid3D<T>::Grid3D(T realWidth_, T realHeight_, T realLength_,
 		unsigned int width_, unsigned int height_, unsigned int length_,
 		bool allocate) :
 	Grid<T>(realWidth_, realHeight_, realLength_,
@@ -33,8 +33,8 @@ Grid3D<T>::Grid3D(double realWidth_, double realHeight_, double realLength_,
 }
 
 template <typename T>
-Grid3D<T>::Grid3D(double realWidth_, double realHeight_, double realLength_,
-		double dh_, bool allocate) : 
+Grid3D<T>::Grid3D(T realWidth_, T realHeight_, T realLength_,
+		T dh_, bool allocate) : 
 	Grid<T>(realWidth_, realHeight_, realLength_,
 			dh_,
 			3u, allocate)
@@ -43,11 +43,14 @@ Grid3D<T>::Grid3D(double realWidth_, double realHeight_, double realLength_,
 	assert(realHeight_ > 0.0);
 	assert(realLength_ > 0.0);
 	assert(dh_ > 0.0);
+	
+	if(allocate)
+		allocateOnCpu();
 }
 
 template <typename T>
 Grid3D<T>::Grid3D(unsigned int width_, unsigned int height_, unsigned int length_,
-		double dh_,
+		T dh_,
 		bool allocate) :
 	Grid<T>(width_, height_, length_,
 			dh_,
@@ -57,6 +60,9 @@ Grid3D<T>::Grid3D(unsigned int width_, unsigned int height_, unsigned int length
 	assert(height_ > 0u);
 	assert(length_ > 0u);
 	assert(dh_ > 0.0);
+	
+	if(allocate)
+		allocateOnCpu();
 }
 
 template <typename T>
