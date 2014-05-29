@@ -10,6 +10,7 @@ class Grid1D : public Grid<T> {
 
 	public:
 		Grid1D(const Grid1D &grid); //ne copie pas les données
+		Grid1D(const std::string &src);
 		explicit Grid1D(T realWidth_,  unsigned int width_, bool allocate = true);
 		explicit Grid1D(T realWidth_, T dh_, bool allocate = true);
 		explicit Grid1D(unsigned int width_, T dh_, bool allocate = true);

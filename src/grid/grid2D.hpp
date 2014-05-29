@@ -8,6 +8,8 @@ template <typename T>
 class Grid2D : public Grid<T> {
 
 	public:
+		
+		Grid2D(const std::string &src);
 		Grid2D(const Grid2D &grid); //ne copie pas les données
 
 		explicit Grid2D(T realWidth_, T realHeight_,

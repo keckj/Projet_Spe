@@ -4,6 +4,7 @@
 #include "grid1D.hpp"
 #include "grid2D.hpp"
 #include "grid3D.hpp"
+#include "log.hpp"
 
 #include <cassert>
 #include <vector>
@@ -14,6 +15,8 @@ using namespace log4cpp;
 using namespace utils;
 
 int main(int argc, char** argv) {
+
+	log4cpp::initLogs();
 	
 	std::cout <<   "========================" << std::endl;
 	std::cout << "\n== GRID TEST PROGRAMM ==" << std::endl;
@@ -361,6 +364,205 @@ int main(int argc, char** argv) {
 		}
 	}
 
+	std::cout << "\n== 1D FLOAT GRID SERIALIZATION ==" << std::endl;
+	{
+		Grid1D<float> fg1(1.0f,10u, false);
+		fg1.save("data/save.raw");
+		Grid1D<float> fg2("data/save.raw");
+		assert(fg1.width() == fg2.width());
+		assert(fg1.height() == fg2.height());
+		assert(fg1.length() == fg2.length());
+		assert(areEqual<float>(fg1.realWidth(), fg2.realWidth()));
+		assert(areEqual<float>(fg1.realHeight(), fg2.realHeight()));
+		assert(areEqual<float>(fg1.realLength(), fg2.realLength()));
+		assert(areEqual<float>(fg1.dh(), fg2.dh()));
+		assert(fg1.dim() == fg2.dim());
+		assert(fg1.isAllocated() == fg2.isAllocated());
+		std::cout << "No data : ok" << std::endl;
+
+		Grid1D<float> fg3(1.0f,10u, true);
+		for(unsigned int i = 0; i < fg3.size(); i++) fg3[i] = i;
+		fg3.save("data/save.raw");
+		Grid1D<float> fg4("data/save.raw");
+		assert(fg3.width() == fg4.width());
+		assert(fg3.height() == fg4.height());
+		assert(fg3.length() == fg4.length());
+		assert(areEqual<float>(fg3.realWidth(), fg4.realWidth()));
+		assert(areEqual<float>(fg3.realHeight(), fg4.realHeight()));
+		assert(areEqual<float>(fg3.realLength(), fg4.realLength()));
+		assert(areEqual<float>(fg3.dh(), fg4.dh()));
+		assert(fg3.dim() == fg4.dim());
+		assert(fg3.isAllocated() == fg4.isAllocated());
+		for (unsigned int i = 0; i < fg3.size(); i++) assert(fg3[i]==fg4[i]);
+		std::cout << "With data : ok" << std::endl;
+	}
+	
+	std::cout << "\n== 2D FLOAT GRID SERIALIZATION ==" << std::endl;
+	{
+		Grid2D<float> fg1(1.0f,2.0f,10u,20u,false);
+		fg1.save("data/save.raw");
+		Grid2D<float> fg2("data/save.raw");
+		assert(fg1.width() == fg2.width());
+		assert(fg1.height() == fg2.height());
+		assert(fg1.length() == fg2.length());
+		assert(areEqual<float>(fg1.realWidth(), fg2.realWidth()));
+		assert(areEqual<float>(fg1.realHeight(), fg2.realHeight()));
+		assert(areEqual<float>(fg1.realLength(), fg2.realLength()));
+		assert(areEqual<float>(fg1.dh(), fg2.dh()));
+		assert(fg1.dim() == fg2.dim());
+		assert(fg1.isAllocated() == fg2.isAllocated());
+		std::cout << "No data : ok" << std::endl;
+
+		Grid2D<float> fg3(1.0f,2.0f,10u,20u,true);
+		for(unsigned int i = 0; i < fg3.size(); i++) fg3[i] = i;
+		fg3.save("data/save.raw");
+		Grid2D<float> fg4("data/save.raw");
+		assert(fg3.width() == fg4.width());
+		assert(fg3.height() == fg4.height());
+		assert(fg3.length() == fg4.length());
+		assert(areEqual<float>(fg3.realWidth(), fg4.realWidth()));
+		assert(areEqual<float>(fg3.realHeight(), fg4.realHeight()));
+		assert(areEqual<float>(fg3.realLength(), fg4.realLength()));
+		assert(areEqual<float>(fg3.dh(), fg4.dh()));
+		assert(fg3.dim() == fg4.dim());
+		assert(fg3.isAllocated() == fg4.isAllocated());
+		for (unsigned int i = 0; i < fg3.size(); i++) assert(fg3[i]==fg4[i]);
+		std::cout << "With data : ok" << std::endl;
+	}
+	
+	std::cout << "\n== 3D FLOAT GRID SERIALIZATION ==" << std::endl;
+	{
+		Grid3D<float> fg1(1.0f,2.0f,3.0f,10u,20u,30u,false);
+		fg1.save("data/save.raw");
+		Grid3D<float> fg2("data/save.raw");
+		assert(fg1.width() == fg2.width());
+		assert(fg1.height() == fg2.height());
+		assert(fg1.length() == fg2.length());
+		assert(areEqual<float>(fg1.realWidth(), fg2.realWidth()));
+		assert(areEqual<float>(fg1.realHeight(), fg2.realHeight()));
+		assert(areEqual<float>(fg1.realLength(), fg2.realLength()));
+		assert(areEqual<float>(fg1.dh(), fg2.dh()));
+		assert(fg1.dim() == fg2.dim());
+		assert(fg1.isAllocated() == fg2.isAllocated());
+		std::cout << "No data : ok" << std::endl;
+
+		Grid3D<float> fg3(1.0f,2.0f,3.0f,10u,20u,30u,true);
+		for(unsigned int i = 0; i < fg3.size(); i++) fg3[i] = i;
+		fg3.save("data/save.raw");
+		Grid3D<float> fg4("data/save.raw");
+		assert(fg3.width() == fg4.width());
+		assert(fg3.height() == fg4.height());
+		assert(fg3.length() == fg4.length());
+		assert(areEqual<float>(fg3.realWidth(), fg4.realWidth()));
+		assert(areEqual<float>(fg3.realHeight(), fg4.realHeight()));
+		assert(areEqual<float>(fg3.realLength(), fg4.realLength()));
+		assert(areEqual<float>(fg3.dh(), fg4.dh()));
+		assert(fg3.dim() == fg4.dim());
+		assert(fg3.isAllocated() == fg4.isAllocated());
+		for (unsigned int i = 0; i < fg3.size(); i++) assert(fg3[i]==fg4[i]);
+		std::cout << "With data : ok" << std::endl;
+	}
+
+	std::cout << "\n== 1D DOUBLE GRID SERIALIZATION ==" << std::endl;
+	{
+		Grid1D<double> fg1(1.0,10u, false);
+		fg1.save("data/save.raw");
+		Grid1D<double> fg2("data/save.raw");
+		assert(fg1.width() == fg2.width());
+		assert(fg1.height() == fg2.height());
+		assert(fg1.length() == fg2.length());
+		assert(areEqual<double>(fg1.realWidth(), fg2.realWidth()));
+		assert(areEqual<double>(fg1.realHeight(), fg2.realHeight()));
+		assert(areEqual<double>(fg1.realLength(), fg2.realLength()));
+		assert(areEqual<double>(fg1.dh(), fg2.dh()));
+		assert(fg1.dim() == fg2.dim());
+		assert(fg1.isAllocated() == fg2.isAllocated());
+		std::cout << "No data : ok" << std::endl;
+
+		Grid1D<double> fg3(1.0,10u, true);
+		for(unsigned int i = 0; i < fg3.size(); i++) fg3[i] = i;
+		fg3.save("data/save.raw");
+		Grid1D<double> fg4("data/save.raw");
+		assert(fg3.width() == fg4.width());
+		assert(fg3.height() == fg4.height());
+		assert(fg3.length() == fg4.length());
+		assert(areEqual<double>(fg3.realWidth(), fg4.realWidth()));
+		assert(areEqual<double>(fg3.realHeight(), fg4.realHeight()));
+		assert(areEqual<double>(fg3.realLength(), fg4.realLength()));
+		assert(areEqual<double>(fg3.dh(), fg4.dh()));
+		assert(fg3.dim() == fg4.dim());
+		assert(fg3.isAllocated() == fg4.isAllocated());
+		for (unsigned int i = 0; i < fg3.size(); i++) assert(fg3[i]==fg4[i]);
+		std::cout << "With data : ok" << std::endl;
+	}
+	
+	std::cout << "\n== 2D DOUBLE GRID SERIALIZATION ==" << std::endl;
+	{
+		Grid2D<double> fg1(1.0,2.0,10u,20u,false);
+		fg1.save("data/save.raw");
+		Grid2D<double> fg2("data/save.raw");
+		assert(fg1.width() == fg2.width());
+		assert(fg1.height() == fg2.height());
+		assert(fg1.length() == fg2.length());
+		assert(areEqual<double>(fg1.realWidth(), fg2.realWidth()));
+		assert(areEqual<double>(fg1.realHeight(), fg2.realHeight()));
+		assert(areEqual<double>(fg1.realLength(), fg2.realLength()));
+		assert(areEqual<double>(fg1.dh(), fg2.dh()));
+		assert(fg1.dim() == fg2.dim());
+		assert(fg1.isAllocated() == fg2.isAllocated());
+		std::cout << "No data : ok" << std::endl;
+
+		Grid2D<double> fg3(1.0,2.0,10u,20u,true);
+		for(unsigned int i = 0; i < fg3.size(); i++) fg3[i] = i;
+		fg3.save("data/save.raw");
+		Grid2D<double> fg4("data/save.raw");
+		assert(fg3.width() == fg4.width());
+		assert(fg3.height() == fg4.height());
+		assert(fg3.length() == fg4.length());
+		assert(areEqual<double>(fg3.realWidth(), fg4.realWidth()));
+		assert(areEqual<double>(fg3.realHeight(), fg4.realHeight()));
+		assert(areEqual<double>(fg3.realLength(), fg4.realLength()));
+		assert(areEqual<double>(fg3.dh(), fg4.dh()));
+		assert(fg3.dim() == fg4.dim());
+		assert(fg3.isAllocated() == fg4.isAllocated());
+		for (unsigned int i = 0; i < fg3.size(); i++) assert(fg3[i]==fg4[i]);
+		std::cout << "With data : ok" << std::endl;
+	}
+	
+	std::cout << "\n== 3D DOUBLE GRID SERIALIZATION ==" << std::endl;
+	{
+		Grid3D<double> fg1(1.0,2.0,3.0,10u,20u,30u,false);
+		fg1.save("data/save.raw");
+		Grid3D<double> fg2("data/save.raw");
+		assert(fg1.width() == fg2.width());
+		assert(fg1.height() == fg2.height());
+		assert(fg1.length() == fg2.length());
+		assert(areEqual<double>(fg1.realWidth(), fg2.realWidth()));
+		assert(areEqual<double>(fg1.realHeight(), fg2.realHeight()));
+		assert(areEqual<double>(fg1.realLength(), fg2.realLength()));
+		assert(areEqual<double>(fg1.dh(), fg2.dh()));
+		assert(fg1.dim() == fg2.dim());
+		assert(fg1.isAllocated() == fg2.isAllocated());
+		std::cout << "No data : ok" << std::endl;
+
+		Grid3D<double> fg3(1.0,2.0,3.0,10u,20u,30u,true);
+		for(unsigned int i = 0; i < fg3.size(); i++) fg3[i] = i;
+		fg3.save("data/save.raw");
+		Grid3D<double> fg4("data/save.raw");
+		assert(fg3.width() == fg4.width());
+		assert(fg3.height() == fg4.height());
+		assert(fg3.length() == fg4.length());
+		assert(areEqual<double>(fg3.realWidth(), fg4.realWidth()));
+		assert(areEqual<double>(fg3.realHeight(), fg4.realHeight()));
+		assert(areEqual<double>(fg3.realLength(), fg4.realLength()));
+		assert(areEqual<double>(fg3.dh(), fg4.dh()));
+		assert(fg3.dim() == fg4.dim());
+		assert(fg3.isAllocated() == fg4.isAllocated());
+		for (unsigned int i = 0; i < fg3.size(); i++) assert(fg3[i]==fg4[i]);
+		std::cout << "With data : ok" << std::endl;
+	}
+
+	exit(EXIT_SUCCESS);
 }
 
 #endif

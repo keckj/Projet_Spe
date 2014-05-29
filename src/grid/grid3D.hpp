@@ -8,6 +8,7 @@ template <typename T>
 class Grid3D : public Grid<T> {
 
 	public:
+		Grid3D(const std::string &src);
 		Grid3D(const Grid3D &grid); //ne copie pas les données
 
 		explicit Grid3D(T realWidth_, T realHeight_, T realLength_,

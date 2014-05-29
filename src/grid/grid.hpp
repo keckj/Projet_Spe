@@ -31,16 +31,19 @@ class Grid {
 		T operator()(unsigned int i, unsigned int j, unsigned int k) const; 
 		T& operator()(unsigned int i, unsigned int j, unsigned int k); 
 		
-		T *data();
+		T *data() const;
 
 		virtual void allocateOnCpu() = 0;
-		
 		void freeOnCpu();
 	
 		//ne copie pas le pointeur, il reste à NULL
 		virtual Grid<T> *clone() const = 0;
 
+		void save(const std::string &dst);
+
 	protected:
+		explicit Grid();
+		
 		//Ne copie pas les données, laisse le pointeur à NULL
 		Grid(const Grid &grid);
 		
