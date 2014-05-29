@@ -18,8 +18,8 @@ template <typename T>
 Grid2D<T>::Grid2D(double realWidth_, double realHeight_,
 		unsigned int width_, unsigned int height_,
 		bool allocate) :
-	Grid<T>(realWidth_, realHeight_, 0.0,
-			width_, height_, 0u,
+	Grid<T>(realWidth_, realHeight_, realWidth_/width_,
+			width_, height_, 1u,
 			2u, allocate)
 {
 	assert(realWidth_ > 0.0);
@@ -34,7 +34,7 @@ Grid2D<T>::Grid2D(double realWidth_, double realHeight_,
 template <typename T>
 Grid2D<T>::Grid2D(double realWidth_, double realHeight_, 
 		double dh_, bool allocate) : 
-	Grid<T>(realWidth_, realHeight_, 0.0,
+	Grid<T>(realWidth_, realHeight_, dh_,
 			dh_,
 			2u, allocate)
 {
@@ -47,7 +47,7 @@ template <typename T>
 Grid2D<T>::Grid2D(unsigned int width_, unsigned int height_,
 		double dh_,
 		bool allocate) :
-	Grid<T>(width_, height_, 0u,
+	Grid<T>(width_, height_, 1u,
 			dh_,
 			2u, allocate)
 {

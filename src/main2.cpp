@@ -1,6 +1,5 @@
 
 #include "headers.hpp"
-
 #include "utils.hpp"
 #include "mainWindow.hpp"
 
@@ -16,7 +15,7 @@
 #include <iostream>
 #include <map>
 
-#if _N_MAIN == 0
+#if _N_MAIN == 1
 
 using namespace log4cpp;
 using namespace utils;
@@ -25,8 +24,8 @@ int main(int argc, char** argv) {
 
 	//Grid3D<float> g3d(1.0,1.0,1.0,100u,100u,100u,false);
 	//Grid2D<float> g2d(1.0,1.0,100u,100u,false);
-	//
-	std::cout << "Je suis le main 0 !" << std::endl;
+	
+	std::cout << "Je suis le main 1 !" << std::endl;
 	
 	std::map<std::string, Grid<float> *> map;
 	Grid1D<float> e(1.0,100u);
@@ -142,4 +141,4 @@ int main(int argc, char** argv) {
 	return EXIT_SUCCESS;
 }
 
-#endif /* _N_MAIN == 0 */
+#endif /* _N_MAIN == 1 */

@@ -2,6 +2,8 @@
 #ifndef GRID_HPP
 #define GRID_HPP
 
+#include <iostream>
+
 template <typename T>
 class Grid {
 
@@ -64,6 +66,9 @@ class Grid {
 
 		T *_data;
 };
+
+template <typename T>
+std::ostream & operator <<(std::ostream &out, const Grid<T> &grid);
 
 #include "grid.tpp"
 

@@ -1,9 +1,24 @@
 
+#fichier de config pour definir des variables makefiles
+CONFIG = $(shell find config.mk 2> /dev/null)
+ifeq ($(CONFIG), config.mk)
+$(info Chargement du fichier de configuration 'config.mk' !)
+include config.mk
+else
+$(info Pas de fichier de configuration présent (config.mk) !)
+endif
+
+ifndef N_MAIN
+N_MAIN = 0
+endif
+$(info Compilation du main numéro $(N_MAIN),)
+
 ####################
 ### LIB EXTERNES ###
 ####################
 
 OS=$(shell uname -s)
+$(info pour la plateforme $(OS))
 
 # Linux ########################################################
 ifeq ($(OS), Linux)
@@ -23,6 +38,7 @@ OPENCL_LIBPATH =
 OPENCL_LIBS = -lOpenCL
 
 DISTRIB=$(filter-out Distributor ID:, $(shell lsb_release -i))
+$(info et la distrib $(DISTRIB))
 
 ifeq ($(DISTRIB), Ubuntu)
 ###### Ubuntu
@@ -80,14 +96,13 @@ LINKFLAGS= -W -Wall -Wextra -pedantic -std=c++0x
 LDFLAGS= $(VIEWER_LIBS) $(CUDA_LIBS) $(OPENCL_LIBS) -llog4cpp
 INCLUDE = -I$(SRCDIR) $(foreach dir, $(SUBDIRS), -I$(dir)) $(VIEWER_INCLUDEPATH) $(CUDA_INCLUDEPATH) $(OPENCL_INCLUDEPATH)
 LIBS = $(VIEWER_LIBPATH) $(CUDA_LIBPATH) $(OPENCL_LIBPATH)
-DEFINES= $(VIEWER_DEFINES) $(OPT)
-
+DEFINES= $(VIEWER_DEFINES) $(OPT) -D_N_MAIN=$(N_MAIN) 
 
 CC=gcc
 CFLAGS= -W -Wall -Wextra -pedantic -std=c99 -m64
 
 CXX=g++
-CXXFLAGS= -W -Wall -Wextra -Wshadow -Wstrict-aliasing -Werror -pedantic -std=c++0x -m64  -Wno-unused-parameter -Wno-comment -Wno-unused-variable
+CXXFLAGS= -W -Wall -Wextra -Wshadow -Wstrict-aliasing -Werror -pedantic -std=c++0x -m64  -Wno-unused-parameter -Wno-comment -Wno-unused-variable #-Weffc++
 
 #preprocesseur QT
 MOC=moc

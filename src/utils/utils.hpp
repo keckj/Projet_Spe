@@ -34,6 +34,7 @@ namespace utils {
 	
 	const std::string toStringDeviceType(cl_device_type deviceType);
 	const std::string toStringBuildStatus(cl_build_status buildStatus);
+	const std::string toStringMemory(unsigned long bytes);
 }
 
 

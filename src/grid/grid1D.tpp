@@ -15,35 +15,38 @@ Grid1D<T> *Grid1D<T>::clone() const {
 
 template <typename T>
 Grid1D<T>::Grid1D(double realWidth_, unsigned int width_, bool allocate) :
-	Grid<T>(realWidth_, 0.0, 0.0,
-			width_, 0u, 0u,
+	Grid<T>(realWidth_, realWidth_/width_, realWidth_/width_,
+			width_, 1u, 1u,
 			1u, allocate)
 {
 	assert(realWidth_ > 0.0);
 	assert(width_ > 0u);
-
-	if(allocate)
+	if(allocate) 
 		allocateOnCpu();
 }
 
 template <typename T>
 Grid1D<T>::Grid1D(double realWidth_, double dh_, bool allocate) : 
-	Grid<T>(realWidth_, 0.0, 0.0,
+	Grid<T>(realWidth_, dh_, dh_,
 			dh_,
 			1u, allocate)
 {
 	assert(realWidth_ > 0.0);
 	assert(dh_ > 0.0);
+	if(allocate) 
+		allocateOnCpu();
 }
 
 template <typename T>
 Grid1D<T>::Grid1D(unsigned int width_, double dh_, bool allocate) :
-	Grid<T>(width_, 0u, 0u,
+	Grid<T>(width_, 1u, 1u,
 			dh_,
 			1u, allocate)
 {
 	assert(width_ > 0u);
 	assert(dh_ > 0.0);
+	if(allocate) 
+		allocateOnCpu();
 }
 
 template <typename T>
@@ -72,6 +75,7 @@ unsigned long Grid1D<T>::bytes() const {
 
 template <typename T>
 void Grid1D<T>::allocateOnCpu() {
+
 	if(!this->_isAllocated) {
 		this->_data = new T[this->_width];
 

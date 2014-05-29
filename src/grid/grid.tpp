@@ -1,6 +1,8 @@
 
 #include <cassert>
+#include <typeinfo>
 #include "log.hpp"
+#include "utils.hpp"
 
 using namespace log4cpp;
 		
@@ -27,48 +29,41 @@ Grid<T>::Grid(double realWidth_, double realHeight_, double realLength_,
 	_isAllocated(false),
 	_data(0)
 {
-	assert(    (_dim == 1 && _realWidth != 0 && _realHeight == 0 && _realLength == 0)
-			|| (_dim == 2 && _realWidth != 0 && _realHeight != 0 && _realLength == 0)
-			|| (_dim == 3 && _realWidth != 0 && _realHeight != 0 && _realLength != 0));
-
+	assert(    (_dim == 1 && _width > 1 && _height == 1 && _length == 1)
+			|| (_dim == 2 && _width > 1 && _height > 1 && _length == 1)
+			|| (_dim == 3 && _width > 1 && _height > 1 && _length > 1));
 }
 
 template <typename T>
-Grid<T>::Grid(double realWidth_, double realHeight_, double realLength_,
+Grid<T>::Grid(double width_, double height_, double length_,
 		double dh_,
 		unsigned int dim_, bool allocate) :
-	_realWidth(realWidth_), _realHeight(realHeight_), _realLength(realLength_),
-	_width(realWidth_/dh_), _height(realHeight_/dh_), _length(realLength_/dh_),
+	_width(width_), _height(height_), _length(length_),
+	_width(width_/dh_), _height(height_/dh_), _length(length_/dh_),
 	_dh(dh_),
 	_dim(dim_),
 	_isAllocated(false),
 	_data(0)
 {
-	assert(    (_dim == 1 && _realWidth != 0 && _realHeight == 0 && _realLength == 0)
-			|| (_dim == 2 && _realWidth != 0 && _realHeight != 0 && _realLength == 0)
-			|| (_dim == 3 && _realWidth != 0 && _realHeight != 0 && _realLength != 0));
-
-	if(allocate)
-		allocateOnCpu();
+	assert(    (_dim == 1 && _width > 1 && _height == 1 && _length == 1)
+			|| (_dim == 2 && _width > 1 && _height > 1 && _length == 1)
+			|| (_dim == 3 && _width > 1 && _height > 1 && _length > 1));
 }
 
 template <typename T>
 Grid<T>::Grid(unsigned int width_, unsigned int height_, unsigned int length_,
 		double dh_,
 		unsigned int dim_, bool allocate) :
-	_realWidth(width_*dh), _realHeight(height_*dh), _realLength(length_*dh),
+	_width(width_*dh_), _height(height_*dh_), _length(length_*dh_),
 	_width(width_), _height(height_), _length(length_),
 	_dh(dh_),
 	_dim(dim_),
 	_isAllocated(false),
 	_data(0)
 {
-	assert(    (_dim == 1 && _realWidth != 0 && _realHeight == 0 && _realLength == 0)
-			|| (_dim == 2 && _realWidth != 0 && _realHeight != 0 && _realLength == 0)
-			|| (_dim == 3 && _realWidth != 0 && _realHeight != 0 && _realLength != 0));
-
-	if(allocate)
-		allocateOnCpu();
+	assert(    (_dim == 1 && _width > 1 && _height == 1 && _length == 1)
+			|| (_dim == 2 && _width > 1 && _height > 1 && _length == 1)
+			|| (_dim == 3 && _width > 1 && _height > 1 && _length > 1));
 }
 
 template <typename T>
@@ -160,3 +155,17 @@ void Grid<T>::freeOnCpu() {
 	//if(_data != NULL)
 		//_isAllocated = true;
 //}
+
+template <typename T>
+std::ostream & operator <<(std::ostream &out, const Grid<T> &grid) {
+	out << "Grid<T=" << typeid(T).name() << ">"
+		<< "\n\t Dim               : " << grid.dim() << "D"
+		<< "\n\t Real size (WxHxL) : " << grid.realWidth() << " x " << grid.realHeight() << " x " << grid.realLength()
+		<< "\n\t Size      (WxHxL) : " << grid.width() << " x " << grid.height() << " x " << grid.length()
+		<< "\n\t DH                : " << grid.dh()
+		<< "\n\t Is allocated ?    : " << (grid.isAllocated() ? "true" : "false")
+		<< "\n\t Elements          : " << grid.size()
+		<< "\n\t Memory size       : " << utils::toStringMemory(grid.bytes());
+
+	return out;
+}

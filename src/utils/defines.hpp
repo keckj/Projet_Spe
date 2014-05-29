@@ -14,6 +14,10 @@
 #define __FILE_LOG_LEVEL DEBUG
 #endif
 
+#ifndef _N_MAIN
+#define _N_MAIN 0
+#endif
+
 //wrapper opencl c++
 #define CL_CALLBACK
 #define CL_USE_DEPRECATED_OPENCL_1_1_APIS

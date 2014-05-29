@@ -13,13 +13,13 @@ namespace utils {
 		cl_device_type deviceType;
 		unsigned int contextId;
 	};
-	
+
 	struct BuildUserData{
 		cl::Program *program;
 		std::string programName;
 	};
 
-	
+
 	void loadDevicesAndCreateContexts(
 			std::vector<cl::Platform> &platforms,
 			std::vector<cl::Context> &gpuContexts, 
@@ -74,51 +74,51 @@ namespace utils {
 			};
 
 
-				cl::Context gpu_context(CL_DEVICE_TYPE_GPU, contextProperties, openclContextCallback, (void*)userData[0], &err);
-				if(err != CL_DEVICE_NOT_FOUND) {
-					CHK_ERRORS(err);
-					std::vector<cl::Device> gpu_devices = gpu_context.getInfo<CL_CONTEXT_DEVICES>(&err);
-					CHK_ERRORS(err);
-					if(gpu_devices.size() != 0) {
-						log_console->infoStream() << "\tFound " << gpu_devices.size() << " GPUs.";
-						nTotGpuDevices += gpu_devices.size();
-						(*nGpuDevices)[i_gpu] = gpu_devices.size();
-						gpuDevices.push_back(gpu_devices);
-						gpuContexts.push_back(gpu_context);
-						i_gpu++;
-					}
+			cl::Context gpu_context(CL_DEVICE_TYPE_GPU, contextProperties, openclContextCallback, (void*)userData[0], &err);
+			if(err != CL_DEVICE_NOT_FOUND) {
+				CHK_ERRORS(err);
+				std::vector<cl::Device> gpu_devices = gpu_context.getInfo<CL_CONTEXT_DEVICES>(&err);
+				CHK_ERRORS(err);
+				if(gpu_devices.size() != 0) {
+					log_console->infoStream() << "\tFound " << gpu_devices.size() << " GPUs.";
+					nTotGpuDevices += gpu_devices.size();
+					(*nGpuDevices)[i_gpu] = gpu_devices.size();
+					gpuDevices.push_back(gpu_devices);
+					gpuContexts.push_back(gpu_context);
+					i_gpu++;
 				}
+			}
 
-				cl::Context cpu_context(CL_DEVICE_TYPE_CPU, contextProperties, openclContextCallback, (void*)userData[1], &err);
-				if(err != CL_DEVICE_NOT_FOUND) {
-					CHK_ERRORS(err);
-					std::vector<cl::Device> cpu_devices = cpu_context.getInfo<CL_CONTEXT_DEVICES>(&err);
-					CHK_ERRORS(err);
-					if(cpu_devices.size() != 0) {
-						log_console->infoStream() << "\tFound " << cpu_devices.size() << " CPUs.";
-						nTotCpuDevices += cpu_devices.size();
-						(*nCpuDevices)[i_cpu] = cpu_devices.size();
-						cpuDevices.push_back(cpu_devices);
-						cpuContexts.push_back(cpu_context);
-						i_cpu++;
-					}
+			cl::Context cpu_context(CL_DEVICE_TYPE_CPU, contextProperties, openclContextCallback, (void*)userData[1], &err);
+			if(err != CL_DEVICE_NOT_FOUND) {
+				CHK_ERRORS(err);
+				std::vector<cl::Device> cpu_devices = cpu_context.getInfo<CL_CONTEXT_DEVICES>(&err);
+				CHK_ERRORS(err);
+				if(cpu_devices.size() != 0) {
+					log_console->infoStream() << "\tFound " << cpu_devices.size() << " CPUs.";
+					nTotCpuDevices += cpu_devices.size();
+					(*nCpuDevices)[i_cpu] = cpu_devices.size();
+					cpuDevices.push_back(cpu_devices);
+					cpuContexts.push_back(cpu_context);
+					i_cpu++;
 				}
+			}
 
-				cl::Context acc_context(CL_DEVICE_TYPE_ACCELERATOR, contextProperties, openclContextCallback, (void*)userData[2], &err);
-				if(err != CL_DEVICE_NOT_FOUND) {
-					CHK_ERRORS(err);
+			cl::Context acc_context(CL_DEVICE_TYPE_ACCELERATOR, contextProperties, openclContextCallback, (void*)userData[2], &err);
+			if(err != CL_DEVICE_NOT_FOUND) {
+				CHK_ERRORS(err);
 
-					std::vector<cl::Device> acc_devices = acc_context.getInfo<CL_CONTEXT_DEVICES>(&err);
-					CHK_ERRORS(err);
-					if(acc_devices.size() != 0) {
-						log_console->infoStream() << "\tFound " << acc_devices.size() << " accelerator devices.";
-						nTotAccDevices += acc_devices.size();
-						(*nAccDevices)[i_acc] = acc_devices.size();
-						accDevices.push_back(acc_devices);
-						accContexts.push_back(acc_context);
-						i_acc++;
-					}
+				std::vector<cl::Device> acc_devices = acc_context.getInfo<CL_CONTEXT_DEVICES>(&err);
+				CHK_ERRORS(err);
+				if(acc_devices.size() != 0) {
+					log_console->infoStream() << "\tFound " << acc_devices.size() << " accelerator devices.";
+					nTotAccDevices += acc_devices.size();
+					(*nAccDevices)[i_acc] = acc_devices.size();
+					accDevices.push_back(acc_devices);
+					accContexts.push_back(acc_context);
+					i_acc++;
 				}
+			}
 		}	
 	}
 
@@ -211,7 +211,7 @@ namespace utils {
 			exit(EXIT_FAILURE);
 		}
 	}
-	
+
 	void buildProgram(cl::Program &program, std::vector<cl::Device> &targetDevices, const char *buildOptions, const std::string &programName) {
 		struct BuildUserData *data = new struct BuildUserData;
 		data->program = &program;
@@ -240,6 +240,24 @@ namespace utils {
 			case(CL_BUILD_IN_PROGRESS): return "CL_BUILD_IN_PROGRESS"; break;
 			default: return "Unknown OpenCL Build Status";
 		}
+	}
+
+	const std::string toStringMemory(unsigned long bytes) {
+
+		std::stringstream ss;
+
+		const char prefix[] = {' ', 'K', 'M', 'G', 'T', 'P'};
+		unsigned long val = 1;
+		for (int i = 0; i < 6; i++) {
+			if(bytes < 1024*val) {
+				ss << round(100*(float)bytes/val)/100.0 << prefix[i] << 'B';
+				break;
+			}
+			val *= 1024;
+		}
+
+		const std::string str(ss.str());
+		return str;
 	}
 }
 
