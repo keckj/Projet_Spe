@@ -4,6 +4,7 @@
 
 #include <map>
 #include <string>
+#include <sstream>
 #include "grid.hpp" 
 
 template <typename T>
@@ -17,7 +18,9 @@ public:
 
 protected:
 	virtual void display(std::map<std::string, Grid<T> *> *grids) {};
-	virtual void writeData(std::map<std::string, Grid<T> *> *grids) {};
+
+	void writeData(std::map<std::string, Grid<T> *> *grids, unsigned int i,
+		const std::string &prefix, const std::string &suffix);
 
 	virtual bool stopCond() {return false;};
 };

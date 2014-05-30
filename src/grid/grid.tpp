@@ -193,6 +193,34 @@ void Grid<T>::save(const std::string &dst) {
 }
 
 template <typename T>
+void Grid<T>::exportData(const std::string &dst) {
+	std::ofstream file(dst, std::ios::out | std::ios::trunc);
+
+	if(!file.good()) {
+		log_console->errorStream() << "Failed to open file " << dst << " !";
+		file.close();
+		exit(EXIT_FAILURE);
+	}
+	
+	assert(this->_isAllocated);
+
+	for (unsigned int j = 0; j < this->height(); j++) {
+		for (unsigned int i = 0; i < this->width(); i++) {
+			file << "\t" << (*this)(i,j,0);
+		}
+		file << "\n";
+	}
+
+	if(!file.good()) {
+		log_console->errorStream() << "Failed to write file " << dst << " !";
+		file.close();
+		exit(EXIT_FAILURE);
+	}
+
+	file.close();
+}
+
+template <typename T>
 std::ostream & operator <<(std::ostream &out, const Grid<T> &grid) {
 	out << "Grid<T=" << typeid(T).name() << ">"
 		<< "\n\t Dim               : " << grid.dim() << "D"
@@ -205,3 +233,4 @@ std::ostream & operator <<(std::ostream &out, const Grid<T> &grid) {
 
 	return out;
 }
+		

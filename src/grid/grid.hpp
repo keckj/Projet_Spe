@@ -39,7 +39,8 @@ class Grid {
 		//ne copie pas le pointeur, il reste à NULL
 		virtual Grid<T> *clone() const = 0;
 
-		void save(const std::string &dst);
+		void save(const std::string &dst);		 //serialisation de la classe
+		void exportData(const std::string &dst); //format lisible (pour gnuplot)
 
 	protected:
 		explicit Grid();
