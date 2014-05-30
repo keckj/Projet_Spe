@@ -19,6 +19,8 @@ public:
 	T computeOptimalTimestep() override;
 
 private:
+	void subStep(T dt, unsigned long offset, unsigned long subworkSize);
+
 	T F(unsigned int i, unsigned int j, unsigned int k);
 	T G(unsigned int i, unsigned int j, unsigned int k);
 	T L(unsigned int i, unsigned int j, unsigned int k);

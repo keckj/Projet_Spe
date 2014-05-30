@@ -1,5 +1,8 @@
 
 #include <algorithm>
+#include <thread>
+#include <vector>
+
 using namespace utils;
 
 template <typename T>
@@ -25,19 +28,54 @@ std::map<std::string, Grid<T> *> *SimpleSystem<T>::step(T dt) {
 	Grid<T> *r = this->grids->at("r");
 	Grid<T> *old_e = this->grids_old->at("e");
 	Grid<T> *old_r = this->grids_old->at("r");
+	
+	unsigned int width = e->width();
+	unsigned int height = e->height();
+	unsigned int length = e->length();
 
-	for (unsigned int k = 0; k < e->length(); k++) {
-		for (unsigned int j = 0; j < e->height(); j++) {
-			for (unsigned int i = 0; i < e->width(); i++) {
-				(*e)(i,j,k) = (*old_e)(i,j,k) + dt * (L(i,j,k) + F(i,j,k)); 
-				(*r)(i,j,k) = (*old_r)(i,j,k) + dt * G(i,j,k); 
-			}
-		}
+	unsigned int nThread = 8;
+	unsigned long workSize = e->size();	
+
+	unsigned long subworkSize = workSize/nThread;
+	unsigned long lastWork = workSize%nThread;
+
+	std::list<std::thread> threads;
+	for (unsigned long i = 0; i < nThread; i++) {
+		threads.push_back(std::thread(&SimpleSystem<T>::subStep, this, dt, i*subworkSize, subworkSize));
+	}
+	
+	subStep(dt, nThread*subworkSize, lastWork);
+	
+	for (auto& it : threads) {
+		it.join();
 	}
 
 	std::swap(this->grids, this->grids_old);
 
 	return this->grids;
+}
+
+template <typename T>
+void SimpleSystem<T>::subStep(T dt, unsigned long offset, unsigned long subworkSize) {
+	Grid<T> *e = this->grids->at("e");
+	Grid<T> *r = this->grids->at("r");
+	Grid<T> *old_e = this->grids_old->at("e");
+	Grid<T> *old_r = this->grids_old->at("r");
+	
+	unsigned int width = e->width();
+	unsigned int height = e->height();
+	unsigned int length = e->length();
+	unsigned int i,j,k;
+
+	for (unsigned int o = 0; o < subworkSize; o++) {
+		k = (offset+o)/(width*height);
+		j = ((offset+o) % (width*height))/width;
+		i = (offset+o) % width;
+
+		(*e)(i,j,k) = (*old_e)(i,j,k) + dt * (L(i,j,k) + F(i,j,k)); 
+		(*r)(i,j,k) = (*old_r)(i,j,k) + dt * G(i,j,k); 
+	}
+
 }
 
 template <typename T>
