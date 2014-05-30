@@ -30,7 +30,7 @@ std::map<std::string, Grid<T> *> *SimpleSystem<T>::step(T dt) {
 		for (unsigned int j = 0; j < e->height(); j++) {
 			for (unsigned int i = 0; i < e->width(); i++) {
 				(*e)(i,j,k) = (*old_e)(i,j,k) + dt * (L(i,j,k) + F(i,j,k)); 
-				(*e)(i,j,k) = (*old_r)(i,j,k) + dt * G(i,j,k); 
+				(*r)(i,j,k) = (*old_r)(i,j,k) + dt * G(i,j,k); 
 			}
 		}
 	}
@@ -60,7 +60,7 @@ T SimpleSystem<T>::F(unsigned int i, unsigned int j, unsigned int k) {
 	T E_ijk = (*e)(i,j,k);
 	T R_ijk = (*r)(i,j,k);
 
-	return _k*E_ijk*(E_ijk - _alpha_1)*(E_ijk - 1) - E_ijk*R_ijk;
+	return -_k*E_ijk*(E_ijk - _alpha_1)*(E_ijk - 1) - E_ijk*R_ijk;
 }
 
 template <typename T>
@@ -83,12 +83,12 @@ T SimpleSystem<T>::L(unsigned int i, unsigned int j, unsigned int k) {
 
 	T E_ijk = (*e)(i,j,k);
 	T E_left = (*e)(i == 0 ? 0 : i - 1, j, k);
-	T E_right = (*e)(i == e->width() - 1 ? e->width() - 1 : i + 1, j, k);
+	T E_right = (*e)(i == e->width()-1 ? e->width()-1 : i + 1, j, k);
 	T E_up = (*e)(i, j == 0 ? 0 : j - 1, k);
-	T E_down = (*e)(i, j == e->height() - 1 ? e->height() - 1 : j + 1, k);
-	T E_front = (*e)(i, j, k == 0 ? 0 : k - 1);
-	T E_back = (*e)(i, j, k == e->length() - 1 ? e->length() - 1 : k + 1);
+	T E_down = (*e)(i, j == e->height()-1 ? e->height()-1 : j + 1, k);
+	//T E_front = (*e)(i, j, k == 0 ? 0 : k - 1);
+	//T E_back = (*e)(i, j, k == e->length() - 1 ? e->length() - 1 : k + 1);
 
-	return _d/SQUARE(dh) * (E_left + E_right + E_up + E_down + E_front + E_back - 6*E_ijk);
+	return _d/(dh*dh) * (E_left + E_right + E_up + E_down - 4*E_ijk);
 }
 

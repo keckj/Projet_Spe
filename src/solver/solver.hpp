@@ -13,8 +13,8 @@ public:
 	Solver();
 	virtual ~Solver();
 
-	void solve(System<T> &system, unsigned int maxSteps);
-	void solve(System<T> &system, T maxTime);
+	unsigned int solve(System<T> &system, unsigned int maxSteps);
+	unsigned int solve(System<T> &system, T maxTime);
 
 protected:
 	virtual void display(std::map<std::string, Grid<T> *> *grids) {};

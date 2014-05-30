@@ -16,7 +16,7 @@ Solver<T>::~Solver() {
 }
 
 template <typename T>
-void Solver<T>::solve(System<T> &system, unsigned int maxSteps) {
+unsigned int Solver<T>::solve(System<T> &system, unsigned int maxSteps) {
 	std::map<std::string, Grid<T> *> *res;
 
 	T dt = system.computeOptimalTimestep();
@@ -32,14 +32,15 @@ void Solver<T>::solve(System<T> &system, unsigned int maxSteps) {
 			log_console->infoStream() << "\t" << 100*i/maxSteps << "%\t(it " << i << "/" << maxSteps << ")";
 
 		if(stopCond())
-			break;
+			return i+1;
 	}
 			
 	log_console->infoStream() << "\t" << 100 << "%\t(it " << maxSteps << "/" << maxSteps << ")";
+	return maxSteps;
 }
 	
 template <typename T>
-void Solver<T>::solve(System<T> &system, T maxTime) {
+unsigned int Solver<T>::solve(System<T> &system, T maxTime) {
 	std::map<std::string, Grid<T> *> *res;
 	log_console->infoStream() << ":::: Solving system ::::";
 
@@ -58,11 +59,13 @@ void Solver<T>::solve(System<T> &system, T maxTime) {
 			log_console->infoStream() << "\t" << 100.0*t/maxTime << "%\t(t=" << t << "/" << maxTime << ")";
 
 		if(stopCond())
-			break;
+			return i+1;
+		
 		i++;
 	}
 	
 	log_console->infoStream() << "\t" << 100 <<  "%\t(t=" << maxTime/dt*dt << "/" << maxTime << ")";
+	return maxSteps;
 }
 	
 template <typename T>
