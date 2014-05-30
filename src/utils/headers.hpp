@@ -35,12 +35,16 @@
 #include <QKeyEvent>
 #include <QMenuBar>
 #include <QStatusBar>
+#include <QProgressBar>
 #include <QLabel>
 #include <QBoxLayout>
 #include <QHBoxLayout>
 #include <QCheckBox>
 #include <QComboBox>
+#include <QGroupBox>
+#include <QPushButton>
 #include <QSlider>
+#include <QSpinBox>
 #include <QGraphicsView>
 #include <QGLWidget>
 #include <QGLFormat>

@@ -3,6 +3,9 @@
 #include <cfloat>
 #include "mainWindow.hpp"
 #include "mainWindow.moc"
+#include "menuBar.hpp"
+#include "statusBar.hpp"
+#include "sidePanel.hpp"
 #include "graphicsViewer.hpp"
 #include "openGLScene.hpp"
 #include "grid2D.hpp"
@@ -17,22 +20,23 @@ MainWindow::MainWindow() {
     // Grids
     m_stored_grids = new std::vector<Grid2D<float>>();
     m_min_val = FLT_MAX; m_max_val = -FLT_MAX;
+    m_total_steps = 1; // set by the user later, this value should not be used
 
     // QT GUI
     QDesktopWidget widget;
     QRect mainScreenSize = widget.availableGeometry(widget.primaryScreen());
 
-    this->setWindowTitle("Ma premiere application QT :D");
+    this->setWindowTitle("Electrophysiological models simulator");
     this->resize(mainScreenSize.width()/2,mainScreenSize.height()/2);
     this->setStyleSheet("QMainWindow { background-color: white; }");
     this->setAutoFillBackground(true);
 
-    /*menuBar = new MenuBar(this);
-      this->setMenuBar(menuBar);
+    MenuBar *menu = new MenuBar(this);
+    this->setMenuBar(menu);
 
-      statusBar = new StatusBar(this);
-      this->setStatusBar(statusBar);
-      */
+    StatusBar *status = new StatusBar(this);
+    this->setStatusBar(status);
+
     QSplitter *splitter = new QSplitter(Qt::Horizontal, this);
 
     QGLWidget *qglwidget =  new QGLWidget(QGLFormat(QGL::SampleBuffers));
@@ -44,21 +48,21 @@ MainWindow::MainWindow() {
     OpenGLScene *scene = new OpenGLScene();
     viewer->setScene(scene);
 
-    /*sidePanel = new SidePanel(slider);
+    SidePanel *panel = new SidePanel(this);
+    /*
+       connect(sidePanel, SIGNAL(draw()), viewer, SLOT(draw()));
 
-      connect(sidePanel, SIGNAL(draw()), viewer, SLOT(draw()));
-
-      connect(viewer, SIGNAL(childKeyEvent(QKeyEvent *)), this, SLOT(childKeyEvent(QKeyEvent *)));
-      */
+       connect(viewer, SIGNAL(childKeyEvent(QKeyEvent *)), this, SLOT(childKeyEvent(QKeyEvent *)));
+       */
     connect(this, SIGNAL(textureUpdate(GLuint)), scene, SLOT(textureUpdate(GLuint)));
+    connect(this, SIGNAL(progressUpdate(int)), status, SLOT(progressUpdate(int)));
 
     splitter->addWidget(viewer);
-    //splitter->addWidget(sidePanel);
-    splitter->setStretchFactor(0,6);
-    splitter->setStretchFactor(1,3);
+    splitter->addWidget(panel);
+    splitter->setStretchFactor(0,1);
+    splitter->setStretchFactor(1,0);
 
     this->setCentralWidget(splitter);
-    //this->setCentralWidget(viewer);
     this->show();
 
     //hack
@@ -70,7 +74,6 @@ MainWindow::~MainWindow() {
 }
 
 void MainWindow::updateGrid(const Grid2D<float> &grid) {
-    std::cout << grid << std::endl;
     // Add grid to the list of stored grids
     m_stored_grids->push_back((Grid2D<float>) grid); 
 
@@ -104,7 +107,32 @@ void MainWindow::updateGrid(const Grid2D<float> &grid) {
 
     // Tell the scene to change the texture it's using
     emit textureUpdate(texture);
+
+    // Update progress bar
+    emit progressUpdate((float) m_stored_grids->size() / m_total_steps * 100);
 }
+
+void MainWindow::changeModel(int model) {
+}
+
+void MainWindow::changeNbIter(int nb) {
+}
+
+void MainWindow::startComputing() {
+}
+
+void MainWindow::pauseComputing() {
+}
+
+void MainWindow::stopComputing() {
+}
+
+void MainWindow::changeAutoRendering(int checkboxState) {
+}
+
+void MainWindow::changeDisplayedGrid(int n) {
+}
+
 
 void MainWindow::keyPressEvent(QKeyEvent *k) {
 
