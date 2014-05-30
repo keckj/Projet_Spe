@@ -33,12 +33,12 @@ int main(int argc, char** argv) {
     glutInit(&argc, argv);
 	log_console->infoStream() << "[Qt Init] ";
 	QApplication application(argc,argv);
-    MainWindow win;
-    win.show();
 
 	log_console->infoStream() << "[Glew Init] " << glewGetErrorString(glewInit());
 	log_console->infoStream()<< "";
 
+    MainWindow win;
+    win.show();
     
     return application.exec();
 

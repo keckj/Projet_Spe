@@ -44,6 +44,7 @@
 #include <QGraphicsView>
 #include <QGLWidget>
 #include <QGLFormat>
+#include <QGLContext>
 #include <QGraphicsScene>
 #include <QPainter>
 #include <QPaintEngine>
