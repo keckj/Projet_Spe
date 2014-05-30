@@ -78,22 +78,24 @@ while (t<T)
   E_prec = E;
 
   if(modulo(i,10)==0)
-    if(k<10) then
-      fprintfMat("Model2D/E_0000" + string(k) + ".dat", matrix(E,nx,ny), "%5.2f");
-      fprintfMat("Model2D/R_0000" + string(k) + ".dat", matrix(R,nx,ny), "%5.2f");
-    elseif (k<100) then 
-      fprintfMat("Model2D/E_000" + string(k) + ".dat", matrix(E,nx,ny), "%5.2f");
-      fprintfMat("Model2D/R_000" + string(k) + ".dat", matrix(R,nx,ny), "%5.2f");
-    elseif (k<1000) then 
-      fprintfMat("Model2D/E_00" + string(k) + ".dat", matrix(E,nx,ny), "%5.2f");
-      fprintfMat("Model2D/R_00" + string(k) + ".dat", matrix(R,nx,ny), "%5.2f");
-    elseif (k<10000) then 
-      fprintfMat("Model2D/E_0" + string(k) + ".dat", matrix(E,nx,ny), "%5.2f");
-      fprintfMat("Model2D/R_0" + string(k) + ".dat", matrix(R,nx,ny), "%5.2f");
-    else 
-      fprintfMat("Model2D/E_" + string(k) + ".dat", matrix(E,nx,ny), "%5.2f");
-      fprintfMat("Model2D/R_" + string(k) + ".dat", matrix(R,nx,ny), "%5.2f");
-    end
+     fprintfMat("Model2D/E_" + string(k) + ".dat", matrix(E,nx,ny), "%5.2f");
+     fprintfMat("Model2D/R_" + string(k) + ".dat", matrix(R,nx,ny), "%5.2f");
+    //if(k<10) then
+      //fprintfMat("Model2D/E_0000" + string(k) + ".dat", matrix(E,nx,ny), "%5.2f");
+      //fprintfMat("Model2D/R_0000" + string(k) + ".dat", matrix(R,nx,ny), "%5.2f");
+    //elseif (k<100) then 
+      //fprintfMat("Model2D/E_000" + string(k) + ".dat", matrix(E,nx,ny), "%5.2f");
+      //fprintfMat("Model2D/R_000" + string(k) + ".dat", matrix(R,nx,ny), "%5.2f");
+    //elseif (k<1000) then 
+      //fprintfMat("Model2D/E_00" + string(k) + ".dat", matrix(E,nx,ny), "%5.2f");
+      //fprintfMat("Model2D/R_00" + string(k) + ".dat", matrix(R,nx,ny), "%5.2f");
+    //elseif (k<10000) then 
+      //fprintfMat("Model2D/E_0" + string(k) + ".dat", matrix(E,nx,ny), "%5.2f");
+      //fprintfMat("Model2D/R_0" + string(k) + ".dat", matrix(R,nx,ny), "%5.2f");
+    //else 
+      //fprintfMat("Model2D/E_" + string(k) + ".dat", matrix(E,nx,ny), "%5.2f");
+      //fprintfMat("Model2D/R_" + string(k) + ".dat", matrix(R,nx,ny), "%5.2f");
+    //end
     k = k + 1;
   end
 

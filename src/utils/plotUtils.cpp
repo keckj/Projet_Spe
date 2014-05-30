@@ -19,7 +19,12 @@ namespace utils {
 			bool generateGif,  const std::string &gif_dst) {
 
 		std::ofstream file(dst, std::ios::out | std::ios::trunc);
-	
+		
+		if(!file.good()) {
+			log_console->errorStream() << "Failed to open file " << dst << " !";
+			file.close();
+			exit(EXIT_FAILURE);
+		}
 
 		file << "#" << dst << "\n";
 		file << "reset\n";
@@ -29,7 +34,6 @@ namespace utils {
 		if(generateGif) {
 			file << "set term gif animate\n";
 			file << "set output '" << gif_dst << "'\n";
-
 		}
 		else {
 			file << "do for [i=1:2] {\n\t";
@@ -38,7 +42,6 @@ namespace utils {
 		file << "do for [i=" << minPlotId << ":" << maxPlotId << "] {\n";
 		if(!generateGif) file << "\t";
 		file << "\tplot '" << prefix  << gridName << "'.i.'" << suffix << "' matrix with image;\n";
-
 		if(!generateGif) file << "\t\tpause " << dt << ";\n";
 		if(!generateGif) file << "\t}\n";
 

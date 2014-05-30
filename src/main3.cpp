@@ -1,4 +1,5 @@
 
+
 #include "defines.hpp"
 #include "utils.hpp"
 
@@ -14,7 +15,7 @@
 #include <iostream>
 #include <map>
 
-#if _N_MAIN == 1
+#if _N_MAIN == 3
 
 int main(int argc, char** argv) {
 	log4cpp::initLogs();
@@ -35,21 +36,15 @@ int main(int argc, char** argv) {
 		}
 	}
 
-	std::map<std::string, Grid<float> *> map;
-	map["e"] = &e;
-	map["r"] = &r;
-
 	float alpha1=0.2f, alpha2=0.1f;
 	float mu1=0.07, mu2=0.3;
 	float k=8.0f, epsilon=0.01, d=5e-5;
-	SimpleSystem<float> system(&map, epsilon, k, d, mu1, mu2, alpha1, alpha2);
-	Solver<float> solver;
 
-	unsigned int nIterations = solver.solve(system, 150.0f);
 
-	makeGnuPlotScript("data/e.plot", "data/prefix_", "e", "_suffix.dat",0,nIterations,0,width,0,height,0.1,true,"data/e.gif");
-	execGnuPlotScript("data/e.plot");
-	showGif("data/e.gif");
+
+	//makeGnuPlotScript("data/e.plot", "data/prefix_", "e", "_suffix.dat",0,nIterations,0,width,0,height,0.1,true,"data/e.gif");
+	//execGnuPlotScript("data/e.plot");
+	//showGif("data/e.gif");
 
 	exit(EXIT_SUCCESS);
 }
