@@ -36,7 +36,9 @@ int main(int argc, char** argv) {
 
 	log_console->infoStream() << "[Glew Init] " << glewGetErrorString(glewInit());
 	log_console->infoStream()<< "";
-
+    
+    //qRegisterMetaType< Grid2D<float> >("Grid2D<float>");
+    //qRegisterMetaType< Grid3D<float> >("Grid3D<float>");
     MainWindow win;
     win.show();
     

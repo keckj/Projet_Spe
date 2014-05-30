@@ -4,7 +4,6 @@
 #include "headers.hpp"
 #include <vector>
 #include "grid2D.hpp"
-#include "computeThread.hpp"
 
 class MainWindow : public QMainWindow {
 	Q_OBJECT
@@ -18,7 +17,7 @@ class MainWindow : public QMainWindow {
         void progressUpdate(int p);
 
     public slots:
-        void updateGrid(const Grid2D<float> &grid);
+        void updateGrid(const Grid2D<float> *grid);
         void changeModel(int model);
         void changeNbIter(int nb);
         void startComputing();
@@ -30,7 +29,7 @@ class MainWindow : public QMainWindow {
 	private:
 		void keyPressEvent(QKeyEvent *k);
 
-        ComputeThread *m_thread;
+        QThread *m_thread;
         std::vector<Grid2D<float>> *m_stored_grids;
         float m_min_val, m_max_val;
         int m_selected_model;
