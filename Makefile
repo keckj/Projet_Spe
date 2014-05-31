@@ -102,7 +102,7 @@ CC=gcc
 CFLAGS= -W -Wall -Wextra -pedantic -std=c99 -m64
 
 CXX=g++
-CXXFLAGS= -W -Wall -Wextra -Wshadow -Wstrict-aliasing -Werror -pedantic -std=c++0x -m64  -Wno-unused-parameter -Wno-comment -Wno-unused-variable #-Weffc++
+CXXFLAGS= -W -Wall -Wextra -Wshadow -Wstrict-aliasing -Werror -pedantic -std=c++0x -m64  -Wno-unused-parameter -Wno-comment -Wno-unused-variable -Wno-unused-result#-Weffc++
 
 #preprocesseur QT
 MOC=moc

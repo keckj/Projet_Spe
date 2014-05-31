@@ -53,7 +53,12 @@ Grid2D<T>::Grid2D(const std::string &src) :
 	
 	if(this->_isAllocated) {
 		this->_data = new T[this->size()];
+		this->_isOwner = true;
 		file.read((char*) this->_data, this->bytes());
+	}
+	else {
+		this->_data = 0;
+		this->_isOwner = false;
 	}
 	
 	file.close();
@@ -61,63 +66,52 @@ Grid2D<T>::Grid2D(const std::string &src) :
 
 //ne copie pas les données, pointeur NULL
 template <typename T>
-Grid2D<T>::Grid2D(const Grid2D<T> &grid) :
-	Grid<T>(grid)
+Grid2D<T>::Grid2D(const Grid2D<T> &grid, bool copyPointer) :
+	Grid<T>(grid, copyPointer)
 {
 }
 		
-//ne copie pas les données, pointeur NULL
-template <typename T>
-Grid2D<T> *Grid2D<T>::clone() const {
-	Grid2D<T> *grid = new Grid2D<T>(*this);
-	return grid;
-}
-
 
 template <typename T>
 Grid2D<T>::Grid2D(T realWidth_, T realHeight_,
 		unsigned int width_, unsigned int height_,
-		bool allocate) :
+		bool allocate_) :
 	Grid<T>(realWidth_, realHeight_, realWidth_/width_,
-			width_, height_, 1u,
-			2u, allocate)
+			width_, height_, 1u, 2u)
 {
 	assert(realWidth_ > 0.0);
 	assert(realHeight_ > 0.0);
 	assert(width_ > 0u);
 	assert(height_ > 0u);
 
-	if(allocate)
-		allocateOnCpu();
+	if(allocate_)
+		this->allocate();
 }
 
 template <typename T>
 Grid2D<T>::Grid2D(T realWidth_, T realHeight_, 
-		T dh_, bool allocate) : 
+		T dh_, bool allocate_) : 
 	Grid<T>(realWidth_, realHeight_, dh_,
-			dh_,
-			2u, allocate)
+			dh_, 2u)
 {
 	assert(realWidth_ > 0.0);
 	assert(realHeight_ > 0.0);
 	assert(dh_ > 0.0);
-	if(allocate)
-		allocateOnCpu();
+	if(allocate_)
+		this->allocate();
 }
 
 template <typename T>
 Grid2D<T>::Grid2D(unsigned int width_, unsigned int height_,
-		T dh_,
-		bool allocate) :
+		T dh_, bool allocate_) :
 	Grid<T>(width_, height_, 1u,
-			dh_,
-			2u, allocate)
+			dh_, 2u)
 {
 	assert(width_ > 0u);
 	assert(height_ > 0u);
 	assert(dh_ > 0.0);
-	if(allocate)
-		allocateOnCpu();
+	if(allocate_)
+		this->allocate();
 }
 
 template <typename T>
@@ -133,30 +127,3 @@ template <typename T>
 T& Grid2D<T>::operator()(unsigned int i, unsigned int j) {
 	return this->_data[j*this->_width+i];
 } 
-
-template <typename T>
-unsigned long Grid2D<T>::size() const {
-	return this->_width*this->_height;
-}
-
-template <typename T>
-unsigned long Grid2D<T>::bytes() const {
-	return this->_width*this->_height*sizeof(T);
-}
-
-template <typename T>
-void Grid2D<T>::allocateOnCpu() {
-	if(!this->_isAllocated) {
-		this->_data = new T[this->_width*this->_height];
-
-		if(this->_data == 0) {
-			log_console->errorStream() << "Failed to allocate 2D grid !";
-			exit(EXIT_FAILURE);
-		}
-
-		this->_isAllocated = true;
-	}
-	else {
-		log_console->warnStream() << "Trying to allocate an already allocated 2D grid !";
-	}
-}

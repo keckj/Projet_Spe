@@ -8,7 +8,7 @@ template <typename T>
 class SimpleSystem : public System<T> {
 
 public:
-	SimpleSystem(std::map<std::string, Grid<T> *> *initialCond,
+	SimpleSystem(const std::map<std::string, Grid<T> *> initialCond,
 			T epsilon_, T k_, T d_,
 			T mu_1_, T mu_2_,
 			T alpha_1_, T alpha_2_);

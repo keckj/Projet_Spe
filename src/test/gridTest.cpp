@@ -1,6 +1,7 @@
 
 
 #include "headers.hpp"
+#include "grid.hpp"
 #include "grid1D.hpp"
 #include "grid2D.hpp"
 #include "grid3D.hpp"
@@ -60,11 +61,11 @@ int main(int argc, char** argv) {
 				assert(!grids[i]->isAllocated());
 				assert(grids[i]->data() == 0);
 
-				grids[i]->allocateOnCpu();
+				grids[i]->allocate();
 				assert(grids[i]->isAllocated());
 				assert(grids[i]->data() != 0);
 
-				grids[i]->freeOnCpu();
+				grids[i]->free();
 				assert(!grids[i]->isAllocated());
 				assert(grids[i]->data() == 0);
 			}
@@ -72,7 +73,7 @@ int main(int argc, char** argv) {
 				assert(grids[i]->isAllocated());
 				assert(grids[i]->data() != 0);
 
-				grids[i]->freeOnCpu();
+				grids[i]->free();
 				assert(!grids[i]->isAllocated());
 				assert(grids[i]->data() == 0);
 			}
@@ -117,11 +118,11 @@ int main(int argc, char** argv) {
 				assert(!grids[i]->isAllocated());
 				assert(grids[i]->data() == 0);
 
-				grids[i]->allocateOnCpu();
+				grids[i]->allocate();
 				assert(grids[i]->isAllocated());
 				assert(grids[i]->data() != 0);
 
-				grids[i]->freeOnCpu();
+				grids[i]->free();
 				assert(!grids[i]->isAllocated());
 				assert(grids[i]->data() == 0);
 			}
@@ -129,7 +130,7 @@ int main(int argc, char** argv) {
 				assert(grids[i]->isAllocated());
 				assert(grids[i]->data() != 0);
 
-				grids[i]->freeOnCpu();
+				grids[i]->free();
 				assert(!grids[i]->isAllocated());
 				assert(grids[i]->data() == 0);
 			}
@@ -174,11 +175,11 @@ int main(int argc, char** argv) {
 				assert(!grids[i]->isAllocated());
 				assert(grids[i]->data() == 0);
 
-				grids[i]->allocateOnCpu();
+				grids[i]->allocate();
 				assert(grids[i]->isAllocated());
 				assert(grids[i]->data() != 0);
 
-				grids[i]->freeOnCpu();
+				grids[i]->free();
 				assert(!grids[i]->isAllocated());
 				assert(grids[i]->data() == 0);
 			}
@@ -186,7 +187,7 @@ int main(int argc, char** argv) {
 				assert(grids[i]->isAllocated());
 				assert(grids[i]->data() != 0);
 
-				grids[i]->freeOnCpu();
+				grids[i]->free();
 				assert(!grids[i]->isAllocated());
 				assert(grids[i]->data() == 0);
 			}
@@ -231,11 +232,11 @@ int main(int argc, char** argv) {
 				assert(!grids[i]->isAllocated());
 				assert(grids[i]->data() == 0);
 
-				grids[i]->allocateOnCpu();
+				grids[i]->allocate();
 				assert(grids[i]->isAllocated());
 				assert(grids[i]->data() != 0);
 
-				grids[i]->freeOnCpu();
+				grids[i]->free();
 				assert(!grids[i]->isAllocated());
 				assert(grids[i]->data() == 0);
 			}
@@ -243,7 +244,7 @@ int main(int argc, char** argv) {
 				assert(grids[i]->isAllocated());
 				assert(grids[i]->data() != 0);
 
-				grids[i]->freeOnCpu();
+				grids[i]->free();
 				assert(!grids[i]->isAllocated());
 				assert(grids[i]->data() == 0);
 			}
@@ -288,11 +289,11 @@ int main(int argc, char** argv) {
 				assert(!grids[i]->isAllocated());
 				assert(grids[i]->data() == 0);
 
-				grids[i]->allocateOnCpu();
+				grids[i]->allocate();
 				assert(grids[i]->isAllocated());
 				assert(grids[i]->data() != 0);
 
-				grids[i]->freeOnCpu();
+				grids[i]->free();
 				assert(!grids[i]->isAllocated());
 				assert(grids[i]->data() == 0);
 			}
@@ -300,7 +301,7 @@ int main(int argc, char** argv) {
 				assert(grids[i]->isAllocated());
 				assert(grids[i]->data() != 0);
 
-				grids[i]->freeOnCpu();
+				grids[i]->free();
 				assert(!grids[i]->isAllocated());
 				assert(grids[i]->data() == 0);
 			}
@@ -345,11 +346,11 @@ int main(int argc, char** argv) {
 				assert(!grids[i]->isAllocated());
 				assert(grids[i]->data() == 0);
 
-				grids[i]->allocateOnCpu();
+				grids[i]->allocate();
 				assert(grids[i]->isAllocated());
 				assert(grids[i]->data() != 0);
 
-				grids[i]->freeOnCpu();
+				grids[i]->free();
 				assert(!grids[i]->isAllocated());
 				assert(grids[i]->data() == 0);
 			}
@@ -357,7 +358,7 @@ int main(int argc, char** argv) {
 				assert(grids[i]->isAllocated());
 				assert(grids[i]->data() != 0);
 
-				grids[i]->freeOnCpu();
+				grids[i]->free();
 				assert(!grids[i]->isAllocated());
 				assert(grids[i]->data() == 0);
 			}
@@ -367,8 +368,8 @@ int main(int argc, char** argv) {
 	std::cout << "\n== 1D FLOAT GRID SERIALIZATION ==" << std::endl;
 	{
 		Grid1D<float> fg1(1.0f,10u, false);
-		fg1.save("data/save.raw");
-		Grid1D<float> fg2("data/save.raw");
+		fg1.exportGrid("data/exportGrid.raw");
+		Grid1D<float> fg2("data/exportGrid.raw");
 		assert(fg1.width() == fg2.width());
 		assert(fg1.height() == fg2.height());
 		assert(fg1.length() == fg2.length());
@@ -382,8 +383,8 @@ int main(int argc, char** argv) {
 
 		Grid1D<float> fg3(1.0f,10u, true);
 		for(unsigned int i = 0; i < fg3.size(); i++) fg3[i] = i;
-		fg3.save("data/save.raw");
-		Grid1D<float> fg4("data/save.raw");
+		fg3.exportGrid("data/exportGrid.raw");
+		Grid1D<float> fg4("data/exportGrid.raw");
 		assert(fg3.width() == fg4.width());
 		assert(fg3.height() == fg4.height());
 		assert(fg3.length() == fg4.length());
@@ -400,8 +401,8 @@ int main(int argc, char** argv) {
 	std::cout << "\n== 2D FLOAT GRID SERIALIZATION ==" << std::endl;
 	{
 		Grid2D<float> fg1(1.0f,2.0f,10u,20u,false);
-		fg1.save("data/save.raw");
-		Grid2D<float> fg2("data/save.raw");
+		fg1.exportGrid("data/exportGrid.raw");
+		Grid2D<float> fg2("data/exportGrid.raw");
 		assert(fg1.width() == fg2.width());
 		assert(fg1.height() == fg2.height());
 		assert(fg1.length() == fg2.length());
@@ -415,8 +416,8 @@ int main(int argc, char** argv) {
 
 		Grid2D<float> fg3(1.0f,2.0f,10u,20u,true);
 		for(unsigned int i = 0; i < fg3.size(); i++) fg3[i] = i;
-		fg3.save("data/save.raw");
-		Grid2D<float> fg4("data/save.raw");
+		fg3.exportGrid("data/exportGrid.raw");
+		Grid2D<float> fg4("data/exportGrid.raw");
 		assert(fg3.width() == fg4.width());
 		assert(fg3.height() == fg4.height());
 		assert(fg3.length() == fg4.length());
@@ -433,8 +434,8 @@ int main(int argc, char** argv) {
 	std::cout << "\n== 3D FLOAT GRID SERIALIZATION ==" << std::endl;
 	{
 		Grid3D<float> fg1(1.0f,2.0f,3.0f,10u,20u,30u,false);
-		fg1.save("data/save.raw");
-		Grid3D<float> fg2("data/save.raw");
+		fg1.exportGrid("data/exportGrid.raw");
+		Grid3D<float> fg2("data/exportGrid.raw");
 		assert(fg1.width() == fg2.width());
 		assert(fg1.height() == fg2.height());
 		assert(fg1.length() == fg2.length());
@@ -448,8 +449,8 @@ int main(int argc, char** argv) {
 
 		Grid3D<float> fg3(1.0f,2.0f,3.0f,10u,20u,30u,true);
 		for(unsigned int i = 0; i < fg3.size(); i++) fg3[i] = i;
-		fg3.save("data/save.raw");
-		Grid3D<float> fg4("data/save.raw");
+		fg3.exportGrid("data/exportGrid.raw");
+		Grid3D<float> fg4("data/exportGrid.raw");
 		assert(fg3.width() == fg4.width());
 		assert(fg3.height() == fg4.height());
 		assert(fg3.length() == fg4.length());
@@ -466,8 +467,8 @@ int main(int argc, char** argv) {
 	std::cout << "\n== 1D DOUBLE GRID SERIALIZATION ==" << std::endl;
 	{
 		Grid1D<double> fg1(1.0,10u, false);
-		fg1.save("data/save.raw");
-		Grid1D<double> fg2("data/save.raw");
+		fg1.exportGrid("data/exportGrid.raw");
+		Grid1D<double> fg2("data/exportGrid.raw");
 		assert(fg1.width() == fg2.width());
 		assert(fg1.height() == fg2.height());
 		assert(fg1.length() == fg2.length());
@@ -481,8 +482,8 @@ int main(int argc, char** argv) {
 
 		Grid1D<double> fg3(1.0,10u, true);
 		for(unsigned int i = 0; i < fg3.size(); i++) fg3[i] = i;
-		fg3.save("data/save.raw");
-		Grid1D<double> fg4("data/save.raw");
+		fg3.exportGrid("data/exportGrid.raw");
+		Grid1D<double> fg4("data/exportGrid.raw");
 		assert(fg3.width() == fg4.width());
 		assert(fg3.height() == fg4.height());
 		assert(fg3.length() == fg4.length());
@@ -499,8 +500,8 @@ int main(int argc, char** argv) {
 	std::cout << "\n== 2D DOUBLE GRID SERIALIZATION ==" << std::endl;
 	{
 		Grid2D<double> fg1(1.0,2.0,10u,20u,false);
-		fg1.save("data/save.raw");
-		Grid2D<double> fg2("data/save.raw");
+		fg1.exportGrid("data/exportGrid.raw");
+		Grid2D<double> fg2("data/exportGrid.raw");
 		assert(fg1.width() == fg2.width());
 		assert(fg1.height() == fg2.height());
 		assert(fg1.length() == fg2.length());
@@ -514,8 +515,8 @@ int main(int argc, char** argv) {
 
 		Grid2D<double> fg3(1.0,2.0,10u,20u,true);
 		for(unsigned int i = 0; i < fg3.size(); i++) fg3[i] = i;
-		fg3.save("data/save.raw");
-		Grid2D<double> fg4("data/save.raw");
+		fg3.exportGrid("data/exportGrid.raw");
+		Grid2D<double> fg4("data/exportGrid.raw");
 		assert(fg3.width() == fg4.width());
 		assert(fg3.height() == fg4.height());
 		assert(fg3.length() == fg4.length());
@@ -532,8 +533,8 @@ int main(int argc, char** argv) {
 	std::cout << "\n== 3D DOUBLE GRID SERIALIZATION ==" << std::endl;
 	{
 		Grid3D<double> fg1(1.0,2.0,3.0,10u,20u,30u,false);
-		fg1.save("data/save.raw");
-		Grid3D<double> fg2("data/save.raw");
+		fg1.exportGrid("data/exportGrid.raw");
+		Grid3D<double> fg2("data/exportGrid.raw");
 		assert(fg1.width() == fg2.width());
 		assert(fg1.height() == fg2.height());
 		assert(fg1.length() == fg2.length());
@@ -547,8 +548,8 @@ int main(int argc, char** argv) {
 
 		Grid3D<double> fg3(1.0,2.0,3.0,10u,20u,30u,true);
 		for(unsigned int i = 0; i < fg3.size(); i++) fg3[i] = i;
-		fg3.save("data/save.raw");
-		Grid3D<double> fg4("data/save.raw");
+		fg3.exportGrid("data/exportGrid.raw");
+		Grid3D<double> fg4("data/exportGrid.raw");
 		assert(fg3.width() == fg4.width());
 		assert(fg3.height() == fg4.height());
 		assert(fg3.length() == fg4.length());
@@ -560,6 +561,181 @@ int main(int argc, char** argv) {
 		assert(fg3.isAllocated() == fg4.isAllocated());
 		for (unsigned int i = 0; i < fg3.size(); i++) assert(fg3[i]==fg4[i]);
 		std::cout << "With data : ok" << std::endl;
+	}
+	
+	std::cout << "\n== RANDOM FLOAT GRID SERIALIZATION ==" << std::endl;
+	{
+		std::vector<Grid<float> * > fgrids;
+		fgrids.push_back(new Grid1D<float>(1.0,10u,true));
+		fgrids.push_back(new Grid2D<float>(1.0,2.0,10u,20u,true));
+		fgrids.push_back(new Grid3D<float>(1.0,2.0,3.0,10u,20u,30u,true));
+		fgrids.push_back(new Grid1D<float>(1.0,10u,false));
+		fgrids.push_back(new Grid2D<float>(1.0,2.0,10u,20u,false));
+		fgrids.push_back(new Grid3D<float>(1.0,2.0,3.0,10u,20u,30u,false));
+		
+		for (Grid<float> *g : fgrids) {
+			g->exportGrid("data/exportGrid.raw");
+			Grid<float> g2("data/exportGrid.raw");
+			assert(g->width() == g2.width());
+			assert(g->height() == g2.height());
+			assert(g->length() == g2.length());
+			assert(areEqual<float>(g->realWidth(), g2.realWidth()));
+			assert(areEqual<float>(g->realHeight(), g2.realHeight()));
+			assert(areEqual<float>(g->realLength(), g2.realLength()));
+			assert(areEqual<float>(g->dh(), g2.dh()));
+			assert(g->dim() == g2.dim());
+			assert(g->isAllocated() == g2.isAllocated());
+		}
+		std::cout << "ok" << std::endl;
+	}
+	
+	std::cout << "\n== RANDOM DOUBLE GRID SERIALIZATION ==" << std::endl;
+	{
+		std::vector<Grid<double> * > fgrids;
+		fgrids.push_back(new Grid1D<double>(1.0,10u,true));
+		fgrids.push_back(new Grid2D<double>(1.0,2.0,10u,20u,true));
+		fgrids.push_back(new Grid3D<double>(1.0,2.0,3.0,10u,20u,30u,true));
+		fgrids.push_back(new Grid1D<double>(1.0,10u,false));
+		fgrids.push_back(new Grid2D<double>(1.0,2.0,10u,20u,false));
+		fgrids.push_back(new Grid3D<double>(1.0,2.0,3.0,10u,20u,30u,false));
+		
+		for (Grid<double> *g : fgrids) {
+			g->exportGrid("data/exportGrid.raw");
+			Grid<double> g2("data/exportGrid.raw");
+			assert(g->width() == g2.width());
+			assert(g->height() == g2.height());
+			assert(g->length() == g2.length());
+			assert(areEqual<double>(g->realWidth(), g2.realWidth()));
+			assert(areEqual<double>(g->realHeight(), g2.realHeight()));
+			assert(areEqual<double>(g->realLength(), g2.realLength()));
+			assert(areEqual<double>(g->dh(), g2.dh()));
+			assert(g->dim() == g2.dim());
+			assert(g->isAllocated() == g2.isAllocated());
+		}
+		std::cout << "ok" << std::endl;
+	}
+	
+	std::cout << "\n== GRID DATA OWNERSHIP ==" << std::endl;
+	{
+		Grid3D<float> g(1.0,2.0,3.0,10u,20u,30u,false);
+		assert(!g.isOwner());
+		assert(!g.isAllocated());
+		g.allocate();
+		assert(g.isOwner());
+		assert(g.isAllocated());
+		g.free();
+		assert(!g.isOwner());
+		assert(!g.isAllocated());
+		g.setData(0,false);
+		assert(!g.isOwner());
+		assert(!g.isAllocated());
+		g.setData(0,true);
+		assert(!g.isOwner());
+		assert(!g.isAllocated());
+		float *data = new float[g.size()];
+		g.setData(data,false);
+		assert(!g.isOwner());
+		assert(g.isAllocated());
+		assert(g.data() == data);
+		g.free();
+		assert(!g.isOwner());
+		assert(!g.isAllocated());
+		assert(g.data() == 0);
+		data[0] = 10;
+		g.setData(data,true);
+		assert(g.isOwner());
+		assert(g.isAllocated());
+		assert(g.data() == data);
+		g.free();
+		assert(!g.isOwner());
+		assert(!g.isAllocated());
+		assert(g.data() == 0);
+		std::cout << "allocate setData free : ok" << std::endl;
+
+		{
+			Grid3D<float> g1(1.0,2.0,3.0,10u,20u,30u,true);
+			Grid3D<float> g2(g1, true);
+			assert(g2.data() == g1.data());
+			assert(g2.isAllocated());
+			assert(!g2.isOwner());
+			Grid3D<float> g3(g1, false);
+			assert(g3.data() == 0);
+			assert(!g3.isAllocated());
+			assert(!g3.isOwner());
+		}	
+		{
+			Grid2D<float> g1(1.0,2.0,10u,20u,true);
+			Grid2D<float> g2(g1, true);
+			assert(g2.data() == g1.data());
+			assert(g2.isAllocated());
+			assert(!g2.isOwner());
+			Grid2D<float> g3(g1, false);
+			assert(g3.data() == 0);
+			assert(!g3.isAllocated());
+			assert(!g3.isOwner());
+		}
+		{
+			Grid1D<float> g1(1.0,10u,true);
+			Grid1D<float> g2(g1, true);
+			assert(g2.data() == g1.data());
+			assert(g2.isAllocated());
+			assert(!g2.isOwner());
+			Grid1D<float> g3(g1, false);
+			assert(g3.data() == 0);
+			assert(!g3.isAllocated());
+			assert(!g3.isOwner());
+		}
+		std::cout << "copy constructors : ok" << std::endl;
+
+		{
+			Grid3D<float> g1(1.0,2.0,3.0,10u,20u,30u,true);
+			Grid<float> *g2 = g1.clone();
+			assert(g2->data() == g1.data());
+			assert(g2->isAllocated());
+			assert(!g2->isOwner());
+			Grid<float> *g3 = g1.cloneAttribs();
+			assert(g3->data() == 0);
+			assert(!g3->isAllocated());
+			assert(!g3->isOwner());
+			Grid<float> *g4 = g1.cloneData();
+			assert(g4->data() != 0);
+			assert(g4->data() != g1.data());
+			assert(g4->isAllocated());
+			assert(g4->isOwner());
+		}	
+		{
+			Grid2D<float> g1(1.0,2.0,10u,20u,true);
+			Grid<float> *g2 = g1.clone();
+			assert(g2->data() == g1.data());
+			assert(g2->isAllocated());
+			assert(!g2->isOwner());
+			Grid<float> *g3 = g1.cloneAttribs();
+			assert(g3->data() == 0);
+			assert(!g3->isAllocated());
+			assert(!g3->isOwner());
+			Grid<float> *g4 = g1.cloneData();
+			assert(g4->data() != 0);
+			assert(g4->data() != g1.data());
+			assert(g4->isAllocated());
+			assert(g4->isOwner());
+		}	
+		{
+			Grid1D<float> g1(1.0,10u,true);
+			Grid<float> *g2 = g1.clone();
+			assert(g2->data() == g1.data());
+			assert(g2->isAllocated());
+			assert(!g2->isOwner());
+			Grid<float> *g3 = g1.cloneAttribs();
+			assert(g3->data() == 0);
+			assert(!g3->isAllocated());
+			assert(!g3->isOwner());
+			Grid<float> *g4 = g1.cloneData();
+			assert(g4->data() != 0);
+			assert(g4->data() != g1.data());
+			assert(g4->isAllocated());
+			assert(g4->isOwner());
+		}	
+		std::cout << "clone cloneAttribs cloneData : ok" << std::endl;
 	}
 
 	exit(EXIT_SUCCESS);

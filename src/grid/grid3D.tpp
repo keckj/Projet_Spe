@@ -54,31 +54,28 @@ Grid3D<T>::Grid3D(const std::string &src) :
 	if(this->_isAllocated) {
 		this->_data = new T[this->size()];
 		file.read((char*) this->_data, this->bytes());
+		this->_isOwner = true;
+	}
+	else {
+		this->_isOwner = false;
+		this->_data = 0;
 	}
 	
 	file.close();
 }
 //ne copie pas les données, pointeur NULL
 template <typename T>
-Grid3D<T>::Grid3D(const Grid3D<T> &grid) :
-	Grid<T>(grid)
+Grid3D<T>::Grid3D(const Grid3D<T> &grid, bool copyPointer) :
+	Grid<T>(grid,copyPointer)
 {
 }
 		
-//ne copie pas les données, pointeur NULL
-template <typename T>
-Grid3D<T> *Grid3D<T>::clone() const {
-	Grid3D<T> *grid = new Grid3D<T>(*this);
-	return grid;
-}
-
 template <typename T>
 Grid3D<T>::Grid3D(T realWidth_, T realHeight_, T realLength_,
 		unsigned int width_, unsigned int height_, unsigned int length_,
-		bool allocate) :
+		bool allocate_) :
 	Grid<T>(realWidth_, realHeight_, realLength_,
-			width_, height_, length_,
-			3u, allocate)
+			width_, height_, length_, 3u)
 {
 	assert(realWidth_ > 0.0);
 	assert(realHeight_ > 0.0);
@@ -87,70 +84,40 @@ Grid3D<T>::Grid3D(T realWidth_, T realHeight_, T realLength_,
 	assert(height_ > 0u);
 	assert(length_ > 0u);
 	
-	if(allocate)
-		allocateOnCpu();
+	if(allocate_)
+		this->allocate();
 }
 
 template <typename T>
 Grid3D<T>::Grid3D(T realWidth_, T realHeight_, T realLength_,
-		T dh_, bool allocate) : 
+		T dh_, bool allocate_) : 
 	Grid<T>(realWidth_, realHeight_, realLength_,
-			dh_,
-			3u, allocate)
+			dh_, 3u)
 {
 	assert(realWidth_ > 0.0);
 	assert(realHeight_ > 0.0);
 	assert(realLength_ > 0.0);
 	assert(dh_ > 0.0);
 	
-	if(allocate)
-		allocateOnCpu();
+	if(allocate_)
+		this->allocate();
 }
 
 template <typename T>
 Grid3D<T>::Grid3D(unsigned int width_, unsigned int height_, unsigned int length_,
-		T dh_,
-		bool allocate) :
+		T dh_, bool allocate_) :
 	Grid<T>(width_, height_, length_,
-			dh_,
-			3u, allocate)
+			dh_, 3u)
 {
 	assert(width_ > 0u);
 	assert(height_ > 0u);
 	assert(length_ > 0u);
 	assert(dh_ > 0.0);
 	
-	if(allocate)
-		allocateOnCpu();
+	if(allocate_)
+		this->allocate();
 }
 
 template <typename T>
 Grid3D<T>::~Grid3D() {
-}
-
-template <typename T>
-unsigned long Grid3D<T>::size() const {
-	return this->_width*this->_height*this->_length;
-}
-
-template <typename T>
-unsigned long Grid3D<T>::bytes() const {
-	return this->_width*this->_height*this->_length*sizeof(T);
-}
-
-template <typename T>
-void Grid3D<T>::allocateOnCpu() {
-	if(!this->_isAllocated) {
-		this->_data = new T[this->_width*this->_height*this->_length];
-
-		if(this->_data == 0) {
-			log_console->errorStream() << "Failed to allocate grid 3D !";
-			exit(EXIT_FAILURE);
-		}
-
-		this->_isAllocated = true;
-	}
-	else {
-		log_console->warnStream() << "Trying to allocate an already allocated 3D grid !";
-	}
 }

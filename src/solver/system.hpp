@@ -9,7 +9,7 @@ template <typename T>
 class System {
 
 	public:
-	System(std::map<std::string, Grid<T> *> *initialCond);
+	System(const std::map<std::string, Grid<T> *> &initialCond);
 	virtual ~System();
 
 	virtual std::map<std::string, Grid<T> *> *step(T dt) = 0;

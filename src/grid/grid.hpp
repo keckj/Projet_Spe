@@ -8,6 +8,8 @@ template <typename T>
 class Grid {
 
 	public:
+		explicit Grid(const std::string &src);
+		explicit Grid(const Grid &grid, bool copyPointer = true);
 		virtual ~Grid();
 
 		T realWidth() const;
@@ -18,47 +20,45 @@ class Grid {
 		unsigned int height() const;
 		unsigned int length() const;
 
-		virtual unsigned long size() const = 0;
-		virtual unsigned long bytes() const = 0;
+		unsigned long size() const;
+		unsigned long bytes() const;
 		
 		T dh() const;
 		unsigned int dim() const;
 		bool isAllocated() const;
+		bool isOwner() const;
 		
-		T operator[](unsigned int n) const;
-		T& operator[](unsigned int n);
+		T operator[](unsigned long n) const;
+		T& operator[](unsigned long n);
 		
 		T operator()(unsigned int i, unsigned int j, unsigned int k) const; 
 		T& operator()(unsigned int i, unsigned int j, unsigned int k); 
 		
 		T *data() const;
 
-		virtual void allocateOnCpu() = 0;
-		void freeOnCpu();
-	
-		//ne copie pas le pointeur, il reste à NULL
-		virtual Grid<T> *clone() const = 0;
 
-		void save(const std::string &dst);		 //serialisation de la classe
+		void setData(T* data_, bool isOwner_);
+		void allocate();
+		void free();
+	
+		Grid<T> *clone() const; //copie légère de la matrice
+		Grid<T> *cloneAttribs() const; //copie légère de la matrice, pointeur de donnée mis à NULL
+		Grid<T> *cloneData() const; //copie profonde de la matrice
+
+		void exportGrid(const std::string &dst); //serialisation de la classe
 		void exportData(const std::string &dst); //format lisible (pour gnuplot)
 
 	protected:
 		explicit Grid();
-		
-		//Ne copie pas les données, laisse le pointeur à NULL
-		Grid(const Grid &grid);
-		
 		explicit Grid(T realWidth_, T realHeight_, T realLength_,
 				unsigned int width_, unsigned int height_, unsigned int length_,
-				unsigned int dim_, bool allocate = true);
+				unsigned int dim_);
 		
 		explicit Grid(T realWidth_, T realHeight_, T realLength_,
-				T dh_,
-				unsigned int dim_, bool allocate = true);
+				T dh_, unsigned int dim_);
 		
 		explicit Grid(unsigned int width_, unsigned int height_, unsigned int length_,
-				T dh_,
-				unsigned int dim_, bool allocate = true);
+				T dh_, unsigned int dim_);
 
 		T _realWidth, _realHeight, _realLength;
 		unsigned int _width,_height,_length;
@@ -66,7 +66,7 @@ class Grid {
 		T _dh;
 
 		unsigned int _dim;
-		bool _isAllocated;
+		bool _isAllocated, _isOwner;
 
 		T *_data;
 };

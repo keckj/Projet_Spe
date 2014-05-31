@@ -1,5 +1,6 @@
 
 # Règles
+all: create_dirs moc $(TARGET)
 
 ifeq ($(LINK), NVCC)
 debug: LINKFLAGS = $(CUDADEBUGFLAGS) 
@@ -16,15 +17,10 @@ profile: CFLAGS += $(PROFILINGFLAGS)
 profile: CXXFLAGS += $(PROFILINGFLAGS)
 profile: all
 
-ifeq ($(LINK), NVCC)
-else
 release: LINKFLAGS += $(RELEASEFLAGS)
-endif
 release: CFLAGS += $(RELEASEFLAGS)
 release: CXXFLAGS += $(RELEASEFLAGS)
 release: all
-
-all: create_dirs moc $(TARGET)
 
 $(TARGET): $(OBJ)
 	@echo

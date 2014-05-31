@@ -6,7 +6,7 @@
 using namespace utils;
 
 template <typename T>
-SimpleSystem<T>::SimpleSystem(std::map<std::string, Grid<T> *> *initialCond,
+SimpleSystem<T>::SimpleSystem(const std::map<std::string, Grid<T> *> initialCond,
 		T epsilon_, T k_, T d_,
 		T mu_1_, T mu_2_,
 		T alpha_1_, T alpha_2_) :
@@ -61,21 +61,40 @@ void SimpleSystem<T>::subStep(T dt, unsigned long offset, unsigned long subworkS
 	Grid<T> *r = this->grids->at("r");
 	Grid<T> *old_e = this->grids_old->at("e");
 	Grid<T> *old_r = this->grids_old->at("r");
-	
+
 	unsigned int width = e->width();
 	unsigned int height = e->height();
 	unsigned int length = e->length();
-	unsigned int i,j,k;
+	unsigned int i,j;
+	T *E_1 = old_e->data();
+	T *E_2 = e->data();
+	T *R_1 = old_r->data();
+	T *R_2 = r->data();
+	
+	T dh = this->_dh;
 
-	for (unsigned int o = 0; o < subworkSize; o++) {
-		k = (offset+o)/(width*height);
-		j = ((offset+o) % (width*height))/width;
-		i = (offset+o) % width;
+	for (unsigned long id = offset; id < offset+subworkSize; id++) {
+		j = (id % (width*height))/width;
+		i = id % width;
+		//(*e)(i,j,0) = (*old_e)(i,j,0) + dt * (L(i,j,0) + F(i,j,0)); 
+		//(*r)(i,j,0) = (*old_r)(i,j,0) + dt * G(i,j,0); 
 
-		(*e)(i,j,k) = (*old_e)(i,j,k) + dt * (L(i,j,k) + F(i,j,k)); 
-		(*r)(i,j,k) = (*old_r)(i,j,k) + dt * G(i,j,k); 
+		T E = E_1[id];
+		T R = R_1[id];
+
+		T _F = -_k*E*(E - _alpha_1)*(E - 1.0f) - E*R;
+		T _G = (_epsilon + _mu_1*R/(E + _mu_2)) * (-R - _k*E*(E-_alpha_2-1.0f));
+		T _L =  _d/(dh*dh) * (
+		+ E_1[i == 0 ? id : id-1]
+		+ E_1[i == width-1 ? id : id+1]
+		+ E_1[j == 0 ? id : id-width ]
+		+ E_1[j == height-1 ? id : id+width]
+		- 4*E
+		);
+
+		E_2[id] = E + dt*(_L+_F);
+		R_2[id] = R + dt*_G;
 	}
-
 }
 
 template <typename T>
