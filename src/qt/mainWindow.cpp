@@ -9,18 +9,16 @@
 #include "graphicsViewer.hpp"
 #include "openGLScene.hpp"
 #include "grid2D.hpp"
-#include "computeThread.hpp"
+// Models
+#include "model.hpp"
+#include "exampleModel.hpp"
 
 MainWindow::MainWindow() {
-
-    // Thread
-    m_thread = new ComputeThread();
-    connect(m_thread, SIGNAL(stepComputed(const Grid2D<float> &)), this, SLOT(updateGrid(const Grid2D<float> &)));
 
     // Grids
     m_stored_grids = new std::vector<Grid2D<float>>();
     m_min_val = FLT_MAX; m_max_val = -FLT_MAX;
-    m_total_steps = 1; // set by the user later, this value should not be used
+    m_total_steps = 10;
 
     // QT GUI
     QDesktopWidget widget;
@@ -66,21 +64,21 @@ MainWindow::MainWindow() {
     this->show();
 
     //hack
-    Grid2D<float> g2d(1.0,1.0,100u,100u,true);
-    this->updateGrid(g2d);
+    //Grid2D<float> g2d(1.0,1.0,100u,100u,true);
+    //this->updateGrid(&g2d);
 }
 
 MainWindow::~MainWindow() {
 }
 
-void MainWindow::updateGrid(const Grid2D<float> &grid) {
+void MainWindow::updateGrid(const Grid2D<float> *grid) {
     // Add grid to the list of stored grids
-    m_stored_grids->push_back((Grid2D<float>) grid); 
+    m_stored_grids->push_back(*grid); 
 
     // Update val_min and val_max
-    for (unsigned int j = 0; j < grid.height(); j++) {
-        for (unsigned int i = 0; i < grid.width(); i++) {
-            float val = grid(i,j);
+    for (unsigned int j = 0; j < grid->height(); j++) {
+        for (unsigned int i = 0; i < grid->width(); i++) {
+            float val = (*grid)(i,j);
             if (val < m_min_val) m_min_val = val;
             if (val > m_max_val) m_max_val = val;
         }
@@ -96,41 +94,72 @@ void MainWindow::updateGrid(const Grid2D<float> &grid) {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
 
     //hack
-    float *gridData = new float[grid.width()*grid.height()];
-    for (unsigned int j = 0; j < grid.height(); j++) {
-        for (unsigned int i = 0; i < grid.width(); i++) {
-            gridData[j*grid.width()+i] = (2*i < grid.width()) ? 0.0f : 1.0f;
+    float *gridData = new float[grid->width()*grid->height()];
+    for (unsigned int j = 0; j < grid->height(); j++) {
+        for (unsigned int i = 0; i < grid->width(); i++) {
+            gridData[j*grid->width()+i] = (2*i < grid->width()) ? 0.0f : 1.0f;
         }
     }
-    //float *gridData = grid.data();
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, grid.width(), grid.height(), 0, GL_LUMINANCE, GL_FLOAT, (GLvoid*) gridData);
+    //float *gridData = grid->data();
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, grid->width(), grid->height(), 0, GL_LUMINANCE, GL_FLOAT, (GLvoid*) gridData);
 
     // Tell the scene to change the texture it's using
     emit textureUpdate(texture);
 
     // Update progress bar
     emit progressUpdate((float) m_stored_grids->size() / m_total_steps * 100);
+
+    std::cout << "progress=" << (float) m_stored_grids->size() / (float) m_total_steps *100 << std::endl;
+
 }
 
 void MainWindow::changeModel(int model) {
+    m_selected_model = model;
 }
 
 void MainWindow::changeNbIter(int nb) {
+    m_total_steps = nb;
 }
 
 void MainWindow::startComputing() {
+    //return; // temporary
+    //m_thread = new QThread;
+    Model *mod;
+    switch (m_selected_model) {
+        default:
+            mod = (Model *) new ExampleModel(m_total_steps);
+    }
+
+    //mod->moveToThread(m_thread);
+    //connect(mod, SIGNAL(error(QString)), this, SLOT(errorString(QString)));
+    //connect(m_thread, SIGNAL(started()), mod, SLOT(startComputing()));
+    //connect(mod, SIGNAL(finished()), m_thread, SLOT(quit()));
+    connect(mod, SIGNAL(finished()), mod, SLOT(deleteLater()));
+    //connect(m_thread, SIGNAL(finished()), m_thread, SLOT(deleteLater()));
+    connect(mod, SIGNAL(stepComputed(const Grid2D<float> *)), this, SLOT(updateGrid(const Grid2D<float> *)));
+    //m_thread->start();
+    QtConcurrent::run(mod, &Model::startComputing);
+
+    // if resume : wakeup
 }
 
 void MainWindow::pauseComputing() {
+    return; //temporary
+    m_thread->wait();
 }
 
 void MainWindow::stopComputing() {
+    return; // temporary
+    //emit killModel
+    //m_thread->quit();
 }
 
 void MainWindow::changeAutoRendering(int checkboxState) {
+    m_auto_render = (checkboxState > 0);
 }
 
 void MainWindow::changeDisplayedGrid(int n) {
+    m_displayed_grid = n;
 }
 
 
