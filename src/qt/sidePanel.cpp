@@ -17,8 +17,8 @@ SidePanel::SidePanel(QWidget *parent_) : QWidget(parent_) {
     this->setAutoFillBackground(true);
 
     // GroupBox
-    QGroupBox *modelGroupBox = new QGroupBox("Model");
-    QGroupBox *runGroupBox = new QGroupBox("Start / Pause / Stop");
+    QGroupBox *modelGroupBox = new QGroupBox("Model options");
+    QGroupBox *runGroupBox = new QGroupBox("Runtime options");
     QGroupBox *renderOptionsGroupBox = new QGroupBox("Rendering options");
 
     modelGroupBox->setStyleSheet(
@@ -74,6 +74,10 @@ SidePanel::SidePanel(QWidget *parent_) : QWidget(parent_) {
     iterSpinBox->setValue(10);
     connect(iterSpinBox, SIGNAL(valueChanged(int)), mainWin, SLOT(changeNbIter(int)));
 
+    // Button for QFileDialog
+    saveDirButton = new QPushButton("Choose saving directory");
+    connect(saveDirButton, SIGNAL(clicked()), this, SLOT(changeDirectory()));
+
     // Buttons
     startButton = new QPushButton("Start");
     connect(startButton, SIGNAL(clicked()), this, SLOT(start_pause_resume()));
@@ -126,6 +130,7 @@ SidePanel::SidePanel(QWidget *parent_) : QWidget(parent_) {
     runLayout->setSpacing(10);
     runLayout->addWidget(startButton);
     runLayout->addWidget(stopButton);
+    runLayout->addWidget(saveDirButton);
 
     renderOptionsLayout->setSpacing(10);
     renderOptionsLayout->addWidget(autoRenderCheckBox);
@@ -166,6 +171,17 @@ void SidePanel::stop() {
 void SidePanel::setModelOptionsStatus(bool status) {
     this->modelComboBox->setEnabled(status);
     this->iterSpinBox->setEnabled(status);
+    this->saveDirButton->setEnabled(status);
+}
+
+void SidePanel::changeDirectory() {
+    QFileDialog dialog;
+    dialog.setDirectory(QDir::currentPath());
+    dialog.setFileMode(QFileDialog::Directory);
+    dialog.setOption(QFileDialog::ShowDirsOnly, true);
+    if (dialog.exec()) {
+        m_saveDirectory = dialog.selectedFiles().at(0);
+    }
 }
 
 void SidePanel::showSlider(int checkboxState) {
