@@ -9,7 +9,7 @@ class Model : public QObject {
     Q_OBJECT
 
     public:
-        explicit Model(int nbIter) : m_nbIter(nbIter), m_pause(false), m_stop(false) {}
+        Model(int nbIter) : m_nbIter(nbIter), m_pause(false), m_stop(false) {}
 
     protected:
         virtual void initComputation() = 0;

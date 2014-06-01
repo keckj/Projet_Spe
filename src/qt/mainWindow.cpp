@@ -27,7 +27,7 @@ MainWindow::MainWindow() {
     QRect mainScreenSize = widget.availableGeometry(widget.primaryScreen());
 
     this->setWindowTitle("Electrophysiological models simulator");
-    this->resize(mainScreenSize.width()/2,mainScreenSize.height()/2);
+    this->resize(mainScreenSize.width()*0.75,mainScreenSize.height()*0.75);
     this->setStyleSheet("QMainWindow { background-color: white; }");
     this->setAutoFillBackground(true);
 

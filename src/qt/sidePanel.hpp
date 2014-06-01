@@ -17,6 +17,7 @@ class SidePanel : public QWidget {
     public slots:
         void start_pause_resume();
         void stop();
+        void changeDirectory();
         void showSlider(int checkboxState);
 
     private:
@@ -24,9 +25,11 @@ class SidePanel : public QWidget {
 
         bool m_paused;
 
+        QString m_saveDirectory;
+
         QComboBox *modelComboBox;
         QSpinBox *iterSpinBox;
-        QPushButton *startButton, *stopButton;
+        QPushButton *saveDirButton, *startButton, *stopButton;
         QSlider *gridSlider;
 };
 
