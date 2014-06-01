@@ -14,7 +14,7 @@ class MainWindow : public QMainWindow {
 		~MainWindow();
 
     signals:
-        void textureUpdate(GLuint newTexture);
+        void textureUpdate(const Grid2D<float> *grid);
         void progressUpdate(int p);
         void pauseThread(bool b);
         void stopThread();
@@ -27,7 +27,7 @@ class MainWindow : public QMainWindow {
         void pauseComputing(bool b);
         void stopComputing();
         void changeAutoRendering(int checkboxState);
-        void changeDisplayedGrid(int n);
+		void changeDisplayedGrid(int n);
 
 	private:
 		void keyPressEvent(QKeyEvent *k);

@@ -8,6 +8,7 @@ class Texture2D : public Texture {
 
 	public: 
 		Texture2D(std::string const &src, std::string const &type);
+		Texture2D(float *data);
 		~Texture2D();
 
 		void bindAndApplyParameters(unsigned int location);
