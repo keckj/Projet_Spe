@@ -76,8 +76,9 @@ SidePanel::SidePanel(QWidget *parent_) : QWidget(parent_) {
 
     // Buttons
     startButton = new QPushButton("Start");
-    connect(startButton, SIGNAL(clicked()), mainWin, SLOT(startComputing()));
     connect(startButton, SIGNAL(clicked()), this, SLOT(start_pause_resume()));
+    connect(this, SIGNAL(startPushed()), mainWin, SLOT(startComputing()));
+    connect(this, SIGNAL(pauseOrResumePushed(bool)), mainWin, SLOT(pauseComputing(bool)));
     stopButton = new QPushButton("Stop");
     stopButton->setEnabled(false);
     connect(stopButton, SIGNAL(clicked()), mainWin, SLOT(stopComputing()));
@@ -143,10 +144,16 @@ void SidePanel::start_pause_resume() {
     setModelOptionsStatus(false);
     stopButton->setEnabled(true);
     m_paused = !m_paused;
-    if (m_paused)
+    if (m_paused) {
+        emit pauseOrResumePushed(true);
         startButton->setText("Resume");
-    else
+    } else {
+        if (startButton->text() != "Start")
+            emit pauseOrResumePushed(false);
+        else 
+            emit startPushed();
         startButton->setText("Pause");
+    }
 }
 
 void SidePanel::stop() {

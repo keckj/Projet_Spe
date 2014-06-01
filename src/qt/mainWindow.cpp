@@ -46,7 +46,7 @@ MainWindow::MainWindow() {
     OpenGLScene *scene = new OpenGLScene();
     viewer->setScene(scene);
 
-    SidePanel *panel = new SidePanel(this);
+    panel = new SidePanel(this);
     /*
        connect(sidePanel, SIGNAL(draw()), viewer, SLOT(draw()));
 
@@ -94,23 +94,24 @@ void MainWindow::updateGrid(const Grid2D<float> *grid) {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
 
     //hack
-    float *gridData = new float[grid->width()*grid->height()];
+    /*float *gridData = new float[grid->width()*grid->height()];
     for (unsigned int j = 0; j < grid->height(); j++) {
         for (unsigned int i = 0; i < grid->width(); i++) {
             gridData[j*grid->width()+i] = (2*i < grid->width()) ? 0.0f : 1.0f;
         }
-    }
-    //float *gridData = grid->data();
+    }*/
+    float *gridData = grid->data();
     glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, grid->width(), grid->height(), 0, GL_LUMINANCE, GL_FLOAT, (GLvoid*) gridData);
 
+    // Update displayed grid if auto rendering
+    if (m_auto_render)
+        m_displayed_grid = texture;
+
     // Tell the scene to change the texture it's using
-    emit textureUpdate(texture);
+    emit textureUpdate(m_displayed_grid);
 
     // Update progress bar
     emit progressUpdate((float) m_stored_grids->size() / m_total_steps * 100);
-
-    std::cout << "progress=" << (float) m_stored_grids->size() / (float) m_total_steps *100 << std::endl;
-
 }
 
 void MainWindow::changeModel(int model) {
@@ -123,35 +124,33 @@ void MainWindow::changeNbIter(int nb) {
 
 void MainWindow::startComputing() {
     //return; // temporary
-    //m_thread = new QThread;
+    m_thread = new QThread;
     Model *mod;
     switch (m_selected_model) {
         default:
             mod = (Model *) new ExampleModel(m_total_steps);
     }
 
-    //mod->moveToThread(m_thread);
+    mod->moveToThread(m_thread);
     //connect(mod, SIGNAL(error(QString)), this, SLOT(errorString(QString)));
-    //connect(m_thread, SIGNAL(started()), mod, SLOT(startComputing()));
-    //connect(mod, SIGNAL(finished()), m_thread, SLOT(quit()));
-    connect(mod, SIGNAL(finished()), mod, SLOT(deleteLater()));
-    //connect(m_thread, SIGNAL(finished()), m_thread, SLOT(deleteLater()));
+    connect(m_thread, SIGNAL(started()), mod, SLOT(startComputing()));
+    connect(this, SIGNAL(pauseThread(bool)), mod, SLOT(pauseComputing(bool)));
+    connect(mod, SIGNAL(finished()), m_thread, SLOT(quit()));                   // kill thread
+    connect(mod, SIGNAL(finished()), panel, SLOT(stop()));                      // update GUI buttons
+    //connect(mod, SIGNAL(finished()), mod, SLOT(deleteLater()));
+    connect(m_thread, SIGNAL(finished()), m_thread, SLOT(deleteLater()));       // cleanup
     connect(mod, SIGNAL(stepComputed(const Grid2D<float> *)), this, SLOT(updateGrid(const Grid2D<float> *)));
-    //m_thread->start();
-    QtConcurrent::run(mod, &Model::startComputing);
+    m_thread->start();
 
-    // if resume : wakeup
+    //TODO connect finished -> sidePanel::stop()
 }
 
-void MainWindow::pauseComputing() {
-    return; //temporary
-    m_thread->wait();
+void MainWindow::pauseComputing(bool b) {
+    emit pauseThread(b);
 }
 
 void MainWindow::stopComputing() {
-    return; // temporary
-    //emit killModel
-    //m_thread->quit();
+    emit stopThread();
 }
 
 void MainWindow::changeAutoRendering(int checkboxState) {
@@ -160,6 +159,7 @@ void MainWindow::changeAutoRendering(int checkboxState) {
 
 void MainWindow::changeDisplayedGrid(int n) {
     m_displayed_grid = n;
+    emit textureUpdate(m_displayed_grid);
 }
 
 
@@ -167,6 +167,8 @@ void MainWindow::keyPressEvent(QKeyEvent *k) {
 
     switch(k->key()) {
         case Qt::Key_Escape:
+            if (m_thread)
+               m_thread->quit(); 
             this->close();
             break;
     }

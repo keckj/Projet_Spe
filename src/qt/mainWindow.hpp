@@ -2,6 +2,7 @@
 #define MAINWINDOW_HPP
 
 #include "headers.hpp"
+#include "sidePanel.hpp"
 #include <vector>
 #include "grid2D.hpp"
 
@@ -15,19 +16,23 @@ class MainWindow : public QMainWindow {
     signals:
         void textureUpdate(GLuint newTexture);
         void progressUpdate(int p);
+        void pauseThread(bool b);
+        void stopThread();
 
     public slots:
         void updateGrid(const Grid2D<float> *grid);
         void changeModel(int model);
         void changeNbIter(int nb);
         void startComputing();
-        void pauseComputing(); // todo in computeThread
+        void pauseComputing(bool b);
         void stopComputing();
         void changeAutoRendering(int checkboxState);
         void changeDisplayedGrid(int n);
 
 	private:
 		void keyPressEvent(QKeyEvent *k);
+
+        SidePanel *panel;
 
         QThread *m_thread;
         std::vector<Grid2D<float>> *m_stored_grids;

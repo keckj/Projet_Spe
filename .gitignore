@@ -11,6 +11,7 @@ tags
 types_c.taghl
 program.log
 qglviewer.mk
+config.mk
 local/
 obj/
 :w

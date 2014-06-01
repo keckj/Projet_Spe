@@ -12,12 +12,13 @@ class ExampleModel : public Model {
         ExampleModel(int nbIter);
         ~ExampleModel();
 
-        void startComputing();
+        void initComputation();
+        void computeStep(int i);
+        void finishComputation();
     
     signals:
         void stepComputed(const Grid2D<float> *grid);
         void stepComputed(const Grid3D<float> *grid);
-        void finished();
 
 };
 

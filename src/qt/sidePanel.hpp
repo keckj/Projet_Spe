@@ -10,6 +10,10 @@ class SidePanel : public QWidget {
 		SidePanel(QWidget *parent_ = 0);
 		~SidePanel();
 
+    signals:
+        void startPushed();
+        void pauseOrResumePushed(bool b);
+
     public slots:
         void start_pause_resume();
         void stop();

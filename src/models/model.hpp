@@ -9,10 +9,17 @@ class Model : public QObject {
     Q_OBJECT
 
     public:
-        explicit Model(int nbIter) : m_nbIter(nbIter) {}
+        explicit Model(int nbIter) : m_nbIter(nbIter), m_pause(false), m_stop(false) {}
+
+    protected:
+        virtual void initComputation() = 0;
+        virtual void computeStep(int i) = 0;
+        virtual void finishComputation() = 0;
 
     public slots:
-        virtual void startComputing() = 0;
+        void startComputing();
+        void pauseComputing(bool b);
+        void stopComputing();
 
     /* Copy signals, inheritance does not work properly */
     signals:
@@ -20,8 +27,11 @@ class Model : public QObject {
         void stepComputed(const Grid3D<float> *grid);
         void finished();
 
-    protected:
+    private:
         int m_nbIter;
+        QMutex m_mutex;
+        QWaitCondition m_cond;
+        bool m_pause, m_stop;
 };
 
 #endif
