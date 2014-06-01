@@ -21,6 +21,7 @@ MainWindow::MainWindow() {
     m_stored_grids = new std::vector<Grid2D<float>>();
     m_min_val = FLT_MAX; m_max_val = -FLT_MAX;
     m_total_steps = 10;
+    m_auto_render = true;
 
     // QT GUI
     QDesktopWidget widget;
@@ -106,13 +107,14 @@ void MainWindow::updateGrid(const Grid2D<float> *grid) {
     glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, grid->width(), grid->height(), 0, GL_LUMINANCE, GL_FLOAT, (GLvoid*) gridData);
 
     // Update displayed grid if auto rendering
-    if (m_auto_render)
+    if (m_auto_render) {
         m_displayed_grid = texture;
+    }
 
     // Tell the scene to change the texture it's using
     emit textureUpdate(m_displayed_grid);
 
-    // Update progress bar
+    // Update progress bar TODO: * nb_it to render
     emit progressUpdate((float) m_stored_grids->size() / m_total_steps * 100);
 }
 

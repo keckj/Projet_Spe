@@ -13,7 +13,7 @@ void OpenGLScene::textureUpdate(GLuint newTexture) {
 
 void OpenGLScene::drawBackground(QPainter *painter, const QRectF &) {
 
-    glClearColor(0.2,0.2,0.2,1.0);
+    glClearColor(1.0,1.0,1.0,1.0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     
     glEnable(GL_TEXTURE_2D);
