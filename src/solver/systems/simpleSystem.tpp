@@ -143,8 +143,6 @@ T SimpleSystem<T>::L(unsigned int i, unsigned int j, unsigned int k) {
 	T E_right = (*e)(i == e->width()-1 ? e->width()-1 : i + 1, j, k);
 	T E_up = (*e)(i, j == 0 ? 0 : j - 1, k);
 	T E_down = (*e)(i, j == e->height()-1 ? e->height()-1 : j + 1, k);
-	//T E_front = (*e)(i, j, k == 0 ? 0 : k - 1);
-	//T E_back = (*e)(i, j, k == e->length() - 1 ? e->length() - 1 : k + 1);
 
 	return _d/(dh*dh) * (E_left + E_right + E_up + E_down - 4*E_ijk);
 }

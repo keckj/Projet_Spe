@@ -65,6 +65,7 @@ SidePanel::SidePanel(QWidget *parent_) : QWidget(parent_) {
     // Dropdown list
     modelComboBox = new QComboBox();
     modelComboBox->addItem("Default model");
+    modelComboBox->addItem("Simple Model 2D");
     connect(modelComboBox, SIGNAL(currentIndexChanged(int)), mainWin, SLOT(changeModel(int)));
 
     // SpinBox
