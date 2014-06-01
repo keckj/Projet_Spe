@@ -8,6 +8,7 @@
 #include "grid3D.hpp"
 #include "simpleSystem.hpp"
 #include "solver.hpp"
+#include "argument.hpp"
 
 #include <cassert>
 #include <ctime>
@@ -15,7 +16,9 @@
 #include <iostream>
 #include <map>
 
+
 #if _N_MAIN == 3
+
 
 using namespace utils;
 
@@ -23,7 +26,9 @@ int main(int argc, char** argv) {
 	log4cpp::initLogs();
 	std::cout << "Je suis le main 3 !" << std::endl;
 
-	unsigned int width=50u, height=50u;
+	Argument arg(true, true);
+
+	unsigned int width=512u, height=512u;
 	Grid2D<float> e(1.0,1.0,width,height);
 	Grid2D<float> r(1.0,1.0,width,height);
 
@@ -45,19 +50,23 @@ int main(int argc, char** argv) {
 	std::map<std::string, Grid<float> *> map;
 	map["e"] = &e;
 	map["r"] = &r;
+	std::string dataDir = "/media/poulpy/4EE6501BE650059D/tmp/";
+	std::string cpuPrefix = "cpu_";
+	std::string cpuSuffix = ".dat";
+	std::string cpuGif = "cpu.gif";
+	std::string cpuScript = "cpu.plot";
+	
 	SimpleSystem<float> system(map, epsilon, kk, d, mu1, mu2, alpha1, alpha2);
 	Solver<float> solver;
-	unsigned int nIterations = solver.solve(system, 100.0f);
+	unsigned int nIterations = solver.solve(system, 150.0f);
 	float dt = system.computeOptimalTimestep();
+	makeGnuPlotScript(dataDir+cpuScript, dataDir+cpuPrefix, "e",cpuSuffix,0,nIterations,0,width,0,height,0.1,true,dataDir+cpuGif);
+	execGnuPlotScript(dataDir+cpuScript, false);
 
-	
-	makeGnuPlotScript("data/e.plot", "data/prefix_", "e", "_suffix.dat",0,nIterations,0,width,0,height,0.1,true,"data/e.gif");
-	execGnuPlotScript("data/e.plot");
-	showGif("data/e.gif");
-
-	
-	std::string prefix = "data/gpu_";
-	std::string suffix = ".dat";
+	std::string gpuPrefix = "gpu_";
+	std::string gpuSuffix = ".dat";
+	std::string gpuGif = "gpu.gif";
+	std::string gpuScript = "gpu.plot";
 	
 	cl_int err;
 	log_console->infoStream() << "Listing platforms..";
@@ -88,7 +97,7 @@ int main(int argc, char** argv) {
 		log_console->warnStream() << "No CPUs were found on your computer.";
 	}
 
-	//Create a command queue for first gpu device from first gpu context
+	//Create command queues
 	unsigned int queuesPerDevice = 2;
 	std::vector<std::vector<std::vector<cl::CommandQueue> > > commandQueues;
 	for (unsigned int i = 0; i < nGpuContexts; i++) {
@@ -142,7 +151,9 @@ int main(int argc, char** argv) {
 	log_console->infoStream() << "DH = " << e.dh();
 
 	char buffer[1000];
-	for (unsigned int i = 0; i < nIterations; i++) {
+	for (unsigned int i = 0; i <= nIterations; i++) {
+		sprintf(buffer,"%se%i%s",(dataDir+gpuPrefix).c_str(),i,gpuSuffix.c_str());
+		e.exportData(buffer);
 		CHK_ERROR_RET(kernel.setArg<cl::Memory>(i%2, E1_d));
 		CHK_ERROR_RET(kernel.setArg<cl::Memory>((i+1)%2, E2_d));
 		CHK_ERROR_RET(kernel.setArg<cl::Memory>(2+i%2, R1_d));
@@ -156,19 +167,18 @@ int main(int argc, char** argv) {
 		CHK_ERROR_RET(kernel.setArg<float>(10, d));
 		CHK_ERROR_RET(kernel.setArg<unsigned int>(11, width));
 		CHK_ERROR_RET(kernel.setArg<unsigned int>(12, height));
-		CHK_ERROR_RET(kernel.setArg<float>(13, dt));
-		CHK_ERROR_RET(kernel.setArg<float>(14, e.dh()));
+		CHK_ERROR_RET(kernel.setArg<float>(13, e.dh()));
+		CHK_ERROR_RET(kernel.setArg<float>(14, dt));
 
 		CHK_ERROR_RET(commandQueues[0][0][0].enqueueNDRangeKernel(kernel, cl::NullRange, global, local));
 		CHK_ERROR_RET(commandQueues[0][0][0].enqueueReadBuffer(i%2==0 ? E2_d : E1_d, CL_TRUE, 0, e.bytes(), e.data()));
-		sprintf(buffer,"%se%i%s",prefix.c_str(),i,suffix.c_str());
-		e.exportData(buffer);
 	}
 
-	makeGnuPlotScript("data/e2.plot", prefix, "e", suffix,0,nIterations,0,width,0,height,dt,true,"data/e2.gif");
-	execGnuPlotScript("data/e2.plot");
-	showGif("data/e2.gif");
+	makeGnuPlotScript(dataDir+gpuScript, dataDir+gpuPrefix,"e", gpuSuffix,0,nIterations,0,width,0,height,0.1,true,dataDir+gpuGif);
+	execGnuPlotScript(dataDir+gpuScript, true);
 	
+	showGif(dataDir+cpuGif);
+	showGif(dataDir+gpuGif);
 
 	return EXIT_SUCCESS;
 }

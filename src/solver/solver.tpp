@@ -45,6 +45,10 @@ unsigned int Solver<T>::solve(System<T> &system, T maxTime) {
 	log_console->infoStream() << ":::: Solving system ::::";
 
 	std::stringstream ss;
+	
+	std::string dataDir = "/media/poulpy/4EE6501BE650059D/tmp/";
+	std::string cpuPrefix = "cpu_";
+	std::string cpuSuffix = ".dat";
 
 	T dt = system.computeOptimalTimestep();
 	unsigned int i = 0;
@@ -52,7 +56,7 @@ unsigned int Solver<T>::solve(System<T> &system, T maxTime) {
 	for (T t = 0; t < maxTime; t+=dt) {
 		res = system.step(dt);
 
-		writeData(res,i,"data/prefix_", "_suffix.dat");
+		writeData(res,i,dataDir+cpuPrefix, cpuSuffix);
 		display(res);
 		
 		if(i%(maxSteps/20) == 0) 
