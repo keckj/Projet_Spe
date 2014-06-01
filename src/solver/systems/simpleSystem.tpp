@@ -76,24 +76,24 @@ void SimpleSystem<T>::subStep(T dt, unsigned long offset, unsigned long subworkS
 	for (unsigned long id = offset; id < offset+subworkSize; id++) {
 		j = (id % (width*height))/width;
 		i = id % width;
-		//(*e)(i,j,0) = (*old_e)(i,j,0) + dt * (L(i,j,0) + F(i,j,0)); 
-		//(*r)(i,j,0) = (*old_r)(i,j,0) + dt * G(i,j,0); 
+		(*e)(i,j,0) = (*old_e)(i,j,0) + dt * (L(i,j,0) + F(i,j,0)); 
+		(*r)(i,j,0) = (*old_r)(i,j,0) + dt * G(i,j,0); 
 
-		T E = E_1[id];
-		T R = R_1[id];
+		//T E = E_1[id];
+		//T R = R_1[id];
 
-		T _F = -_k*E*(E - _alpha_1)*(E - 1.0f) - E*R;
-		T _G = (_epsilon + _mu_1*R/(E + _mu_2)) * (-R - _k*E*(E-_alpha_2-1.0f));
-		T _L =  _d/(dh*dh) * (
-		+ E_1[i == 0 ? id : id-1]
-		+ E_1[i == width-1 ? id : id+1]
-		+ E_1[j == 0 ? id : id-width ]
-		+ E_1[j == height-1 ? id : id+width]
-		- 4*E
-		);
+		//T _F = -_k*E*(E - _alpha_1)*(E - 1.0f) - E*R;
+		//T _G = (_epsilon + _mu_1*R/(E + _mu_2)) * (-R - _k*E*(E-_alpha_2-1.0f));
+		//T _L =  _d/(dh*dh) * (
+		//+ E_1[i == 0 ? id : id-1]
+		//+ E_1[i == width-1 ? id : id+1]
+		//+ E_1[j == 0 ? id : id-width ]
+		//+ E_1[j == height-1 ? id : id+width]
+		//- 4*E
+		//);
 
-		E_2[id] = E + dt*(_L+_F);
-		R_2[id] = R + dt*_G;
+		//E_2[id] = E + dt*(_L+_F);
+		//R_2[id] = R + dt*_G;
 	}
 }
 
@@ -143,8 +143,6 @@ T SimpleSystem<T>::L(unsigned int i, unsigned int j, unsigned int k) {
 	T E_right = (*e)(i == e->width()-1 ? e->width()-1 : i + 1, j, k);
 	T E_up = (*e)(i, j == 0 ? 0 : j - 1, k);
 	T E_down = (*e)(i, j == e->height()-1 ? e->height()-1 : j + 1, k);
-	//T E_front = (*e)(i, j, k == 0 ? 0 : k - 1);
-	//T E_back = (*e)(i, j, k == e->length() - 1 ? e->length() - 1 : k + 1);
 
 	return _d/(dh*dh) * (E_left + E_right + E_up + E_down - 4*E_ijk);
 }

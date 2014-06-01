@@ -9,9 +9,11 @@
 #include "graphicsViewer.hpp"
 #include "openGLScene.hpp"
 #include "grid2D.hpp"
+#include "log.hpp"
 // Models
 #include "model.hpp"
 #include "exampleModel.hpp"
+#include "simpleModel2D.hpp"
 
 MainWindow::MainWindow() {
 
@@ -127,8 +129,13 @@ void MainWindow::startComputing() {
     m_thread = new QThread;
     Model *mod;
     switch (m_selected_model) {
+		case 1:
+            mod = (Model *) new SimpleModel2D(m_total_steps);
+			log_console->infoStream() << "Started a simple model 2D simulation !";
+			break;
         default:
             mod = (Model *) new ExampleModel(m_total_steps);
+			log_console->infoStream() << "Started an example model simulation !";
     }
 
     mod->moveToThread(m_thread);
@@ -140,6 +147,7 @@ void MainWindow::startComputing() {
     //connect(mod, SIGNAL(finished()), mod, SLOT(deleteLater()));
     connect(m_thread, SIGNAL(finished()), m_thread, SLOT(deleteLater()));       // cleanup
     connect(mod, SIGNAL(stepComputed(const Grid2D<float> *)), this, SLOT(updateGrid(const Grid2D<float> *)));
+
     m_thread->start();
 
     //TODO connect finished -> sidePanel::stop()
