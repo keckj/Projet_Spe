@@ -6,7 +6,7 @@
 class GraphicsViewer : public QGraphicsView {
 
     public:
-        GraphicsViewer() { setWindowTitle(tr("GraphicsViewer")); }
+        GraphicsViewer();
 
     protected:
         void resizeEvent(QResizeEvent *event_) {
