@@ -74,6 +74,7 @@ SidePanel::SidePanel(QWidget *parent_) : QWidget(parent_) {
     iterSpinBox->setSingleStep(1);
     iterSpinBox->setValue(10);
     connect(iterSpinBox, SIGNAL(valueChanged(int)), mainWin, SLOT(changeNbIter(int)));
+    connect(iterSpinBox, SIGNAL(valueChanged(int)), this, SLOT(changeNbIterSlider(int)));
 
     // Button for QFileDialog
     saveDirButton = new QPushButton("Choose saving directory");
@@ -97,11 +98,11 @@ SidePanel::SidePanel(QWidget *parent_) : QWidget(parent_) {
     
     // Slider
     gridSlider = new QSlider(Qt::Horizontal);
-    gridSlider->setRange(0, 10); // to be updated when iterSpinBox changes value
+    gridSlider->setRange(1, 10); // to be updated when iterSpinBox changes value
     gridSlider->setPageStep(5);
     gridSlider->setSingleStep(1);
     gridSlider->setTracking(false);
-    gridSlider->setValue(0);
+    gridSlider->setValue(1);
     gridSlider->hide();
     connect(gridSlider, SIGNAL(valueChanged(int)), mainWin, SLOT(changeDisplayedGrid(int)));
     
@@ -191,3 +192,8 @@ void SidePanel::showSlider(int checkboxState) {
     else
         this->gridSlider->hide();    
 }
+
+void SidePanel::changeNbIterSlider(int nbIter) {
+    this->gridSlider->setRange(1, nbIter);
+}
+

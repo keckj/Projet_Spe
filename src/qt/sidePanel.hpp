@@ -15,10 +15,13 @@ class SidePanel : public QWidget {
         void pauseOrResumePushed(bool b);
 
     public slots:
-        void start_pause_resume();
         void stop();
+
+    private slots:
+        void start_pause_resume();
         void changeDirectory();
         void showSlider(int checkboxState);
+        void changeNbIterSlider(int nbIter);
 
     private:
         void setModelOptionsStatus(bool status);
