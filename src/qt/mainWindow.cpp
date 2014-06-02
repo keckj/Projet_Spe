@@ -55,7 +55,7 @@ MainWindow::MainWindow() {
 
        connect(viewer, SIGNAL(childKeyEvent(QKeyEvent *)), this, SLOT(childKeyEvent(QKeyEvent *)));
        */
-    connect(this, SIGNAL(textureUpdate(GLuint)), scene, SLOT(textureUpdate(GLuint)));
+    connect(this, SIGNAL(textureUpdate(const Grid2D<float> *)), scene, SLOT(textureUpdate(const Grid2D<float> *)));
     connect(this, SIGNAL(progressUpdate(int)), status, SLOT(progressUpdate(int)));
 
     splitter->addWidget(viewer);
@@ -78,41 +78,24 @@ void MainWindow::updateGrid(const Grid2D<float> *grid) {
     // Add grid to the list of stored grids
     m_stored_grids->push_back(*grid); 
 
-    // Update val_min and val_max
-    for (unsigned int j = 0; j < grid->height(); j++) {
-        for (unsigned int i = 0; i < grid->width(); i++) {
-            float val = (*grid)(i,j);
-            if (val < m_min_val) m_min_val = val;
-            if (val > m_max_val) m_max_val = val;
-        }
-    }
-
     // Create 2D texture
-    GLuint texture;
-    glGenTextures(1, &texture);
-    glBindTexture(GL_TEXTURE_2D, texture);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
-
-    //hack
-    /*float *gridData = new float[grid->width()*grid->height()];
-    for (unsigned int j = 0; j < grid->height(); j++) {
-        for (unsigned int i = 0; i < grid->width(); i++) {
-            gridData[j*grid->width()+i] = (2*i < grid->width()) ? 0.0f : 1.0f;
-        }
-    }*/
-    float *gridData = grid->data();
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, grid->width(), grid->height(), 0, GL_LUMINANCE, GL_FLOAT, (GLvoid*) gridData);
+    //GLuint texture;
+    //glGenTextures(1, &texture);
+    //glBindTexture(GL_TEXTURE_2D, texture);
+    //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+    //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+    
+	//float *gridData = grid->data();
+    //glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, grid->width(), grid->height(), 0, GL_LUMINANCE, GL_FLOAT, (GLvoid*) gridData);
 
     // Update displayed grid if auto rendering
-    if (m_auto_render) {
-        m_displayed_grid = texture;
-    }
+    //if (m_auto_render)
+        //m_displayed_grid = texture;
 
     // Tell the scene to change the texture it's using
-    emit textureUpdate(m_displayed_grid);
+    emit textureUpdate(grid);
 
     // Update progress bar TODO: * nb_it to render
     emit progressUpdate((float) m_stored_grids->size() / m_total_steps * 100);
@@ -168,8 +151,8 @@ void MainWindow::changeAutoRendering(int checkboxState) {
 }
 
 void MainWindow::changeDisplayedGrid(int n) {
-    m_displayed_grid = n;
-    emit textureUpdate(m_displayed_grid);
+	m_displayed_grid = n;
+	//emit textureUpdate(m_displayed_grid);
 }
 
 
@@ -187,3 +170,5 @@ void MainWindow::keyPressEvent(QKeyEvent *k) {
 void MainWindow::childKeyEvent(QKeyEvent *k) {
     keyPressEvent(k);
 }
+		
+

@@ -2,7 +2,6 @@
 #ifndef _CUSTOM_HEADERS_H
 #define _CUSTOM_HEADERS_H
 
-
 //Defines custom (debug, log, ...)
 #include "defines.hpp"
 
@@ -57,6 +56,7 @@
 #include <QRectF>
 #include <QResizeEvent>
 #include <QTimer>
+#include <QGenericMatrix>
 #pragma GCC diagnostic pop
 //////////////////////////
 
@@ -65,6 +65,7 @@
 #include "errorCodes.hpp"
 #include "log.hpp"
 #include "utils.hpp"
+#include "clUtils.hpp"
 
 
 //MACROS ERREURS OPENCL//
