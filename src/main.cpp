@@ -7,6 +7,8 @@
 
 #include <iostream>
 
+#include "colormap.hpp"
+
 #if _N_MAIN == 0
 
 using namespace log4cpp;
@@ -30,6 +32,7 @@ int main(int argc, char** argv) {
     MainWindow win;
     win.show();
 	//FIN INIT (le reste de GL est fait dans QT)//
+	//
     
     return application.exec();
 

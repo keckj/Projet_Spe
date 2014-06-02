@@ -141,7 +141,7 @@ std::vector<unsigned int> Texture::requestTextures(unsigned int nbRequested) {
 
 		
 void Texture::sortHitMap() {
-	log_console->debugStream() << "[TEXTURE MANAGER]  Sorting texture hitmap !";
+	//log_console->debugStream() << "[TEXTURE MANAGER]  Sorting texture hitmap !";
 	Texture::reversedHitMap = utils::mapToReversePairVector(Texture::locationsHitMap);
 	std::sort(reversedHitMap.begin(), reversedHitMap.end(), compareFunc);
 }

@@ -16,12 +16,15 @@ class OpenGLScene : public QGraphicsScene {
 
     private:
 		Program *m_drawProgram;
+		std::map<std::string, int> m_drawProgramUniformLocationMap;
 		Texture *m_currentTexture;
 		unsigned int m_texCoordsVBO;
 		unsigned int m_vertexCoordsVBO;
 		unsigned int m_texture;
+		unsigned int m_colormapsUBO;
 		
 		void makeProgramm();
+		void makeColorMaps();
 		void makeArrays();
 
     public slots:
