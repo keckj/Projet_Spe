@@ -20,7 +20,7 @@ MainWindow::MainWindow() {
     // Grids
     m_stored_grids = new std::vector<Grid2D<float>>();
     m_min_val = FLT_MAX; m_max_val = -FLT_MAX;
-    m_total_steps = 10;
+    m_total_steps = 100;
     m_auto_render = true;
 
     // QT GUI
@@ -50,11 +50,9 @@ MainWindow::MainWindow() {
     viewer->setScene(scene);
 
     panel = new SidePanel(this);
-    /*
-       connect(sidePanel, SIGNAL(draw()), viewer, SLOT(draw()));
 
-       connect(viewer, SIGNAL(childKeyEvent(QKeyEvent *)), this, SLOT(childKeyEvent(QKeyEvent *)));
-       */
+    connect(panel, SIGNAL(childKeyEvent(QKeyEvent *)), this, SLOT(childKeyEvent(QKeyEvent *)));
+    
     connect(this, SIGNAL(textureUpdate(GLuint)), scene, SLOT(textureUpdate(GLuint)));
     connect(this, SIGNAL(progressUpdate(int)), status, SLOT(progressUpdate(int)));
 
@@ -79,13 +77,13 @@ void MainWindow::updateGrid(const Grid2D<float> *grid) {
     m_stored_grids->push_back(*grid); 
 
     // Update val_min and val_max
-    for (unsigned int j = 0; j < grid->height(); j++) {
+    /*for (unsigned int j = 0; j < grid->height(); j++) {
         for (unsigned int i = 0; i < grid->width(); i++) {
             float val = (*grid)(i,j);
             if (val < m_min_val) m_min_val = val;
             if (val > m_max_val) m_max_val = val;
         }
-    }
+    }*/
 
     // Create 2D texture
     GLuint texture;
@@ -127,7 +125,7 @@ void MainWindow::changeNbIter(int nb) {
 }
 
 void MainWindow::startComputing() {
-    //return; // temporary
+    m_stored_grids->clear();
     m_thread = new QThread;
     Model *mod;
     switch (m_selected_model) {
@@ -175,7 +173,7 @@ void MainWindow::changeDisplayedGrid(int n) {
 
 void MainWindow::keyPressEvent(QKeyEvent *k) {
 
-    switch(k->key()) {
+    switch (k->key()) {
         case Qt::Key_Escape:
             if (m_thread)
                m_thread->quit(); 

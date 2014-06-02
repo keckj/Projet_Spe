@@ -2,15 +2,15 @@
 #include "sidePanel.hpp"
 #include "sidePanel.moc"
 #include "mainWindow.hpp"
+#include "parametersDialog.hpp"
 
 SidePanel::SidePanel(QWidget *parent_) : QWidget(parent_) {
 
     // Get parent
     MainWindow *mainWin = qobject_cast<MainWindow *>(parent_);
     if (!mainWin)
-        log4cpp::log_console->errorStream() << "SidePanel does not have a parent. Signals won't be transmitted";
+        log4cpp::log_console->errorStream() << "SidePanel does not have a parent !";
 
-    // Set m_paused
     m_paused = true;
 
     this->setStyleSheet("QWidget {background-color: white;}");
@@ -58,7 +58,7 @@ SidePanel::SidePanel(QWidget *parent_) : QWidget(parent_) {
 										"    padding: 0 3px 0 3px;"
 										"}");
 
-    // Labels
+    // Labels for model
     QLabel *modelLabel = new QLabel("Selected model :");
     QLabel *iterLabel = new QLabel("Iterations : ");
     
@@ -68,13 +68,18 @@ SidePanel::SidePanel(QWidget *parent_) : QWidget(parent_) {
     modelComboBox->addItem("Simple Model 2D");
     connect(modelComboBox, SIGNAL(currentIndexChanged(int)), mainWin, SLOT(changeModel(int)));
 
-    // SpinBox
+    // Iterations spinBox
     iterSpinBox = new QSpinBox();
     iterSpinBox->setRange(1, 1000000);
-    iterSpinBox->setSingleStep(1);
-    iterSpinBox->setValue(10);
+    iterSpinBox->setSingleStep(10);
+    iterSpinBox->setValue(100);
     connect(iterSpinBox, SIGNAL(valueChanged(int)), mainWin, SLOT(changeNbIter(int)));
     connect(iterSpinBox, SIGNAL(valueChanged(int)), this, SLOT(changeNbIterSlider(int)));
+
+    // Button for model parameters
+    paramsButton = new QPushButton("Parameters");
+    connect(paramsButton, SIGNAL(clicked()), this, SLOT(openParametersDialog()));
+    paramsDialog = new ParametersDialog(this);
 
     // Button for QFileDialog
     saveDirButton = new QPushButton("Choose saving directory");
@@ -90,15 +95,22 @@ SidePanel::SidePanel(QWidget *parent_) : QWidget(parent_) {
     connect(stopButton, SIGNAL(clicked()), mainWin, SLOT(stopComputing()));
     connect(stopButton, SIGNAL(clicked()), this, SLOT(stop()));
 
-    // Checkbox
+    // Rendering colormap label & dropdown list
+    QLabel *colorLabel = new QLabel("<FONT COLOR='red'>TEST</FONT>");
+    QComboBox *colorComboBox = new QComboBox();
+    colorComboBox->addItem("Default greyscale");
+    //colorComboBox->addItem("TODO"); loop ?
+    connect(colorComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(changeColorMap(int)));
+
+    // Auto rendering checkbox
     QCheckBox *autoRenderCheckBox = new QCheckBox("Automatic rendering");
     autoRenderCheckBox->setChecked(true);
     connect(autoRenderCheckBox, SIGNAL(stateChanged(int)), mainWin, SLOT(changeAutoRendering(int)));
     connect(autoRenderCheckBox, SIGNAL(stateChanged(int)), this, SLOT(showSlider(int)));
     
-    // Slider
+    // Iteration selection slider
     gridSlider = new QSlider(Qt::Horizontal);
-    gridSlider->setRange(1, 10); // to be updated when iterSpinBox changes value
+    gridSlider->setRange(1, 100); // to be updated when iterSpinBox changes value
     gridSlider->setPageStep(5);
     gridSlider->setSingleStep(1);
     gridSlider->setTracking(false);
@@ -118,7 +130,7 @@ SidePanel::SidePanel(QWidget *parent_) : QWidget(parent_) {
     renderOptionsGroupBox->setLayout(renderOptionsLayout);
 
     // Add Widgets
-    globalLayout->setSpacing(50);
+    globalLayout->setSpacing(30);
     globalLayout->addWidget(modelGroupBox);
     globalLayout->addWidget(runGroupBox);
     globalLayout->addWidget(renderOptionsGroupBox);
@@ -128,6 +140,7 @@ SidePanel::SidePanel(QWidget *parent_) : QWidget(parent_) {
     modelLayout->addWidget(modelComboBox);
     modelLayout->addWidget(iterLabel);
     modelLayout->addWidget(iterSpinBox);
+    modelLayout->addWidget(paramsButton);
 
     runLayout->setSpacing(10);
     runLayout->addWidget(startButton);
@@ -135,6 +148,8 @@ SidePanel::SidePanel(QWidget *parent_) : QWidget(parent_) {
     runLayout->addWidget(saveDirButton);
 
     renderOptionsLayout->setSpacing(10);
+    renderOptionsLayout->addWidget(colorLabel);
+    renderOptionsLayout->addWidget(colorComboBox);
     renderOptionsLayout->addWidget(autoRenderCheckBox);
     renderOptionsLayout->addWidget(gridSlider);
 }
@@ -142,6 +157,8 @@ SidePanel::SidePanel(QWidget *parent_) : QWidget(parent_) {
 SidePanel::~SidePanel() {
     delete modelComboBox;
     delete iterSpinBox;
+    delete paramsDialog;
+    delete saveDirButton;
     delete startButton;
     delete stopButton;
     delete gridSlider;
@@ -173,7 +190,13 @@ void SidePanel::stop() {
 void SidePanel::setModelOptionsStatus(bool status) {
     this->modelComboBox->setEnabled(status);
     this->iterSpinBox->setEnabled(status);
+    this->paramsButton->setEnabled(status);
     this->saveDirButton->setEnabled(status);
+}
+
+void SidePanel::openParametersDialog() {
+    paramsDialog->setModal(true);
+    paramsDialog->show();    
 }
 
 void SidePanel::changeDirectory() {
@@ -186,6 +209,10 @@ void SidePanel::changeDirectory() {
     }
 }
 
+void SidePanel::changeColorMap(int colorMapId) {
+    // TODO
+}
+
 void SidePanel::showSlider(int checkboxState) {
     if (checkboxState == Qt::Unchecked)
         this->gridSlider->show();
@@ -195,5 +222,15 @@ void SidePanel::showSlider(int checkboxState) {
 
 void SidePanel::changeNbIterSlider(int nbIter) {
     this->gridSlider->setRange(1, nbIter);
+}
+
+void SidePanel::keyPressEvent(QKeyEvent *k) {
+    switch (k->key()) {
+        case Qt::Key_Return:
+        case Qt::Key_Enter:
+            start_pause_resume();
+            break;
+    }
+    emit childKeyEvent(k);
 }
 

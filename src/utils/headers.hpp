@@ -32,6 +32,7 @@
 #include <QMainWindow>
 #include <QObject>
 #include <QWidget>
+#include <QDialog>
 #include <QFileDialog>
 #include <QKeyEvent>
 #include <QMenuBar>

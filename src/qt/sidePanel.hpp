@@ -2,6 +2,7 @@
 #define SIDE_PANEL_H
 
 #include "headers.hpp"
+#include "parametersDialog.hpp"
 
 class SidePanel : public QWidget {
     Q_OBJECT
@@ -14,25 +15,31 @@ class SidePanel : public QWidget {
         void startPushed();
         void pauseOrResumePushed(bool b);
 
+        void childKeyEvent(QKeyEvent *k);
+
     public slots:
         void stop();
 
     private slots:
         void start_pause_resume();
+        void openParametersDialog();
         void changeDirectory();
+        void changeColorMap(int colorMapId);
         void showSlider(int checkboxState);
         void changeNbIterSlider(int nbIter);
 
     private:
         void setModelOptionsStatus(bool status);
+        void keyPressEvent(QKeyEvent *k);
 
         bool m_paused;
 
         QString m_saveDirectory;
 
+        ParametersDialog *paramsDialog;
         QComboBox *modelComboBox;
         QSpinBox *iterSpinBox;
-        QPushButton *saveDirButton, *startButton, *stopButton;
+        QPushButton *paramsButton, *saveDirButton, *startButton, *stopButton;
         QSlider *gridSlider;
 };
 

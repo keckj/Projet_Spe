@@ -7,7 +7,7 @@
 
 enum WidgetType {
 	SLIDER=0,
-	BOX,
+	SPINBOX,
 	CHECKBOX
 };
 
