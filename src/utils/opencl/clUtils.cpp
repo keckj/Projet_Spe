@@ -65,9 +65,9 @@ namespace utils {
 			userData[1]->platform=&(*it); userData[1]->deviceType=CL_DEVICE_TYPE_CPU; userData[1]->contextId=i_cpu;
 			userData[2]->platform=&(*it); userData[2]->deviceType=CL_DEVICE_TYPE_ACCELERATOR; userData[2]->contextId=i_acc;
 
-			cl_context_properties contextProperties[3] = { 
-				CL_CONTEXT_PLATFORM, 
-				(cl_context_properties)(*it)(), 
+			cl_context_properties contextProperties[5] = { 
+				CL_CONTEXT_PLATFORM, (cl_context_properties)(*it)(), 
+				CL_GL_CONTEXT_KHR, (cl_context_properties) glXGetCurrentContext(),
 				0 
 			};
 

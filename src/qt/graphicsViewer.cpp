@@ -31,9 +31,5 @@ GraphicsViewer::GraphicsViewer() {
 	glBindBuffer(GL_UNIFORM_BUFFER, Globals::projectionViewUniformBlock);
 	glBufferSubData(GL_UNIFORM_BUFFER,  0*sizeof(GLfloat), 16*sizeof(GLfloat), projectionMatrixFloat);
 	glBufferSubData(GL_UNIFORM_BUFFER, 16*sizeof(GLfloat), 16*sizeof(GLfloat), viewMatrixFloat);
-	//glBufferSubData(GL_UNIFORM_BUFFER, 32*sizeof(GLfloat),  4*sizeof(GLfloat), cameraPos_f);
-	//glBufferSubData(GL_UNIFORM_BUFFER, 36*sizeof(GLfloat),  4*sizeof(GLfloat), cameraDir_f);
-	//glBufferSubData(GL_UNIFORM_BUFFER, 40*sizeof(GLfloat),  4*sizeof(GLfloat), cameraUp_f);
-	//glBufferSubData(GL_UNIFORM_BUFFER, 44*sizeof(GLfloat),  4*sizeof(GLfloat), cameraRight_f);
 	glBindBuffer(GL_UNIFORM_BUFFER, 0);
 }

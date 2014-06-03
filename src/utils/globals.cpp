@@ -73,7 +73,7 @@ void Globals::print(std::ostream &out) {
         out << "\n\tGL_MAX_GEOMETRY_UNIFORM_BLOCKS " << glMaxGeometryUniformBlocks;
         out << "\n\tGL_MAX_FRAGMENT_UNIFORM_BLOCKS " << glMaxFragmentUniformBlocks;
         out << "\n\tGL_MAX_UNIFORM_BLOCKSIZE " << utils::toStringMemory(glMaxUniformBlockSize);
-		out << "\n\tGL_EXTENSIONS " << glGetString(GL_EXTENSIONS);
+		//out << "\n\tGL_EXTENSIONS " << glGetString(GL_EXTENSIONS);
         out << "\n";
 }
 

@@ -19,7 +19,6 @@ class ExampleModel : public Model {
     signals:
         void stepComputed(const Grid2D<float> *grid);
         void stepComputed(const Grid3D<float> *grid);
-
 };
 
 #endif

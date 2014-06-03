@@ -42,7 +42,7 @@ namespace ColorMap {
 	//blue-green
 	const colormap multi_hue_3 {
 		0,0,0,255,
-		247,252240,255,
+		47,252,240,255,
 		224,243,219,255,
 		204,235,197,255,
 		168,221,181,255,
@@ -153,7 +153,7 @@ namespace ColorMap {
 
 	//crimson-yellow
 	const colormap multi_hue_11 {
-		0,255,255,255,
+		0,0,0,255,
 		255,255,229,255,
 		255,247,188,255,
 		254,227,145,255,
@@ -167,7 +167,7 @@ namespace ColorMap {
 	
 	//red-yellow
 	const colormap multi_hue_12 {
-		0,255,255,255,
+		0,0,0,255,
 		255,255,204,255,
 		255,237,160,255,
 		254,217,118,255,

@@ -5,6 +5,12 @@
 //Defines custom (debug, log, ...)
 #include "defines.hpp"
 
+ #if defined (__APPLE__) || defined(MACOSX)
+static const char* CL_GL_SHARING_EXT = "cl_APPLE_gl_sharing";
+#else
+static const char* CL_GL_SHARING_EXT ="cl_khr_gl_sharing";
+#endif
+
 //ORDRE IMPORTANT GL CL QT
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wshadow"
@@ -58,6 +64,10 @@
 #include <QResizeEvent>
 #include <QTimer>
 #include <QGenericMatrix>
+
+//GLX après QT (don't ask why)
+#include <GL/glx.h>
+
 #pragma GCC diagnostic pop
 //////////////////////////
 
