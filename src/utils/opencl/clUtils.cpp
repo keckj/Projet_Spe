@@ -32,7 +32,8 @@ namespace utils {
 			unsigned int &nTotAccDevices,
 			unsigned int **nGpuDevices,
 			unsigned int **nCpuDevices,
-			unsigned int **nAccDevices
+			unsigned int **nAccDevices,
+			bool enable_cl_gl_context_khr
 			) 
 
 	{
@@ -64,16 +65,27 @@ namespace utils {
 			userData[0]->platform=&(*it); userData[0]->deviceType=CL_DEVICE_TYPE_GPU; userData[0]->contextId=i_gpu;
 			userData[1]->platform=&(*it); userData[1]->deviceType=CL_DEVICE_TYPE_CPU; userData[1]->contextId=i_cpu;
 			userData[2]->platform=&(*it); userData[2]->deviceType=CL_DEVICE_TYPE_ACCELERATOR; userData[2]->contextId=i_acc;
-
-			cl_context_properties contextProperties[5] = { 
-				CL_CONTEXT_PLATFORM, (cl_context_properties)(*it)(), 
-				CL_GL_CONTEXT_KHR, (cl_context_properties) glXGetCurrentContext(),
-				0 
-			};
-
+	
+			
+			cl_context_properties *contextProperties = NULL;
+			if(enable_cl_gl_context_khr) {
+				cl_context_properties contextPropertiesGl[5] = { 
+					CL_CONTEXT_PLATFORM, (cl_context_properties)(*it)(), 
+					CL_GL_CONTEXT_KHR, (cl_context_properties) glXGetCurrentContext(),
+					0 
+				};
+				contextProperties = contextPropertiesGl;
+			} 
+			else {
+				cl_context_properties contextPropertiesNoGl[3] = { 
+					CL_CONTEXT_PLATFORM, (cl_context_properties)(*it)(), 
+					0 
+				};
+				contextProperties = contextPropertiesNoGl;
+			}
 
 			cl::Context gpu_context(CL_DEVICE_TYPE_GPU, contextProperties, openclContextCallback, (void*)userData[0], &err);
-			if(err != CL_DEVICE_NOT_FOUND) {
+			if(err != CL_DEVICE_NOT_FOUND && err != CL_INVALID_PROPERTY) {
 				CHK_ERRORS(err);
 				std::vector<cl::Device> gpu_devices = gpu_context.getInfo<CL_CONTEXT_DEVICES>(&err);
 				CHK_ERRORS(err);
@@ -86,35 +98,38 @@ namespace utils {
 					i_gpu++;
 				}
 			}
+	
 
-			cl::Context cpu_context(CL_DEVICE_TYPE_CPU, contextProperties, openclContextCallback, (void*)userData[1], &err);
-			if(err != CL_DEVICE_NOT_FOUND) {
-				CHK_ERRORS(err);
-				std::vector<cl::Device> cpu_devices = cpu_context.getInfo<CL_CONTEXT_DEVICES>(&err);
-				CHK_ERRORS(err);
-				if(cpu_devices.size() != 0) {
-					log_console->infoStream() << "\tFound " << cpu_devices.size() << " CPUs.";
-					nTotCpuDevices += cpu_devices.size();
-					(*nCpuDevices)[i_cpu] = cpu_devices.size();
-					cpuDevices.push_back(cpu_devices);
-					cpuContexts.push_back(cpu_context);
-					i_cpu++;
+			if(!enable_cl_gl_context_khr) {
+				cl::Context cpu_context(CL_DEVICE_TYPE_CPU, contextProperties, openclContextCallback, (void*)userData[1], &err);
+				if(err != CL_DEVICE_NOT_FOUND) {
+					CHK_ERRORS(err);
+					std::vector<cl::Device> cpu_devices = cpu_context.getInfo<CL_CONTEXT_DEVICES>(&err);
+					CHK_ERRORS(err);
+					if(cpu_devices.size() != 0) {
+						log_console->infoStream() << "\tFound " << cpu_devices.size() << " CPUs.";
+						nTotCpuDevices += cpu_devices.size();
+						(*nCpuDevices)[i_cpu] = cpu_devices.size();
+						cpuDevices.push_back(cpu_devices);
+						cpuContexts.push_back(cpu_context);
+						i_cpu++;
+					}
 				}
-			}
 
-			cl::Context acc_context(CL_DEVICE_TYPE_ACCELERATOR, contextProperties, openclContextCallback, (void*)userData[2], &err);
-			if(err != CL_DEVICE_NOT_FOUND) {
-				CHK_ERRORS(err);
+				cl::Context acc_context(CL_DEVICE_TYPE_ACCELERATOR, contextProperties, openclContextCallback, (void*)userData[2], &err);
+				if(err != CL_DEVICE_NOT_FOUND) {
+					CHK_ERRORS(err);
 
-				std::vector<cl::Device> acc_devices = acc_context.getInfo<CL_CONTEXT_DEVICES>(&err);
-				CHK_ERRORS(err);
-				if(acc_devices.size() != 0) {
-					log_console->infoStream() << "\tFound " << acc_devices.size() << " accelerator devices.";
-					nTotAccDevices += acc_devices.size();
-					(*nAccDevices)[i_acc] = acc_devices.size();
-					accDevices.push_back(acc_devices);
-					accContexts.push_back(acc_context);
-					i_acc++;
+					std::vector<cl::Device> acc_devices = acc_context.getInfo<CL_CONTEXT_DEVICES>(&err);
+					CHK_ERRORS(err);
+					if(acc_devices.size() != 0) {
+						log_console->infoStream() << "\tFound " << acc_devices.size() << " accelerator devices.";
+						nTotAccDevices += acc_devices.size();
+						(*nAccDevices)[i_acc] = acc_devices.size();
+						accDevices.push_back(acc_devices);
+						accContexts.push_back(acc_context);
+						i_acc++;
+					}
 				}
 			}
 		}	

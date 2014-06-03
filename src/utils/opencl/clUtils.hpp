@@ -22,7 +22,8 @@ namespace utils {
 			unsigned int &nTotAccDevices,
 			unsigned int **nGpuDevices,
 			unsigned int **nCpuDevices,
-			unsigned int **nAccDevices
+			unsigned int **nAccDevices,
+			bool enable_cl_gl_context_khr = false
 			);
 
 

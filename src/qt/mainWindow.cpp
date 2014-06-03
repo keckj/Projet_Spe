@@ -14,6 +14,7 @@
 #include "model.hpp"
 #include "exampleModel.hpp"
 #include "simpleModel2D.hpp"
+#include "multigpu.hpp"
 
 MainWindow::MainWindow() {
 
@@ -112,6 +113,10 @@ void MainWindow::startComputing() {
 		case 1:
             mod = (Model *) new SimpleModel2D(m_total_steps);
 			log_console->infoStream() << "Started a simple model 2D simulation !";
+			break;
+		case 2:
+            mod = (Model *) new MultiGpu(m_total_steps);
+			log_console->infoStream() << "Started a yolo-swaggy bug multi-gpu model simulation !";
 			break;
         default:
             mod = (Model *) new ExampleModel(m_total_steps);

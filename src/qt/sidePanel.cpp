@@ -67,6 +67,7 @@ SidePanel::SidePanel(QWidget *parent_) : QWidget(parent_) {
     modelComboBox = new QComboBox();
     modelComboBox->addItem("Default model");
     modelComboBox->addItem("Simple Model 2D");
+    modelComboBox->addItem("->Multi-GPU<-");
     connect(modelComboBox, SIGNAL(currentIndexChanged(int)), mainWin, SLOT(changeModel(int)));
 
     // Iterations spinBox
