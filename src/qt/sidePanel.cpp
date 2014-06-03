@@ -3,6 +3,7 @@
 #include "sidePanel.moc"
 #include "mainWindow.hpp"
 #include "parametersDialog.hpp"
+#include "colormap.hpp"
 
 SidePanel::SidePanel(QWidget *parent_) : QWidget(parent_) {
 
@@ -98,8 +99,10 @@ SidePanel::SidePanel(QWidget *parent_) : QWidget(parent_) {
     // Rendering colormap label & dropdown list
     QLabel *colorLabel = new QLabel("<FONT COLOR='red'>TEST</FONT>");
     QComboBox *colorComboBox = new QComboBox();
-    colorComboBox->addItem("Default greyscale");
-    //colorComboBox->addItem("TODO"); loop ?
+    std::map<std::string, std::pair<unsigned int, float*>> colormap = ColorMap::multiHueColorMaps();
+    for (auto it = colormap.begin(); it != colormap.end(); ++it) {
+        colorComboBox->addItem(QString(it->first.c_str()));
+    }
     connect(colorComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(changeColorMap(int)));
 
     // Auto rendering checkbox
