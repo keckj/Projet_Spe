@@ -55,6 +55,7 @@ MainWindow::MainWindow() {
     
     connect(this, SIGNAL(textureUpdate(const Grid2D<float> *)), scene, SLOT(textureUpdate(const Grid2D<float> *)));
     connect(this, SIGNAL(progressUpdate(int)), status, SLOT(progressUpdate(int)));
+	connect(this, SIGNAL(changeColormap(unsigned int)), scene, SLOT(changeColormap(unsigned int)));
 
     splitter->addWidget(viewer);
     splitter->addWidget(panel);
@@ -136,6 +137,10 @@ void MainWindow::pauseComputing(bool b) {
 
 void MainWindow::stopComputing() {
     emit stopThread();
+}
+
+void MainWindow::changeColormap(int colorId) {
+	emit colormapUpdate(colorId);
 }
 
 void MainWindow::changeAutoRendering(int checkboxState) {

@@ -16,6 +16,7 @@ class MainWindow : public QMainWindow {
     signals:
         void textureUpdate(const Grid2D<float> *grid);
         void progressUpdate(int p);
+		void colormapUpdate(unsigned int colorId);
         void pauseThread(bool b);
         void stopThread();
 
@@ -26,6 +27,7 @@ class MainWindow : public QMainWindow {
         void startComputing();
         void pauseComputing(bool b);
         void stopComputing();
+		void changeColormap(int colorId);
         void changeAutoRendering(int checkboxState);
 		void changeDisplayedGrid(int n);
 

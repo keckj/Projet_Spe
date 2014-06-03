@@ -11,7 +11,8 @@ OpenGLScene::OpenGLScene() :
 	m_texCoordsVBO(0),
 	m_vertexCoordsVBO(0),
 	m_texture(0),
-	m_colormapsUBO()
+	m_colormapsUBO(),
+	m_colorId(0)
 {
 }
 
@@ -38,7 +39,7 @@ void OpenGLScene::drawBackground(QPainter *painter, const QRectF &) {
 
 	m_drawProgram->use();
 	
-	glUniform1i(m_drawProgramUniformLocationMap["colormapId"], 7); //[0-11] pour le moment
+	glUniform1i(m_drawProgramUniformLocationMap["colormapId"], m_colorId); //[0-11] pour le moment
 	glUniform1f(m_drawProgramUniformLocationMap["minVal"], 0.0f);
 	glUniform1f(m_drawProgramUniformLocationMap["maxVal"], 1.0f);
 
@@ -105,4 +106,8 @@ void OpenGLScene::makeColorMaps() {
 				colorMap.second.second);
 	}
 	glBindBuffer(GL_UNIFORM_BUFFER, 0);
+}
+		
+void OpenGLScene::changeColormap(unsigned int colorId) {
+	m_colorId = colorId;
 }

@@ -100,7 +100,7 @@ SidePanel::SidePanel(QWidget *parent_) : QWidget(parent_) {
     QComboBox *colorComboBox = new QComboBox();
     colorComboBox->addItem("Default greyscale");
     //colorComboBox->addItem("TODO"); loop ?
-    connect(colorComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(changeColorMap(int)));
+    connect(colorComboBox, SIGNAL(currentIndexChanged(int)), mainWin, SLOT(colormapUpdated(int)));
 
     // Auto rendering checkbox
     QCheckBox *autoRenderCheckBox = new QCheckBox("Automatic rendering");
@@ -207,10 +207,6 @@ void SidePanel::changeDirectory() {
     if (dialog.exec()) {
         m_saveDirectory = dialog.selectedFiles().at(0);
     }
-}
-
-void SidePanel::changeColorMap(int colorMapId) {
-    // TODO
 }
 
 void SidePanel::showSlider(int checkboxState) {

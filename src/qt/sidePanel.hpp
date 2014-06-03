@@ -24,7 +24,6 @@ class SidePanel : public QWidget {
         void start_pause_resume();
         void openParametersDialog();
         void changeDirectory();
-        void changeColorMap(int colorMapId);
         void showSlider(int checkboxState);
         void changeNbIterSlider(int nbIter);
 
