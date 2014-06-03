@@ -103,7 +103,7 @@ SidePanel::SidePanel(QWidget *parent_) : QWidget(parent_) {
     for (auto it = colormap.begin(); it != colormap.end(); ++it) {
         colorComboBox->addItem(QString(it->first.c_str()));
     }
-    connect(colorComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(changeColorMap(int)));
+    connect(colorComboBox, SIGNAL(currentIndexChanged(int)), mainWin, SLOT(changeColormap(int)));
 
     // Auto rendering checkbox
     QCheckBox *autoRenderCheckBox = new QCheckBox("Automatic rendering");
@@ -210,10 +210,6 @@ void SidePanel::changeDirectory() {
     if (dialog.exec()) {
         m_saveDirectory = dialog.selectedFiles().at(0);
     }
-}
-
-void SidePanel::changeColorMap(int colorMapId) {
-    // TODO
 }
 
 void SidePanel::showSlider(int checkboxState) {

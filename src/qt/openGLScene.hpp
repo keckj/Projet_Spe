@@ -22,6 +22,7 @@ class OpenGLScene : public QGraphicsScene {
 		unsigned int m_vertexCoordsVBO;
 		unsigned int m_texture;
 		unsigned int m_colormapsUBO;
+		unsigned int m_colorId;
 		
 		void makeProgramm();
 		void makeColorMaps();
@@ -29,6 +30,7 @@ class OpenGLScene : public QGraphicsScene {
 
     public slots:
         void textureUpdate(const Grid2D<float> *grid);
+		void changeColormap(unsigned int colorId);
 };
 #endif
 
