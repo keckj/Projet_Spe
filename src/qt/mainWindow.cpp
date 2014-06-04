@@ -129,7 +129,7 @@ void MainWindow::startComputing() {
     connect(this, SIGNAL(pauseThread(bool)), mod, SLOT(pauseComputing(bool)));
     connect(mod, SIGNAL(finished()), m_thread, SLOT(quit()));                   // kill thread
     connect(mod, SIGNAL(finished()), panel, SLOT(stop()));                      // update GUI buttons
-    //connect(mod, SIGNAL(finished()), mod, SLOT(deleteLater()));
+    //connect(mod, SIGNAL(finished()), mod, SLOT(deleteLater()));                 // cleanup (TODO thread safe signal)
     connect(m_thread, SIGNAL(finished()), m_thread, SLOT(deleteLater()));       // cleanup
     connect(mod, SIGNAL(stepComputed(const Grid2D<float> *)), this, SLOT(updateGrid(const Grid2D<float> *)));
 

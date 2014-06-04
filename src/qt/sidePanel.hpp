@@ -3,6 +3,7 @@
 
 #include "headers.hpp"
 #include "parametersDialog.hpp"
+#include "argument.hpp"
 
 class SidePanel : public QWidget {
     Q_OBJECT
@@ -10,6 +11,8 @@ class SidePanel : public QWidget {
     public:
 		SidePanel(QWidget *parent_ = 0);
 		~SidePanel();
+
+        std::map<std::string, Argument> *getArguments();
 
     signals:
         void startPushed();

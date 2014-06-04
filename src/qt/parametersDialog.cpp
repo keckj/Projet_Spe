@@ -13,8 +13,6 @@ ParametersDialog::ParametersDialog(QWidget *parent_) : QDialog(parent_) {
     if (!panel)
         log4cpp::log_console->errorStream() << "ParametersDialog does not have a parent !";
 
-    //vector<Argument *> *args = panel->getArguments();
-
     this->setWindowTitle("Parameters");
 
     // Layouts
@@ -39,38 +37,47 @@ ParametersDialog::ParametersDialog(QWidget *parent_) : QDialog(parent_) {
     buttonsLayout->addWidget(cancelButton);
     connect(cancelButton, SIGNAL(clicked()), this, SLOT(reject()));
 
-    /*
-    for (auto arg = args->begin(); arg != args->end(); ++arg) {
-        argGridLayout->addWidget(new QLabel(arg->name()), TODO, TODO); 
-        switch(arg->preferredWidgetType()) {
+    m_argsMap = panel->getArguments();
+    
+    int nParams = m_argsMap->size();
+    const int nbParamsPerColumn = 10;
+    int cpt = 0;
+    QWidget *widget;
+    
+    for (auto it = m_argsMap->begin(); it != m_argsMap->end(); ++it) {
+        argGridLayout->addWidget(new QLabel(QString(it->first.c_str())), cpt % nbParamsPerColumn, 2 * cpt / nbParamsPerColumn);
+        cpt++;
+        Argument arg = it->second;
+        switch(arg.preferredWidgetType()) {
             case SLIDER:    // always int
                 widget = new QSlider;
-                widget->setValue(arg->val().int());
-                widget->setRange(arg->minVal(), arg->maxVal());
+                ((QSlider*)widget)->setValue(arg.val());
+                ((QSlider*)widget)->setRange(arg.minVal(), arg.maxVal());
                 break;
             case SPINBOX:   // int or double
-                if (arg->type() == INT) {
+                if (arg.type() == INT) {
                     widget = new QSpinBox;
-                    widget->setValue(arg->val().int());
-                    widget->setMaximum(arg->maxVal());
-                    widget->setMinimum(arg->minVal());
+                    ((QSpinBox *)widget)->setValue(arg.val());
+                    ((QSpinBox *)widget)->setMaximum(arg.maxVal());
+                    ((QSpinBox *)widget)->setMinimum(arg.minVal());
                 } else {
                     widget = new QDoubleSpinBox;
-                    widget->setValue(arg->val().double());
-                    widget->setMaximum(arg->maxVal());
-                    widget->setMinimum(arg->minVal());
+                    ((QDoubleSpinBox*)widget)->setValue(arg.val());
+                    ((QDoubleSpinBox*)widget)->setMaximum(arg.maxVal());
+                    ((QDoubleSpinBox*)widget)->setMinimum(arg.minVal());
                 }
                 break;
             case CHECKBOX:  // always bool
                 widget = new QCheckBox;
-                widget->setChecked(arg->val().bool());
+                ((QCheckBox*)widget)->setChecked(arg.val());
                 break;
             default:
                 log4cpp::log_console->errorStream() << "ParametersDialog: Unknown argument widget type !";
                 break;
         }
-        argGridLayout->addWidget(widget, TODO, TODO);
-    }*/
+        argGridLayout->addWidget(widget, cpt % nbParamsPerColumn, (2 * cpt / nbParamsPerColumn) + 1);
+        cpt++;
+    }
 }
 
 void ParametersDialog::okClicked() {
@@ -79,6 +86,6 @@ void ParametersDialog::okClicked() {
 }
 
 void ParametersDialog::resetClicked() {
-    // TODO reset all widget->setValue
+    // TODO reset all widget->setValue(arg->defaultVal())
 }
 

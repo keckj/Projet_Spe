@@ -2,6 +2,7 @@
 #define PARAM_DIALOG_HPP
 
 #include "headers.hpp"
+#include "argument.hpp"
 
 class ParametersDialog : public QDialog {
     Q_OBJECT
@@ -12,6 +13,9 @@ class ParametersDialog : public QDialog {
     private slots:
         void okClicked();
         void resetClicked();
+
+    private:
+        std::map<std::string, Argument> *m_argsMap;
 };
 
 #endif
