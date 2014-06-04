@@ -1,22 +1,27 @@
 
 #include "subDomain.hpp"
 
+#include "utils.hpp"
+
+using namespace log4cpp;
+using namespace utils;
+
 SubDomain::SubDomain(unsigned int id_, unsigned int nSubDomain_,
 		unsigned int idx_, unsigned int idy_, unsigned int idz_, 
 		unsigned int nSubDomainX_, unsigned int nSubDomainY_, unsigned int nSubDomainZ_,
-		unsigned int subGridWidth_, unsigned int subGridHeight_, unsigned int subGridLength_,
+		unsigned int subDomainWidth_, unsigned int subDomainHeight_, unsigned int subDomainLength_,
 		unsigned int borderSize_) :
 	_id(id_),
 	_nSubDomain(nSubDomain_),
 	_idx(idx_), _idy(idy_), _idz(idz_),
 	_nSubDomainX(nSubDomainX_), _nSubDomainY(nSubDomainY_), _nSubDomainZ(nSubDomainZ_),
-	_subGridWidth(subGridWidth_), _subGridHeight(subGridHeight_), _subGridLength(subGridLength_),
+	_subDomainWidth(subDomainWidth_), _subDomainHeight(subDomainHeight_), _subDomainLength(subDomainLength_),
 	_borderSize(borderSize_),
-	_size(_subGridWidth*_subGridHeight*_subGridLength), 
+	_size(_subDomainWidth*_subDomainHeight*_subDomainLength), 
 	_bytes(_size*sizeof(float)),
-	_edgeSizeX(_subGridHeight*_subGridLength*_borderSize),
-	_edgeSizeY(_subGridWidth*_subGridLength*_borderSize),
-	_edgeSizeZ(_subGridWidth*_subGridHeight*_borderSize),
+	_edgeSizeX(_subDomainHeight*_subDomainLength*_borderSize),
+	_edgeSizeY(_subDomainWidth*_subDomainLength*_borderSize),
+	_edgeSizeZ(_subDomainWidth*_subDomainHeight*_borderSize),
 	_edgeBytesX(_edgeSizeX*sizeof(float)), 
 	_edgeBytesY(_edgeSizeY*sizeof(float)), 
 	_edgeBytesZ(_edgeSizeZ*sizeof(float)),
@@ -38,6 +43,13 @@ SubDomain::SubDomain(unsigned int id_, unsigned int nSubDomain_,
 	
 	_internalEdgeFront = new float[_edgeSizeZ];
 	_internalEdgeBack = new float[_edgeSizeZ];
+
+	log_console->debugStream() 
+		<< "Created a " << toStringDimension(_subDomainWidth, _subDomainHeight, _subDomainLength) << " subDomain"
+		<< ", id=" << _id << "/" << _nSubDomain-1u << "  [ "
+		<< toStringVec3(_idx,_idy,_idz) << " // " << toStringVec3(_nSubDomainX-1u, _nSubDomainY-1u, _nSubDomainZ-1u)
+		<< " ], borderSize=" << _borderSize 
+		<< ", storage=" << toStringMemory(_bytes) << ".";
 }
 
 SubDomain::~SubDomain() {
@@ -46,9 +58,6 @@ SubDomain::~SubDomain() {
 		_internalEdgeLeft, _internalEdgeRight,
 		_internalEdgeTop, _internalEdgeDown,
 		_internalEdgeFront, _internalEdgeBack,
-		_externalEdgeLeft, _externalEdgeRight,
-		_externalEdgeTop, _externalEdgeDown,
-		_externalEdgeFront, _externalEdgeBack
 	};
 
 	for (int i = 0; i < 13; i++) {
@@ -80,14 +89,14 @@ unsigned int SubDomain::nSubDomainY() const {
 unsigned int SubDomain::nSubDomainZ() const {
 	return _nSubDomainZ;
 }
-unsigned int SubDomain::subGridWidth() const {
-	return _subGridWidth;
+unsigned int SubDomain::subDomainWidth() const {
+	return _subDomainWidth;
 }		
-unsigned int SubDomain::subGridHeight() const {
-	return _subGridHeight;
+unsigned int SubDomain::subDomainHeight() const {
+	return _subDomainHeight;
 }		
-unsigned int SubDomain::subGridLength() const {
-	return _subGridLength;
+unsigned int SubDomain::subDomainLength() const {
+	return _subDomainLength;
 }
 unsigned int SubDomain::borderSize() const {
 	return _borderSize;

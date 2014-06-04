@@ -3,6 +3,7 @@
 #include "multigpu.hpp"
 #include "multigpu.moc"
 #include "log.hpp"
+#include "domain.hpp"
 
 #include <sstream>
 
@@ -26,6 +27,7 @@ MultiGpu::~MultiGpu()
 void MultiGpu::initComputation() {
 	initGrids(NULL);
 	checkGrids();
+
 	initOpenClContext();
 }
 
@@ -128,10 +130,12 @@ void MultiGpu::initGrids(std::map<std::string, Grid<float>*> *initialCondGrids) 
 		(*_initialCondGrids)["e"] = gridE;
 		(*_initialCondGrids)["r"] = gridR;
 		
-		_gridWidth = 512u;
-		_gridHeight = 512u;
-		_gridLength = 512u;
+		_gridWidth = 1233u;
+		_gridHeight = 457u;
+		_gridLength = 789u;
 		_nFunctions = _initialCondGrids->size();
+
+		Domain dom(_gridWidth, _gridHeight, _gridLength, 1u, 17);
 }
 
 void MultiGpu::checkGrids() {

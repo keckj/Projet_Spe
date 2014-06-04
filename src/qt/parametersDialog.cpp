@@ -73,7 +73,7 @@ ParametersDialog::ParametersDialog(std::map<std::string, Argument> *argsMap, QWi
                         ((QDoubleSpinBox *)widget)->setMinimum((float)arg.minVal());
                         ((QDoubleSpinBox *)widget)->setMaximum((float)arg.maxVal());
                         ((QDoubleSpinBox *)widget)->setValue((float)arg.val());
-                    break;
+						break;
                     case DOUBLE:
                         widget = new QDoubleSpinBox;
                         ((QDoubleSpinBox *)widget)->setDecimals((int)(-log10((double)arg.minVal()))+2);

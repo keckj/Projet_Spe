@@ -7,6 +7,8 @@
 #include "utils/headers.hpp"
 #include "model.hpp"
 
+#include "circleInitialCond.hpp"
+
 #include <mutex>
 #include <condition_variable>
 

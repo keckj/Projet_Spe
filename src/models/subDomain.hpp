@@ -9,7 +9,7 @@ class SubDomain {
 		SubDomain(unsigned int id, unsigned int nSubDomain,
 				unsigned int idx, unsigned int idy, unsigned int idz, 
 				unsigned int nSubDomainX, unsigned int nSubDomainY, unsigned int nSubDomainZ,
-				unsigned int subGridWidth, unsigned int subGridHeight, unsigned int subGridLength,
+				unsigned int subDomainWidth, unsigned int subDomainHeight, unsigned int subDomainLength,
 				unsigned int borderSize);
 
 		~SubDomain();
@@ -25,9 +25,9 @@ class SubDomain {
 		unsigned int nSubDomainY() const;		
 		unsigned int nSubDomainZ() const;
 
-		unsigned int subGridWidth() const;		
-		unsigned int subGridHeight() const;		
-		unsigned int subGridLength() const;
+		unsigned int subDomainWidth() const;		
+		unsigned int subDomainHeight() const;		
+		unsigned int subDomainLength() const;
 
 		unsigned int borderSize() const;
 
@@ -57,6 +57,10 @@ class SubDomain {
 		unsigned long edgeBytesY() const;
 		unsigned long edgeBytesZ() const;
 
+		unsigned int offsetX();
+		unsigned int offsetY();
+		unsigned int offsetZ();
+
 		void setExternalEdges(float *edgeLeft , float *edgeTop , float *edgeFront,
 							  float *edgeRight, float *edgeDown, float *edgeBack); 
 
@@ -65,7 +69,7 @@ class SubDomain {
 		const unsigned int _nSubDomain;
 		const unsigned int _idx, _idy, _idz;
 		const unsigned int _nSubDomainX,  _nSubDomainY,  _nSubDomainZ;
-		const unsigned int _subGridWidth,  _subGridHeight,  _subGridLength;
+		const unsigned int _subDomainWidth,  _subDomainHeight,  _subDomainLength;
 		const unsigned int _borderSize;
 		
 		const unsigned long _size, _bytes;

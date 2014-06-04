@@ -1,13 +1,16 @@
 
 #include "domain.hpp"
+#include "log.hpp"
 #include <cassert>
+
+using namespace log4cpp;
 		
 Domain::Domain(
 		unsigned int domainWidth_, unsigned int domainHeight_, unsigned int domainLength_,
 		unsigned int extraBorderSize_, 
 		unsigned int minSplits_) :
 	_domainWidth(domainWidth_), 
-	_domainHeight(domainWidth_),
+	_domainHeight(domainHeight_),
 	_domainLength(domainLength_),
 	_extraBorderSize(extraBorderSize_)
 {
@@ -60,6 +63,8 @@ void Domain::splitDomain(unsigned int minSplits) {
 		
 	unsigned int splitX=1, splitY=1, splitZ=1;
 	unsigned int subdomainWidth=_domainWidth, subdomainHeight=_domainHeight, subdomainLength=_domainLength;
+
+	log_console->debugStream() << "Splitting a " << _domainWidth << " x " << _domainHeight << " x " << _domainLength << " domain (minSplits=" << minSplits << ").";
 	
 	while(splitX*splitY*splitZ < minSplits) {
 		if(subdomainWidth > subdomainHeight && subdomainWidth > subdomainLength) { //on privilégie la découpe en z puis y puis x
@@ -82,6 +87,18 @@ void Domain::splitDomain(unsigned int minSplits) {
 	_splitsY = splitY;
 	_splitsZ = splitZ;
 	_nSplits = _splitsX*_splitsY*_splitsZ;
+	
+	log_console->debugStream() << "Splits : (" << _splitsX << "," << _splitsY << "," << _splitsZ << ")";
+	log_console->debugStream() << "SubDomains : (" 
+		<< _domainWidth/_splitsX << "," 
+		<< _domainHeight/_splitsY << ","
+		<< _domainLength/_splitsZ << ")"
+		<< "\t + O[ ("
+		<< _domainWidth/_splitsX + _domainWidth%_splitsX << "," 
+		<< _domainHeight/_splitsY + _domainHeight%_splitsY << "," 
+		<< _domainLength/_splitsZ + _domainLength%_splitsZ << ") " 
+		<< "]";
+	
 
 	SubDomain *dom;
 
@@ -93,9 +110,9 @@ void Domain::splitDomain(unsigned int minSplits) {
 					_nSplits,
 					i,j,k,
 					_splitsX, _splitsY, _splitsZ,
-					(i==_splitsX-1 ? _domainWidth %_splitsX : _domainWidth /_splitsX),
-					(j==_splitsY-1 ? _domainHeight%_splitsY : _domainHeight/_splitsY),
-					(k==_splitsZ-1 ? _domainLength%_splitsZ : _domainLength/_splitsZ),
+					_domainWidth /_splitsX + (i==_splitsX-1 ? _domainWidth %_splitsX : 0u),
+					_domainHeight/_splitsY + (j==_splitsY-1 ? _domainHeight%_splitsY : 0u),
+					_domainLength/_splitsZ + (k==_splitsZ-1 ? _domainLength%_splitsZ : 0u),
 					_extraBorderSize
 				);
 

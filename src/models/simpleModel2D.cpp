@@ -4,6 +4,8 @@
 #include "simpleModel2D.moc"
 #include "grid2D.hpp"
 #include "utils.hpp"
+#include "initialCond.hpp"
+#include "circleInitialCond.hpp"
 
 #include <algorithm>
 #include <thread>
@@ -91,18 +93,25 @@ SimpleModel2D::~SimpleModel2D() {
 }
 		
 void SimpleModel2D::initComputation() {
+
 	float r2 = 0.005;
 	for (unsigned int j = 0; j < _height; j++) {
 		for (unsigned int i = 0; i < _width; i++) {
-			(*_e1)(i,j) = 0.0f;	
 			(*_r1)(i,j) = 0.0f;	
 			
-			if(SQUARE(i*_dh - _e1->realWidth()/2.0f) + SQUARE(j*_dh - _e1->realHeight()/2.0f) < r2)
-				(*_e1)(i,j) = 1.0f;	
+			//if(i*_dh < _e1->realWidth()/2.0f) {
+				//(*_e1)(i,j) = 1.0f;
+			//}
+			
+			//if(j*_dh < _e1->realHeight()/2.0f) {
+				//(*_r1)(i,j) = 1.0f;
+			//}
 		}
 	}
+	
+	CircleInitialCond<float> *circle = new CircleInitialCond<float>(0.1,0.5,0.5,0.5);
+	circle->initializeGrid(_e1);
 }
-
 
 void SimpleModel2D::computeStep(int i) {
 	
@@ -185,7 +194,7 @@ std::map<std::string, Argument> *SimpleModel2D::getArguments() {
 	args->emplace("mu_1",Argument(0.07f, 0.01f, 0.5f, WidgetType::SPINBOX));
 	args->emplace("mu_2",Argument(0.3f, 0.1f, 0.5f, WidgetType::SPINBOX));
 	args->emplace("alpha_1",Argument(0.2f, 0.1f, 0.5f, WidgetType::SPINBOX));
-	args->emplace("alpha_2",Argument(0.3f, 0.1f, 0.5f, WidgetType::SPINBOX));
-    
+	args->emplace("alpha_2",Argument(0.1f, 0.1f, 0.5f, WidgetType::SPINBOX));
+			
 	return args;
 }

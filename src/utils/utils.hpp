@@ -11,6 +11,22 @@
 namespace utils {
 
 	const std::string toStringMemory(unsigned long bytes);
+	
+	template <typename T>
+	const std::string toStringVec3(T vx, T vy, T vz, const std::string sep = ",") {
+		std::stringstream ss;
+		ss << "(" << vx << sep << vy << sep << vz << ")";
+		const std::string str(ss.str());
+		return str;
+	}
+	
+	template <typename T>
+	const std::string toStringDimension(T width, T height, T length) {
+		std::stringstream ss;
+		ss << width << " x " << height << " x " << length;
+		const std::string str(ss.str());
+		return str;
+	}
 
 	template <typename T>
 		T abs(T val) {
