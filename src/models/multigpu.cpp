@@ -26,8 +26,6 @@ MultiGpu::~MultiGpu()
 void MultiGpu::initComputation() {
 	initGrids(NULL);
 	checkGrids();
-	splitProblem(4);
-
 	initOpenClContext();
 }
 
@@ -154,46 +152,3 @@ void MultiGpu::checkGrids() {
 	}
 }
 
-void MultiGpu::splitProblem(unsigned int minSplit) {
-		
-	unsigned int nSplit = minSplit;
-
-	unsigned int splitX=1, splitY=1, splitZ=1;
-	unsigned int subGridWidth=_gridWidth, subGridHeight=_gridHeight, subGridLength=_gridLength;
-	
-	while(splitX*splitY*splitZ < nSplit) {
-		if(subGridWidth > subGridHeight && subGridWidth > subGridLength) { //on privilégie la découpe en z puis y puis x
-			subGridWidth = (_gridWidth+splitX-1)/splitX;
-			splitX++;
-		}
-		else {
-			if(subGridHeight > subGridLength) {
-				subGridHeight = (_gridHeight+splitY-1)/splitY;
-				splitY++;
-			}
-			else {
-				subGridLength = (_gridLength+splitZ-1)/splitZ;
-				splitZ++;
-			}
-		}
-	}
-	
-	_splitX = splitX;
-	_splitY = splitY;
-	_splitZ = splitZ;
-	_nSubGrids = _splitX*_splitY*_splitZ;
-
-	_subGridWidth = new unsigned int[_nSubGrids];
-	_subGridHeight = new unsigned int[_nSubGrids];
-	_subGridLength = new unsigned int[_nSubGrids];
-
-	for (unsigned int k = 0; k < splitZ; k++) {
-		for (unsigned int j = 0; j < splitY; j++) {
-			for (unsigned int i = 0; i < splitX; i++) {
-				_subGridWidth [k*splitY*splitX + j*splitX + i] = (i==splitX-1 ? _gridWidth %splitX : _gridWidth /splitX);
-				_subGridHeight[k*splitY*splitX + j*splitX + i] = (j==splitY-1 ? _gridHeight%splitY : _gridHeight/splitY);
-				_subGridLength[k*splitY*splitX + j*splitX + i] = (k==splitZ-1 ? _gridLength%splitZ : _gridLength/splitZ);
-			}
-		}
-	}
-}

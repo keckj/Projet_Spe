@@ -197,7 +197,7 @@ void SidePanel::openParametersDialog() {
     paramsDialog->show();    
 }
         
-std::map<std::string, Argument> *getArguments() {
+std::map<std::string, Argument> *SidePanel::getArguments() {
     //switch(modelComboBox)
     return new std::map<std::string, Argument>;
 }
