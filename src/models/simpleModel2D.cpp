@@ -31,6 +31,15 @@ SimpleModel2D::SimpleModel2D(int nbIter,
 	_dt = computeOptimalTimestep();
 	
 	log_console->debugStream() << "Created a Simple Model 2D !";
+	log_console->debugStream() 
+		<< "epsilon=" << _epsilon 
+		<< "\td=" << _d 
+		<< "\tk=" << _k 
+		<< "\tmu_1=" << _mu_1
+		<< "\tmu_2=" << _mu_2
+		<< "\talpha_1=" << _alpha_1
+		<< "\talpha_2=" << _alpha_2;
+
 	log_console->debugStream() << "dh " << _dh << " !";
 	log_console->debugStream() << "dt " << _dt << " !";
 	log_console->debugStream() << "Size " << _e1->size() << " !";
@@ -44,10 +53,33 @@ SimpleModel2D::SimpleModel2D(unsigned int nbIter,
 {
 	_epsilon = args->at("epsilon")();
 	_d = args->at("d")();
+	_k = args->at("k")();
 	_mu_1 = args->at("mu_1")();
 	_mu_2 = args->at("mu_2")();
 	_alpha_1 = args->at("alpha_1")();
 	_alpha_2 = args->at("alpha_2")();
+	
+	_e1 = new Grid2D<float>(_width, _height, 0.01f);
+	_e2 = new Grid2D<float>(_width, _height, 0.01f);
+	_r1 = new Grid2D<float>(_width, _height, 0.01f);
+	_r2 = new Grid2D<float>(_width, _height, 0.01f);
+
+	_dh = _e1->dh();
+	_dt = computeOptimalTimestep();
+	
+	log_console->debugStream() << "Created a Simple Model 2D !";
+	log_console->debugStream() 
+		<< "epsilon=" << _epsilon 
+		<< "\td=" << _d 
+		<< "\tk=" << _k 
+		<< "\tmu_1=" << _mu_1
+		<< "\tmu_2=" << _mu_2
+		<< "\talpha_1=" << _alpha_1
+		<< "\talpha_2=" << _alpha_2;
+
+	log_console->debugStream() << "dh " << _dh << " !";
+	log_console->debugStream() << "dt " << _dt << " !";
+	log_console->debugStream() << "Size " << _e1->size() << " !";
 }
 
 
@@ -148,7 +180,8 @@ std::map<std::string, Argument> *SimpleModel2D::getArguments() {
 	std::map<std::string,Argument> *args = new std::map<std::string,Argument>;
 
 	args->emplace("epsilon", Argument(0.01f, 0.001f, 0.1f, WidgetType::SPINBOX));
-	args->emplace("d",Argument(1e-4f, 5e-5f, 1e-4f, WidgetType::SPINBOX));
+	args->emplace("d",Argument(5e-5f, 1e-5f, 1e-4f, WidgetType::SPINBOX));
+	args->emplace("k",Argument(8.0f, 0.0f, 20.0f, WidgetType::SPINBOX));
 	args->emplace("mu_1",Argument(0.07f, 0.01f, 0.5f, WidgetType::SPINBOX));
 	args->emplace("mu_2",Argument(0.3f, 0.1f, 0.5f, WidgetType::SPINBOX));
 	args->emplace("alpha_1",Argument(0.2f, 0.1f, 0.5f, WidgetType::SPINBOX));

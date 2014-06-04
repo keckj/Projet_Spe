@@ -204,11 +204,6 @@ void SidePanel::openParametersDialog() {
     paramsDialog->show();
 }
         
-std::map<std::string, Argument> *SidePanel::getArguments() {
-    //switch(modelComboBox)
-    return new std::map<std::string, Argument>;
-}
-
 void SidePanel::changeDirectory() {
     QFileDialog dialog;
     dialog.setDirectory(QDir::currentPath());
