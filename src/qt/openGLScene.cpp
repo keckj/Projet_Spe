@@ -105,6 +105,7 @@ void OpenGLScene::makeColorMaps() {
 	glBindBuffer(GL_UNIFORM_BUFFER, 0);
 }
 		
-void OpenGLScene::changeColormap(unsigned int colorId) {
-	m_colorId = colorId;
+void OpenGLScene::changeColormap(const QString &colormapName) {
+	std::map<std::string, std::pair<unsigned int, float*> > maps = ColorMap::multiHueColorMaps();
+	m_colorId = maps[colormapName.toStdString()].first;
 }
