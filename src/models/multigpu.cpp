@@ -13,8 +13,7 @@ MultiGpu::MultiGpu(int nbIter) :
 	Model(10),
 	_nDevices(0),
 	_nFunctions(0),
-	_grids(0),
-	_gridsOld(0),
+	_initialCondGrids(0),
 	_gridWidth(0), _gridHeight(0), _gridLength(0),
 	_subGridWidth(0), _subGridHeight(0), _subGridLength(0)
 {
@@ -25,9 +24,10 @@ MultiGpu::~MultiGpu()
 }
 
 void MultiGpu::initComputation() {
-	initGrids();
+	initGrids(NULL);
 	checkGrids();
 	splitProblem(4);
+
 	initOpenClContext();
 }
 
@@ -121,45 +121,23 @@ void MultiGpu::initOpenClContext(){
 void MultiGpu::createGlObjects(){}
 		
 
-void MultiGpu::initGrids() {
-		_grids = new std::map<std::string, Grid<float>*>;
-		_gridsOld = new std::map<std::string, Grid<float>*>;
+void MultiGpu::initGrids(std::map<std::string, Grid<float>*> *initialCondGrids) {
+		_initialCondGrids = new std::map<std::string, Grid<float>*>;
 		
-		Grid<float> *gridE_A = new Grid3D<float>(512u,512u,512u,0.01f);
-		Grid<float> *gridE_B = new Grid3D<float>(512u,512u,512u,0.01f);
+		Grid<float> *gridE = new Grid3D<float>(512u,512u,512u,0.01f);
+		Grid<float> *gridR = new Grid3D<float>(512u,512u,512u,0.01f);
 
-		Grid<float> *gridR_A = new Grid3D<float>(512u,512u,512u,0.01f);
-		Grid<float> *gridR_B = new Grid3D<float>(512u,512u,512u,0.01f);
-
-		(*_grids)["e"] = gridE_A;
-		(*_grids)["r"] = gridR_A;
+		(*_initialCondGrids)["e"] = gridE;
+		(*_initialCondGrids)["r"] = gridR;
 		
-		(*_gridsOld)["e"] = gridE_B;
-		(*_gridsOld)["r"] = gridR_B;
-
 		_gridWidth = 512u;
 		_gridHeight = 512u;
 		_gridLength = 512u;
+		_nFunctions = _initialCondGrids->size();
 }
 
 void MultiGpu::checkGrids() {
-	for(auto grid = _grids->begin(); grid != _grids->end(); ++grid) {
-		if(!grid->second->isAllocated()) {
-			log_console->errorStream() << "Grid '" << grid->first << "' is not allocated, aborting.";
-			emit(finished());
-		}
-		if(grid->second->width() != _gridWidth
-			|| grid->second->height() != _gridHeight
-			|| grid->second->length() != _gridLength) {
-			log_console->errorStream() << "Grid sizes are not coherent, aborting.";
-			emit(finished());
-		}
-		if(!grid->second->isOwner()) {
-			log_console->warnStream() << "Grid '" << grid->first << "' is allocated but is not data owner.";
-		}
-	}
-	
-	for(auto grid = _gridsOld->begin(); grid != _gridsOld->end(); ++grid) {
+	for(auto grid = _initialCondGrids->begin(); grid != _initialCondGrids->end(); ++grid) {
 		if(!grid->second->isAllocated()) {
 			log_console->errorStream() << "Grid '" << grid->first << "' is not allocated, aborting.";
 			emit(finished());
@@ -218,6 +196,4 @@ void MultiGpu::splitProblem(unsigned int minSplit) {
 			}
 		}
 	}
-
-	_nSubGrids = 1 << nSplit;
 }
