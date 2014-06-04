@@ -1,3 +1,4 @@
+#include <cmath>
 #include "headers.hpp"
 #include "parametersDialog.hpp"
 #include "parametersDialog.moc"
@@ -6,7 +7,7 @@
 #include "value.hpp"
 
 
-ParametersDialog::ParametersDialog(QWidget *parent_) : QDialog(parent_) {
+ParametersDialog::ParametersDialog(std::map<std::string, Argument> *argsMap, QWidget *parent_) : QDialog(parent_) {
 
     // Get parent
     SidePanel *panel = qobject_cast<SidePanel *>(parent_);
@@ -37,55 +38,115 @@ ParametersDialog::ParametersDialog(QWidget *parent_) : QDialog(parent_) {
     buttonsLayout->addWidget(cancelButton);
     connect(cancelButton, SIGNAL(clicked()), this, SLOT(reject()));
 
-    m_argsMap = panel->getArguments();
-    
-    int nParams = m_argsMap->size();
+    // Arguments
+    m_argsMap = argsMap;
+    m_widgetsMap = new std::map<std::string, QWidget *>; 
     const int nbParamsPerColumn = 10;
     int cpt = 0;
     QWidget *widget;
-    
+
     for (auto it = m_argsMap->begin(); it != m_argsMap->end(); ++it) {
-        argGridLayout->addWidget(new QLabel(QString(it->first.c_str())), cpt % nbParamsPerColumn, 2 * cpt / nbParamsPerColumn);
-        cpt++;
+        argGridLayout->addWidget(new QLabel(QString(it->first.c_str())), cpt % nbParamsPerColumn, 2 * (cpt / nbParamsPerColumn));
         Argument arg = it->second;
         switch(arg.preferredWidgetType()) {
             case SLIDER:    // always int
-                widget = new QSlider;
-                ((QSlider*)widget)->setValue(arg.val());
-                ((QSlider*)widget)->setRange(arg.minVal(), arg.maxVal());
+                if (arg.type() != INT) {
+                    log4cpp::log_console->errorStream() <<  "Type " << arg.type() << " is not supported in QSlider !";
+                } else {
+                    widget = new QSlider(Qt::Horizontal);
+                    ((QSlider *)widget)->setRange(arg.minVal(), arg.maxVal());
+                    ((QSlider *)widget)->setValue(arg.val());
+                }
                 break;
             case SPINBOX:   // int or double
-                if (arg.type() == INT) {
-                    widget = new QSpinBox;
-                    ((QSpinBox *)widget)->setValue(arg.val());
-                    ((QSpinBox *)widget)->setMaximum(arg.maxVal());
-                    ((QSpinBox *)widget)->setMinimum(arg.minVal());
-                } else {
-                    widget = new QDoubleSpinBox;
-                    ((QDoubleSpinBox*)widget)->setValue(arg.val());
-                    ((QDoubleSpinBox*)widget)->setMaximum(arg.maxVal());
-                    ((QDoubleSpinBox*)widget)->setMinimum(arg.minVal());
+                switch (arg.type()) {
+                    case INT:
+                        widget = new QSpinBox;
+                        ((QSpinBox *)widget)->setMinimum(arg.minVal());
+                        ((QSpinBox *)widget)->setMaximum(arg.maxVal());
+                        ((QSpinBox *)widget)->setValue(arg.val());
+                        break;
+                    case FLOAT:
+                        widget = new QDoubleSpinBox;
+                        ((QDoubleSpinBox *)widget)->setDecimals((int)(-log10((float)arg.minVal()))+2);
+                        ((QDoubleSpinBox *)widget)->setSingleStep(((float)arg.maxVal()-(float)arg.minVal())/100.0);
+                        ((QDoubleSpinBox *)widget)->setMinimum((float)arg.minVal());
+                        ((QDoubleSpinBox *)widget)->setMaximum((float)arg.maxVal());
+                        ((QDoubleSpinBox *)widget)->setValue((float)arg.val());
+                    break;
+                    case DOUBLE:
+                        widget = new QDoubleSpinBox;
+                        ((QDoubleSpinBox *)widget)->setDecimals((int)(-log10((double)arg.minVal()))+2);
+                        ((QDoubleSpinBox *)widget)->setSingleStep(((double)arg.maxVal()-(double)arg.minVal())/100.0);
+                        ((QDoubleSpinBox *)widget)->setMinimum((double)arg.minVal());
+                        ((QDoubleSpinBox *)widget)->setMaximum((double)arg.maxVal());
+                        ((QDoubleSpinBox *)widget)->setValue((double)arg.val());
+                        break;
+                    default:
+                        log4cpp::log_console->errorStream() << "Type " << arg.type() << " is not supported in QSpinBox / QDoubleSpinBox !";
                 }
                 break;
             case CHECKBOX:  // always bool
-                widget = new QCheckBox;
-                ((QCheckBox*)widget)->setChecked(arg.val());
+                if (arg.type() != BOOL) {
+                        log4cpp::log_console->errorStream() << "Type " << arg.type() << " is not supported in QCheckBox !";
+                } else {
+                    widget = new QCheckBox;
+                    ((QCheckBox *)widget)->setChecked(arg.val());
+                }
                 break;
             default:
                 log4cpp::log_console->errorStream() << "ParametersDialog: Unknown argument widget type !";
                 break;
         }
-        argGridLayout->addWidget(widget, cpt % nbParamsPerColumn, (2 * cpt / nbParamsPerColumn) + 1);
+        argGridLayout->addWidget(widget, cpt % nbParamsPerColumn, (2 * (cpt / nbParamsPerColumn)) + 1);
+        m_widgetsMap->emplace(it->first, widget);
         cpt++;
     }
 }
 
 void ParametersDialog::okClicked() {
-    // TODO call method in SidePanel
+    for (auto it = m_widgetsMap->begin(); it != m_widgetsMap->end(); ++it) {
+        QWidget *widget = it->second;
+        Argument arg = m_argsMap->at(it->first);
+        switch(arg.preferredWidgetType()) {
+            case SLIDER:    // always int
+                arg() = ((QSlider *)widget)->value();
+                break;
+            case SPINBOX:   // int or double/float
+                if (arg.type() == INT) {
+                    arg() = ((QSpinBox *)widget)->value();
+                } else {
+                    arg() = ((QDoubleSpinBox *)widget)->value();
+                }
+                break;
+            case CHECKBOX:  // always bool
+                arg() = ((QCheckBox *)widget)->isChecked();
+                break;
+        }
+    }
+
     emit accept(); 
 }
 
 void ParametersDialog::resetClicked() {
-    // TODO reset all widget->setValue(arg->defaultVal())
+    for (auto it = m_widgetsMap->begin(); it != m_widgetsMap->end(); ++it) {
+        QWidget *widget = it->second;
+        Argument arg = m_argsMap->at(it->first);
+        switch(arg.preferredWidgetType()) {
+            case SLIDER:    // always int
+                ((QSlider *)widget)->setValue(arg.defaultVal());
+                break;
+            case SPINBOX:   // int or double/float
+                if (arg.type() == INT) {
+                    ((QSpinBox *)widget)->setValue(arg.defaultVal());
+                } else {
+                    ((QDoubleSpinBox *)widget)->setValue(arg.defaultVal());
+                }
+                break;
+            case CHECKBOX:  // always bool
+                ((QCheckBox *)widget)->setChecked(arg.defaultVal());
+                break;
+        }
+    }
 }
 

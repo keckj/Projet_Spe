@@ -147,12 +147,12 @@ std::map<std::string, Argument> *SimpleModel2D::getArguments() {
 	
 	std::map<std::string,Argument> *args = new std::map<std::string,Argument>;
 
-	args->emplace("epsilon", Argument(0.01f, 0.001f, 0.1f, WidgetType::SLIDER));
-	args->emplace("d",Argument(1e-5f, 5e-5f, 1e-4f, WidgetType::SLIDER));
-	args->emplace("mu_1",Argument(0.01f, 0.07f, 0.5f, WidgetType::SLIDER));
-	args->emplace("mu_2",Argument(0.1f, 0.3f, 0.5f, WidgetType::SLIDER));
-	args->emplace("alpha_1",Argument(0.1f, 0.2f, 0.5f, WidgetType::SLIDER));
-	args->emplace("alpha_2",Argument(0.1f, 0.1f, 0.5f, WidgetType::SLIDER));
-
+	args->emplace("epsilon", Argument(0.01f, 0.001f, 0.1f, WidgetType::SPINBOX));
+	args->emplace("d",Argument(1e-4f, 5e-5f, 1e-4f, WidgetType::SPINBOX));
+	args->emplace("mu_1",Argument(0.07f, 0.01f, 0.5f, WidgetType::SPINBOX));
+	args->emplace("mu_2",Argument(0.3f, 0.1f, 0.5f, WidgetType::SPINBOX));
+	args->emplace("alpha_1",Argument(0.2f, 0.1f, 0.5f, WidgetType::SPINBOX));
+	args->emplace("alpha_2",Argument(0.3f, 0.1f, 0.5f, WidgetType::SPINBOX));
+    
 	return args;
 }
