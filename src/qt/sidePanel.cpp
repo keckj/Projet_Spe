@@ -5,6 +5,8 @@
 #include "parametersDialog.hpp"
 #include "argument.hpp"
 #include "colormap.hpp"
+// Models
+#include "simpleModel2D.hpp"
 
 SidePanel::SidePanel(QWidget *parent_) : QWidget(parent_) {
 
@@ -14,6 +16,7 @@ SidePanel::SidePanel(QWidget *parent_) : QWidget(parent_) {
         log4cpp::log_console->errorStream() << "SidePanel does not have a parent !";
 
     m_paused = true;
+    paramsDialog = NULL;
 
     this->setStyleSheet("QWidget {background-color: white;}");
     this->setAutoFillBackground(true);
@@ -62,7 +65,7 @@ SidePanel::SidePanel(QWidget *parent_) : QWidget(parent_) {
 
     // Labels for model
     QLabel *modelLabel = new QLabel("Selected model :");
-    QLabel *iterLabel = new QLabel("Iterations : ");
+    QLabel *iterLabel = new QLabel("Iterations :");
     
     // Dropdown list
     modelComboBox = new QComboBox();
@@ -82,7 +85,6 @@ SidePanel::SidePanel(QWidget *parent_) : QWidget(parent_) {
     // Button for model parameters
     paramsButton = new QPushButton("Parameters");
     connect(paramsButton, SIGNAL(clicked()), this, SLOT(openParametersDialog()));
-    paramsDialog = new ParametersDialog(this);
 
     // Button for QFileDialog
     saveDirButton = new QPushButton("Choose saving directory");
@@ -99,7 +101,7 @@ SidePanel::SidePanel(QWidget *parent_) : QWidget(parent_) {
     connect(stopButton, SIGNAL(clicked()), this, SLOT(stop()));
 
     // Rendering colormap label & dropdown list
-    QLabel *colorLabel = new QLabel("<FONT COLOR='red'>TEST</FONT>");
+    QLabel *colorLabel = new QLabel("Colormap :");
     QComboBox *colorComboBox = new QComboBox();
     std::map<std::string, std::pair<unsigned int, float*>> colormap = ColorMap::multiHueColorMaps();
     for (auto it = colormap.begin(); it != colormap.end(); ++it) {
@@ -112,6 +114,7 @@ SidePanel::SidePanel(QWidget *parent_) : QWidget(parent_) {
     autoRenderCheckBox->setChecked(true);
     connect(autoRenderCheckBox, SIGNAL(stateChanged(int)), mainWin, SLOT(changeAutoRendering(int)));
     connect(autoRenderCheckBox, SIGNAL(stateChanged(int)), this, SLOT(showSlider(int)));
+    autoRenderCheckBox->setVisible(false);
     
     // Iteration selection slider
     gridSlider = new QSlider(Qt::Horizontal);
@@ -193,8 +196,12 @@ void SidePanel::setModelOptionsStatus(bool status) {
 }
 
 void SidePanel::openParametersDialog() {
+    if (paramsDialog) paramsDialog->deleteLater();
+
+   
+    paramsDialog = new ParametersDialog(this->getArguments(), this);
     paramsDialog->setModal(true);
-    paramsDialog->show();    
+    paramsDialog->show();
 }
         
 std::map<std::string, Argument> *SidePanel::getArguments() {
@@ -221,6 +228,17 @@ void SidePanel::showSlider(int checkboxState) {
 
 void SidePanel::changeNbIterSlider(int nbIter) {
     this->gridSlider->setRange(1, nbIter);
+}
+
+std::map<std::string, Argument> *SidePanel::getArguments() {
+    switch(modelComboBox->currentIndex()) {
+        case 1:
+            m_argsMap = SimpleModel2D::getArguments();
+            break;
+        default:
+            m_argsMap = new std::map<std::string, Argument>;
+    }
+    return m_argsMap;
 }
 
 void SidePanel::keyPressEvent(QKeyEvent *k) {

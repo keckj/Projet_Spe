@@ -35,6 +35,7 @@ class SidePanel : public QWidget {
         void keyPressEvent(QKeyEvent *k);
 
         bool m_paused;
+        std::map<std::string, Argument> *m_argsMap;
 
         QString m_saveDirectory;
 

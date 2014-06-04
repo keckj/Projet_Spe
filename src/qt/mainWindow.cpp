@@ -111,7 +111,7 @@ void MainWindow::startComputing() {
     Model *mod;
     switch (m_selected_model) {
 		case 1:
-            mod = (Model *) new SimpleModel2D(m_total_steps);
+            mod = (Model *) new SimpleModel2D(m_total_steps, panel->getArguments());
 			log_console->infoStream() << "Started a simple model 2D simulation !";
 			break;
 		case 2:

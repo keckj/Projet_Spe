@@ -8,6 +8,7 @@ Argument::Argument(Value defaultVal_, Value minVal_, Value maxVal_, WidgetType p
 {
 	ValType	type_ = defaultVal_.type();
 	assert(minVal_.type() == type_ && maxVal_.type() == type_);
+    //TODO ASSERT MIN <= VAL <= MAX
 }
 		
 Argument::Argument(const Argument &arg) :
