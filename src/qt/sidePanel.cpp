@@ -3,6 +3,7 @@
 #include "sidePanel.moc"
 #include "mainWindow.hpp"
 #include "parametersDialog.hpp"
+#include "argument.hpp"
 #include "colormap.hpp"
 
 SidePanel::SidePanel(QWidget *parent_) : QWidget(parent_) {
@@ -158,13 +159,6 @@ SidePanel::SidePanel(QWidget *parent_) : QWidget(parent_) {
 }
 
 SidePanel::~SidePanel() {
-    delete modelComboBox;
-    delete iterSpinBox;
-    delete paramsDialog;
-    delete saveDirButton;
-    delete startButton;
-    delete stopButton;
-    delete gridSlider;
 }
 
 void SidePanel::start_pause_resume() {
@@ -200,6 +194,11 @@ void SidePanel::setModelOptionsStatus(bool status) {
 void SidePanel::openParametersDialog() {
     paramsDialog->setModal(true);
     paramsDialog->show();    
+}
+        
+std::map<std::string, Argument> *getArguments() {
+    //switch(modelComboBox)
+    return new std::map<std::string, Argument>;
 }
 
 void SidePanel::changeDirectory() {
