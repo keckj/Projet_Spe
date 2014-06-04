@@ -1,4 +1,8 @@
 
+#pragma OPENCL EXTENSION cl_khr_gl_sharing : enable
+#pragma OPENCL EXTENSION cl_khr_gl_event : enable
+#pragma OPENCL EXTENSION cl_khr_3d_image_writes : enable
+
 __kernel void computeStep(__global const float * restrict E_1, __global float * restrict E_2,
 					__global const float * restrict R_1, __global float * restrict R_2,
 					const float alpha1, const float alpha2, const float mu1, const float mu2,

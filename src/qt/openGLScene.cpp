@@ -14,6 +14,9 @@ OpenGLScene::OpenGLScene() :
 	m_colormapsUBO(),
 	m_colorId(0)
 {
+		makeArrays();
+		makeProgramm();
+		makeColorMaps();
 }
 
 void OpenGLScene::textureUpdate(const Grid2D<float> *grid) {
@@ -30,12 +33,6 @@ void OpenGLScene::drawBackground(QPainter *painter, const QRectF &) {
 
 	glClearColor(0.2,0.2,0.2,1.0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-	if(m_drawProgram == 0) {
-		makeArrays();
-		makeProgramm();
-		makeColorMaps();
-	}
 
 	m_drawProgram->use();
 	

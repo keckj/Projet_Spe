@@ -3,6 +3,7 @@
 #define SIMPLEMODEL2D_H
 
 #include "model.hpp"
+#include "argument.hpp"
 
 class SimpleModel2D : public Model {
     Q_OBJECT
@@ -14,11 +15,17 @@ class SimpleModel2D : public Model {
 			float mu_1_=0.07, float mu_2_=0.3f,
 			float alpha_1_=0.2f, float alpha_2_=0.1f);
 
+		SimpleModel2D(unsigned int nbIter,
+				std::map<std::string, Argument> *args, 
+				unsigned int width = 200, unsigned int height = 200);
+
         ~SimpleModel2D();
 
         void initComputation() override;
         void computeStep(int i) override;
         void finishComputation() override;
+
+		static std::map<std::string, Argument> *getArguments();
 
 	private:
 		float computeOptimalTimestep();

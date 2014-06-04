@@ -10,6 +10,7 @@ class Model : public QObject {
 
     public:
         Model(int nbIter) : m_nbIter(nbIter), m_pause(false), m_stop(false) {}
+		virtual ~Model() {};
 
     protected:
         virtual void initComputation() = 0;
