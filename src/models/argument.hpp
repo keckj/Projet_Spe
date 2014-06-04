@@ -15,7 +15,10 @@ class Argument {
 	
 	public:
 		Argument(Value defaultVal, Value minVal, Value maxVal, WidgetType type);
+		Argument(const Argument &arg);
 		~Argument();
+
+		Argument& operator=(const Argument& arg);
 
 		//get and set value
 		const Value operator ()() const;

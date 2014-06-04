@@ -11,7 +11,7 @@ static const char* CL_GL_SHARING_EXT = "cl_APPLE_gl_sharing";
 static const char* CL_GL_SHARING_EXT ="cl_khr_gl_sharing";
 #endif
 
-//ORDRE IMPORTANT GL CL QT
+//ORDRE IMPORTANT GL CL QT CL-GL GLX CL-CXX
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wshadow"
 #pragma GCC diagnostic ignored "-Weffc++"
@@ -66,6 +66,7 @@ static const char* CL_GL_SHARING_EXT ="cl_khr_gl_sharing";
 #include <QGenericMatrix>
 
 //GLX après QT (don't ask why)
+#include <CL/cl_gl.h>
 #include <GL/glx.h>
 
 #pragma GCC diagnostic pop

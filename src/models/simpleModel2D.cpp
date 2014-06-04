@@ -35,6 +35,21 @@ SimpleModel2D::SimpleModel2D(int nbIter,
 	log_console->debugStream() << "dt " << _dt << " !";
 	log_console->debugStream() << "Size " << _e1->size() << " !";
 }
+	
+SimpleModel2D::SimpleModel2D(unsigned int nbIter,
+		std::map<std::string, Argument> *args, 
+		unsigned int width_, unsigned int height_) :
+	Model(nbIter),
+	_width(width_), _height(height_)
+{
+	_epsilon = args->at("epsilon")();
+	_d = args->at("d")();
+	_mu_1 = args->at("mu_1")();
+	_mu_2 = args->at("mu_2")();
+	_alpha_1 = args->at("alpha_1")();
+	_alpha_2 = args->at("alpha_2")();
+}
+
 
 SimpleModel2D::~SimpleModel2D() {
 	delete _e1;
@@ -55,6 +70,7 @@ void SimpleModel2D::initComputation() {
 		}
 	}
 }
+
 
 void SimpleModel2D::computeStep(int i) {
 	
@@ -127,3 +143,16 @@ float SimpleModel2D::L(unsigned int i, unsigned int j) {
 	return _d/(_dh*_dh) * (E_left + E_right + E_up + E_down - 4*E_ijk);
 }
 
+std::map<std::string, Argument> *SimpleModel2D::getArguments() {
+	
+	std::map<std::string,Argument> *args = new std::map<std::string,Argument>;
+
+	args->at("epsilon") = Argument(0.01f, 0.001f, 0.1f, WidgetType::SLIDER);
+	args->at("d") = Argument(1e-5f, 5e-5f, 1e-4f, WidgetType::SLIDER);
+	args->at("mu_1") = Argument(0.01f, 0.07f, 0.5f, WidgetType::SLIDER);
+	args->at("mu_2") = Argument(0.1f, 0.3f, 0.5f, WidgetType::SLIDER);
+	args->at("alpha_1") = Argument(0.1f, 0.2f, 0.5f, WidgetType::SLIDER);
+	args->at("alpha_2") = Argument(0.1f, 0.1f, 0.5f, WidgetType::SLIDER);
+
+	return args;
+}

@@ -6,18 +6,6 @@ using namespace log4cpp;
 
 namespace utils {
 
-	struct ContextUserData{
-		cl::Platform *platform;
-		cl_device_type deviceType;
-		unsigned int contextId;
-	};
-
-	struct BuildUserData{
-		cl::Program *program;
-		std::string programName;
-	};
-
-
 	void loadDevicesAndCreateContexts(
 			std::vector<cl::Platform> &platforms,
 			std::vector<cl::Context> &gpuContexts, 
@@ -32,8 +20,7 @@ namespace utils {
 			unsigned int &nTotAccDevices,
 			unsigned int **nGpuDevices,
 			unsigned int **nCpuDevices,
-			unsigned int **nAccDevices,
-			bool enable_cl_gl_context_khr
+			unsigned int **nAccDevices
 			) 
 
 	{
@@ -66,23 +53,10 @@ namespace utils {
 			userData[1]->platform=&(*it); userData[1]->deviceType=CL_DEVICE_TYPE_CPU; userData[1]->contextId=i_cpu;
 			userData[2]->platform=&(*it); userData[2]->deviceType=CL_DEVICE_TYPE_ACCELERATOR; userData[2]->contextId=i_acc;
 	
-			
-			cl_context_properties *contextProperties = NULL;
-			if(enable_cl_gl_context_khr) {
-				cl_context_properties contextPropertiesGl[5] = { 
-					CL_CONTEXT_PLATFORM, (cl_context_properties)(*it)(), 
-					CL_GL_CONTEXT_KHR, (cl_context_properties) glXGetCurrentContext(),
-					0 
-				};
-				contextProperties = contextPropertiesGl;
-			} 
-			else {
-				cl_context_properties contextPropertiesNoGl[3] = { 
-					CL_CONTEXT_PLATFORM, (cl_context_properties)(*it)(), 
-					0 
-				};
-				contextProperties = contextPropertiesNoGl;
-			}
+			cl_context_properties contextProperties[3] = { 
+				CL_CONTEXT_PLATFORM, (cl_context_properties)(*it)(), 
+				0 
+			};
 
 			cl::Context gpu_context(CL_DEVICE_TYPE_GPU, contextProperties, openclContextCallback, (void*)userData[0], &err);
 			if(err != CL_DEVICE_NOT_FOUND && err != CL_INVALID_PROPERTY) {
@@ -100,7 +74,6 @@ namespace utils {
 			}
 	
 
-			if(!enable_cl_gl_context_khr) {
 				cl::Context cpu_context(CL_DEVICE_TYPE_CPU, contextProperties, openclContextCallback, (void*)userData[1], &err);
 				if(err != CL_DEVICE_NOT_FOUND) {
 					CHK_ERRORS(err);
@@ -131,7 +104,6 @@ namespace utils {
 						i_acc++;
 					}
 				}
-			}
 		}	
 	}
 

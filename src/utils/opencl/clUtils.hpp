@@ -7,6 +7,19 @@
 #include <limits>
 
 namespace utils {
+	
+	struct ContextUserData{
+		cl::Platform *platform;
+		cl_device_type deviceType;
+		unsigned int contextId;
+	};
+
+	struct BuildUserData{
+		cl::Program *program;
+		std::string programName;
+	};
+
+
 
 	void loadDevicesAndCreateContexts(
 			std::vector<cl::Platform> &platforms,
@@ -22,8 +35,7 @@ namespace utils {
 			unsigned int &nTotAccDevices,
 			unsigned int **nGpuDevices,
 			unsigned int **nCpuDevices,
-			unsigned int **nAccDevices,
-			bool enable_cl_gl_context_khr = false
+			unsigned int **nAccDevices
 			);
 
 
