@@ -30,7 +30,7 @@ class OpenGLScene : public QGraphicsScene {
 
     public slots:
         void textureUpdate(const Grid2D<float> *grid);
-		void changeColormap(unsigned int colorId);
+		void changeColormap(const QString &colormapName);
 };
 #endif
 

@@ -103,7 +103,7 @@ SidePanel::SidePanel(QWidget *parent_) : QWidget(parent_) {
     for (auto it = colormap.begin(); it != colormap.end(); ++it) {
         colorComboBox->addItem(QString(it->first.c_str()));
     }
-    connect(colorComboBox, SIGNAL(currentIndexChanged(int)), mainWin, SLOT(changeColormap(int)));
+    connect(colorComboBox, SIGNAL(currentIndexChanged(const QString &)), mainWin, SLOT(changeColormap(const QString &)));
 
     // Auto rendering checkbox
     QCheckBox *autoRenderCheckBox = new QCheckBox("Automatic rendering");
