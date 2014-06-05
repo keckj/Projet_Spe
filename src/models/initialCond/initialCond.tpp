@@ -33,7 +33,7 @@ void InitialCond<T>::initializeSubGrid(
 				unsigned long offset = k*subGridHeight*subGridWidth + j*subGridWidth + i;
 				x = (gridWidth -1u==0u ? T(0.5) : (T)(offsetX + i) / (T)(gridWidth -1));
 				y = (gridHeight-1u==0u ? T(0.5) : (T)(offsetY + j) / (T)(gridHeight-1));
-				z = (gridLength-1u==0u ? T(0.5) : (T)(offsetZ + z) / (T)(gridLength-1));
+				z = (gridLength-1u==0u ? T(0.5) : (T)(offsetZ + k) / (T)(gridLength-1));
 				data[offset] = F(x,y,z);
 			}
 		}
