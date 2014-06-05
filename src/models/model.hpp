@@ -9,12 +9,13 @@ class Model : public QObject {
     Q_OBJECT
 
     public:
-        Model(int nbIter) : m_nbIter(nbIter), m_pause(false), m_stop(false) {}
+        Model(int nbIter, unsigned int width = 200, unsigned int height = 200, unsigned int length = 0); 
 		virtual ~Model() {};
 
     protected:
         virtual void initComputation() = 0;
         virtual void computeStep(int i) = 0;
+        //virtual std::map<std::string, GLuint> computeStep(int i) = 0;
         virtual void finishComputation() = 0;
 
     public slots:
@@ -26,7 +27,11 @@ class Model : public QObject {
     signals:
         void stepComputed(const Grid2D<float> *grid);
         void stepComputed(const Grid3D<float> *grid);
+        //void stepComputed(std::map<std::string, GLuint> *textures);
         void finished();
+
+    protected:
+        unsigned int m_width, m_height, m_length;
 
     private:
         int m_nbIter;

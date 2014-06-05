@@ -51,7 +51,7 @@ SimpleModel2D::SimpleModel2D(int nbIter,
 SimpleModel2D::SimpleModel2D(unsigned int nbIter,
 		std::map<std::string, Argument> *args, 
 		unsigned int width_, unsigned int height_) :
-	Model(nbIter),
+	Model(nbIter, width_, height_),
 	_width(width_), _height(height_)
 {
 	_epsilon = args->at("epsilon")();

@@ -12,6 +12,7 @@ class SidePanel : public QWidget {
 		SidePanel(QWidget *parent_ = 0);
 		~SidePanel();
 
+        std::map<std::string, bool> *getVariables();
         std::map<std::string, Argument> *getArguments();
 
     signals:
@@ -26,6 +27,7 @@ class SidePanel : public QWidget {
     private slots:
         void start_pause_resume();
         void openParametersDialog();
+        void openInitDialog();
         void changeDirectory();
         void showSlider(int checkboxState);
         void changeNbIterSlider(int nbIter);
@@ -37,13 +39,16 @@ class SidePanel : public QWidget {
 
         bool m_paused;
         std::map<std::string, Argument> *m_argsMap;
+        std::map<std::string, bool> *m_varsMap;
+        //TODO initCond
 
         QString m_saveDirectory;
 
-        ParametersDialog *paramsDialog;
+        ParametersDialog *initDialog, *paramsDialog;
         QComboBox *modelComboBox;
         QSpinBox *iterSpinBox;
-        QPushButton *paramsButton, *saveDirButton, *startButton, *stopButton;
+        QListWidget *variablesRenderedList;
+        QPushButton *initButton, *paramsButton, *saveDirButton, *startButton, *stopButton;
         QSlider *gridSlider;
 };
 

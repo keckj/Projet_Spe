@@ -16,6 +16,7 @@ SidePanel::SidePanel(QWidget *parent_) : QWidget(parent_) {
         log4cpp::log_console->errorStream() << "SidePanel does not have a parent !";
 
     m_paused = true;
+    initDialog = NULL;
     paramsDialog = NULL;
 
     this->setStyleSheet("QWidget {background-color: white;}");
@@ -62,19 +63,31 @@ SidePanel::SidePanel(QWidget *parent_) : QWidget(parent_) {
 										"    left: 20px;"
 										"    padding: 0 3px 0 3px;"
 										"}");
+    
+    // Layouts
+    QBoxLayout *globalLayout = new QBoxLayout(QBoxLayout::TopToBottom, this);
+    QGridLayout *modelLayout = new QGridLayout(modelGroupBox);
+    QBoxLayout *runLayout = new QBoxLayout(QBoxLayout::TopToBottom, runGroupBox);
+    QGridLayout *renderOptionsLayout = new QGridLayout(renderOptionsGroupBox);
+
+    this->setLayout(globalLayout);
+    modelGroupBox->setLayout(modelLayout);
+    runGroupBox->setLayout(runLayout);
+    renderOptionsGroupBox->setLayout(renderOptionsLayout);
+
+    //----//
 
     // Labels for model
     QLabel *modelLabel = new QLabel("Selected model :");
     QLabel *iterLabel = new QLabel("Iterations :");
     
     // Dropdown list
-    modelComboBox = new QComboBox();
+    modelComboBox = new QComboBox;
     modelComboBox->addItem("Default model");
     modelComboBox->addItem("Simple Model 2D");
     modelComboBox->addItem("->Multi-GPU<-");
     connect(modelComboBox, SIGNAL(currentIndexChanged(int)), mainWin, SLOT(changeModel(int)));
     connect(modelComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(refreshParameters(int)));
-    refreshParameters(0); // init m_argsMap
 
     // Iterations spinBox
     iterSpinBox = new QSpinBox();
@@ -84,7 +97,9 @@ SidePanel::SidePanel(QWidget *parent_) : QWidget(parent_) {
     connect(iterSpinBox, SIGNAL(valueChanged(int)), mainWin, SLOT(changeNbIter(int)));
     connect(iterSpinBox, SIGNAL(valueChanged(int)), this, SLOT(changeNbIterSlider(int)));
 
-    // Button for model parameters
+    // Buttons for model parameters and model initialization with QDialog
+    initButton = new QPushButton("Initialization");
+    connect(initButton, SIGNAL(clicked()), this, SLOT(openInitDialog()));
     paramsButton = new QPushButton("Parameters");
     connect(paramsButton, SIGNAL(clicked()), this, SLOT(openParametersDialog()));
 
@@ -102,9 +117,16 @@ SidePanel::SidePanel(QWidget *parent_) : QWidget(parent_) {
     connect(stopButton, SIGNAL(clicked()), mainWin, SLOT(stopComputing()));
     connect(stopButton, SIGNAL(clicked()), this, SLOT(stop()));
 
+    // Labels and lists for variables to display
+    QLabel *variablesRenderedLabel = new QLabel("Variables rendered :");
+    variablesRenderedList = new QListWidget;
+    variablesRenderedList->setSizePolicy(QSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored));
+    variablesRenderedList->setMinimumSize(QSize(30,100)); //modify if needed (height = nItems * cst?)
+    connect(variablesRenderedList, SIGNAL(itemChanged(QListWidgetItem *)), mainWin, SLOT(updateRenderedVars(QListWidgetItem *)));
+
     // Rendering colormap label & dropdown list
     QLabel *colorLabel = new QLabel("Colormap :");
-    QComboBox *colorComboBox = new QComboBox();
+    QComboBox *colorComboBox = new QComboBox;
     std::map<std::string, std::pair<unsigned int, float*>> colormap = ColorMap::multiHueColorMaps();
     for (auto it = colormap.begin(); it != colormap.end(); ++it) {
         colorComboBox->addItem(QString(it->first.c_str()));
@@ -128,16 +150,7 @@ SidePanel::SidePanel(QWidget *parent_) : QWidget(parent_) {
     gridSlider->hide();
     connect(gridSlider, SIGNAL(valueChanged(int)), mainWin, SLOT(changeDisplayedGrid(int)));
     
-    // Layouts
-    QBoxLayout *globalLayout = new QBoxLayout(QBoxLayout::TopToBottom, this);
-    QBoxLayout *modelLayout = new QBoxLayout(QBoxLayout::TopToBottom, modelGroupBox);
-    QBoxLayout *runLayout = new QBoxLayout(QBoxLayout::TopToBottom, runGroupBox);
-    QBoxLayout *renderOptionsLayout = new QBoxLayout(QBoxLayout::TopToBottom, renderOptionsGroupBox);
-
-    this->setLayout(globalLayout);
-    modelGroupBox->setLayout(modelLayout);
-    runGroupBox->setLayout(runLayout);
-    renderOptionsGroupBox->setLayout(renderOptionsLayout);
+    //----//
 
     // Add Widgets
     globalLayout->setSpacing(30);
@@ -146,11 +159,12 @@ SidePanel::SidePanel(QWidget *parent_) : QWidget(parent_) {
     globalLayout->addWidget(renderOptionsGroupBox);
 
     modelLayout->setSpacing(10);
-    modelLayout->addWidget(modelLabel);
-    modelLayout->addWidget(modelComboBox);
-    modelLayout->addWidget(iterLabel);
-    modelLayout->addWidget(iterSpinBox);
-    modelLayout->addWidget(paramsButton);
+    modelLayout->addWidget(modelLabel, 0, 0);
+    modelLayout->addWidget(modelComboBox, 0, 1);
+    modelLayout->addWidget(iterLabel, 1, 0);
+    modelLayout->addWidget(iterSpinBox, 1, 1);
+    modelLayout->addWidget(initButton, 2, 0);
+    modelLayout->addWidget(paramsButton, 2, 1);
 
     runLayout->setSpacing(10);
     runLayout->addWidget(startButton);
@@ -158,10 +172,15 @@ SidePanel::SidePanel(QWidget *parent_) : QWidget(parent_) {
     runLayout->addWidget(saveDirButton);
 
     renderOptionsLayout->setSpacing(10);
-    renderOptionsLayout->addWidget(colorLabel);
-    renderOptionsLayout->addWidget(colorComboBox);
-    renderOptionsLayout->addWidget(autoRenderCheckBox);
-    renderOptionsLayout->addWidget(gridSlider);
+    renderOptionsLayout->addWidget(variablesRenderedLabel, 0, 0);
+    renderOptionsLayout->addWidget(variablesRenderedList, 0, 1);
+    renderOptionsLayout->addWidget(colorLabel, 1, 0);
+    renderOptionsLayout->addWidget(colorComboBox,1 , 1);
+    renderOptionsLayout->addWidget(autoRenderCheckBox, 2, 0);
+    renderOptionsLayout->addWidget(gridSlider, 2, 1);
+    
+    // Init m_argsMap and m_varsMap
+    refreshParameters(0);
 }
 
 SidePanel::~SidePanel() {
@@ -193,8 +212,17 @@ void SidePanel::stop() {
 void SidePanel::setModelOptionsStatus(bool status) {
     this->modelComboBox->setEnabled(status);
     this->iterSpinBox->setEnabled(status);
+    this->initButton->setEnabled(status);
     this->paramsButton->setEnabled(status);
     this->saveDirButton->setEnabled(status);
+}
+
+void SidePanel::openInitDialog() {
+    /*if (initDialog) initDialog->deleteLater();
+
+    initDialog = new InitializationDialog(m_initialCond, , this);
+    initDialog->setModal(true);
+    initDialog->show();*/
 }
 
 void SidePanel::openParametersDialog() {
@@ -230,14 +258,31 @@ void SidePanel::refreshParameters(int modelId) {
     switch(modelId) {
         case 1:
             m_argsMap = SimpleModel2D::getArguments();
+            //m_varsMap = SimpleModel2D::getVariables();
+            m_varsMap = new std::map<std::string, bool>;
             break;
         default:
             m_argsMap = new std::map<std::string, Argument>;
+            m_varsMap = new std::map<std::string, bool>;
+    }
+
+    // Variables: GUI update
+    this->variablesRenderedList->clear();    
+    QListWidgetItem *item;
+    for (auto it = m_varsMap->begin(); it !=m_varsMap->end(); ++it) {
+        item = new QListWidgetItem(QString(it->first.c_str()), variablesRenderedList);
+        item->setFlags(item->flags() | Qt::ItemIsUserCheckable);
+        item->setCheckState(Qt::Unchecked);
+        this->variablesRenderedList->addItem(item);
     }
 }
 
 std::map<std::string, Argument> *SidePanel::getArguments() {
     return m_argsMap;
+}
+
+std::map<std::string, bool> *SidePanel::getVariables() {
+    return m_varsMap;
 }
 
 void SidePanel::keyPressEvent(QKeyEvent *k) {

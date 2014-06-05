@@ -106,6 +106,9 @@ ParametersDialog::ParametersDialog(std::map<std::string, Argument> *argsMap, QWi
         m_widgetsMap->emplace(it->first, widget);
         cpt++;
     }
+
+    // Space between argGrid and buttons
+    argGridLayout->addWidget(new QLabel(), nbParamsPerColumn, 0);
 }
 
 void ParametersDialog::okClicked() {

@@ -14,7 +14,7 @@ progressBar(0), message(0)
 	progressBar->setMaximumSize(200,20);
 
 	message = new QLabel(this);
-	message->setText("Nothing to be done !");
+	message->setText("");
 	message->setMaximumSize(300,20);
 
 	this->addWidget(message,1);

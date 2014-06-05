@@ -24,6 +24,9 @@ MainWindow::MainWindow() {
     m_total_steps = 100;
     m_auto_render = true;
 
+    //Register metaType
+    qRegisterMetaType<std::string>();
+
     // QT GUI
     QDesktopWidget widget;
     QRect mainScreenSize = widget.availableGeometry(widget.primaryScreen());
@@ -72,7 +75,7 @@ MainWindow::~MainWindow() {
 
 void MainWindow::updateGrid(const Grid2D<float> *grid) {
     // Add grid to the list of stored grids
-    m_stored_grids->push_back(*grid); 
+    //m_stored_grids->push_back(*grid); 
 
     // Create 2D texture
     //GLuint texture;
@@ -124,7 +127,6 @@ void MainWindow::startComputing() {
     }
 
     mod->moveToThread(m_thread);
-    //connect(mod, SIGNAL(error(QString)), this, SLOT(errorString(QString)));
     connect(m_thread, SIGNAL(started()), mod, SLOT(startComputing()));
     connect(this, SIGNAL(pauseThread(bool)), mod, SLOT(pauseComputing(bool)));
     connect(mod, SIGNAL(finished()), m_thread, SLOT(quit()));                   // kill thread
@@ -132,6 +134,8 @@ void MainWindow::startComputing() {
     //connect(mod, SIGNAL(finished()), mod, SLOT(deleteLater()));                 // cleanup (TODO thread safe signal)
     connect(m_thread, SIGNAL(finished()), m_thread, SLOT(deleteLater()));       // cleanup
     connect(mod, SIGNAL(stepComputed(const Grid2D<float> *)), this, SLOT(updateGrid(const Grid2D<float> *)));
+    //connect(this, SIGNAL(addTextureRequest(std::string)), mod, SLOT(addTexture(std::string)));
+    //connect(this, SIGNAL(removeTextureRequest(std::string)), mod, SLOT(removeTexture(std::string)));
 
     m_thread->start();
 }
@@ -142,6 +146,16 @@ void MainWindow::pauseComputing(bool b) {
 
 void MainWindow::stopComputing() {
     emit stopThread();
+}
+       
+void MainWindow::updateRenderedVars(QListWidgetItem *item) {
+    if (item->checkState() == Qt::Unchecked) {
+        emit removeTextureRequest(item->text().toStdString());
+        qWarning() << "DEBUG :" << item->text() << " is unchecked";
+    } else {
+        emit addTextureRequest(item->text().toStdString());
+        qWarning() << "DEBUG :" << item->text() << " is checked";
+    }
 }
 
 void MainWindow::changeColormap(const QString &colormapName) {
@@ -162,8 +176,6 @@ void MainWindow::keyPressEvent(QKeyEvent *k) {
 
     switch (k->key()) {
         case Qt::Key_Escape:
-            if (m_thread)
-               m_thread->quit(); 
             this->close();
             break;
     }

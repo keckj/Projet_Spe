@@ -3,6 +3,11 @@
 #include "model.moc"
 #include "log.hpp"
 
+
+Model::Model(int nbIter, unsigned int width, unsigned int height, unsigned int length) : 
+            m_width(width), m_height(height), m_length(length), m_nbIter(nbIter), m_pause(false), m_stop(false) {
+}
+
 void Model::startComputing() {
 		
 	log_console->debugStream() << "Start Computing.";
@@ -21,10 +26,8 @@ void Model::startComputing() {
         }
         m_mutex.unlock();
 
-		//log_console->debugStream() << "Computing step " << i << ".";
         computeStep(i);
-        //TODO computeStep returns pointer to texture/grid
-        //emit stepComputed(ptr)
+        //emit(computeStep(i)); TODO TODO TODO map<string variable, GLuint texture> *
     }
     finishComputation();
     emit finished();

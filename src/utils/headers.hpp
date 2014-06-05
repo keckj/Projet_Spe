@@ -52,6 +52,8 @@ static const char* CL_GL_SHARING_EXT ="cl_khr_gl_sharing";
 #include <QPushButton>
 #include <QSlider>
 #include <QSpinBox>
+#include <QListWidget>
+#include <QListWidgetItem>
 #include <QGraphicsView>
 #include <QGLWidget>
 #include <QGLFormat>
