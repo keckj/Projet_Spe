@@ -6,6 +6,7 @@
 #include "utils.hpp"
 #include "initialCond.hpp"
 #include "circleInitialCond.hpp"
+#include "functionInitialCond.hpp"
 
 #include <algorithm>
 #include <thread>
@@ -94,6 +95,7 @@ SimpleModel2D::~SimpleModel2D() {
 		
 void SimpleModel2D::initComputation() {
 
+	/*
 	float r2 = 0.005;
 	for (unsigned int j = 0; j < _height; j++) {
 		for (unsigned int i = 0; i < _width; i++) {
@@ -108,9 +110,13 @@ void SimpleModel2D::initComputation() {
 			//}
 		}
 	}
+	*/
+
+	FunctionInitialCond<float> zero([] (float,float,float) -> float { return 0;});
+	zero.initializeGrid(_r1);
 	
-	CircleInitialCond<float> *circle = new CircleInitialCond<float>(0.1,0.5,0.5,0.5);
-	circle->initializeGrid(_e1);
+	CircleInitialCond<float> circle(0.1,0.75,0.75,0.5);
+	circle.initializeGrid(_e1);
 }
 
 void SimpleModel2D::computeStep(int i) {
