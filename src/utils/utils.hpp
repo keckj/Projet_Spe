@@ -23,7 +23,7 @@ namespace utils {
 	template <typename T>
 	const std::string toStringDimension(T width, T height, T length) {
 		std::stringstream ss;
-		ss << width << " x " << height << " x " << length;
+		ss << width << "x" << height << "x" << length;
 		const std::string str(ss.str());
 		return str;
 	}
