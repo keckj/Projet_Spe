@@ -29,6 +29,7 @@ class SidePanel : public QWidget {
         void changeDirectory();
         void showSlider(int checkboxState);
         void changeNbIterSlider(int nbIter);
+        void refreshParameters(int modelId);
 
     private:
         void setModelOptionsStatus(bool status);

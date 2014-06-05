@@ -73,6 +73,8 @@ SidePanel::SidePanel(QWidget *parent_) : QWidget(parent_) {
     modelComboBox->addItem("Simple Model 2D");
     modelComboBox->addItem("->Multi-GPU<-");
     connect(modelComboBox, SIGNAL(currentIndexChanged(int)), mainWin, SLOT(changeModel(int)));
+    connect(modelComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(refreshParameters(int)));
+    refreshParameters(0); // init m_argsMap
 
     // Iterations spinBox
     iterSpinBox = new QSpinBox();
@@ -198,8 +200,7 @@ void SidePanel::setModelOptionsStatus(bool status) {
 void SidePanel::openParametersDialog() {
     if (paramsDialog) paramsDialog->deleteLater();
 
-   
-    paramsDialog = new ParametersDialog(this->getArguments(), this);
+    paramsDialog = new ParametersDialog(m_argsMap, this);
     paramsDialog->setModal(true);
     paramsDialog->show();
 }
@@ -225,14 +226,17 @@ void SidePanel::changeNbIterSlider(int nbIter) {
     this->gridSlider->setRange(1, nbIter);
 }
 
-std::map<std::string, Argument> *SidePanel::getArguments() {
-    switch(modelComboBox->currentIndex()) {
+void SidePanel::refreshParameters(int modelId) {
+    switch(modelId) {
         case 1:
             m_argsMap = SimpleModel2D::getArguments();
             break;
         default:
             m_argsMap = new std::map<std::string, Argument>;
     }
+}
+
+std::map<std::string, Argument> *SidePanel::getArguments() {
     return m_argsMap;
 }
 
