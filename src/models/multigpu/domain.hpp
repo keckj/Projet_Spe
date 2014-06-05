@@ -5,15 +5,18 @@
 #include <vector>
 
 #include "subDomain.hpp"
+#include "initialCond.hpp"
 
-class Domain {
+template <typename T, unsigned int N>
+class MultiBufferedDomain {
 
 	public: 
-		Domain(unsigned int domainWidth, unsigned int domainHeight, unsigned int domainLength,
+		MultiBufferedDomain(unsigned int domainWidth, unsigned int domainHeight, unsigned int domainLength,
 			unsigned int extraBorderSize, 
-			unsigned int minSplits);
+			unsigned int minSplits,
+			InitialCond<float> *initialCondition);
 
-		~Domain();
+		~MultiBufferedDomain();
 
 		unsigned int domainWidth() const;
 		unsigned int domainHeight() const;
@@ -26,8 +29,8 @@ class Domain {
 		unsigned int splitsY() const;
 		unsigned int splitsZ() const;
 
-		SubDomain *operator()(unsigned int i, unsigned int j, unsigned int k);
-		SubDomain *operator[](unsigned int n);
+		MultiBufferedSubDomain<T,N> *operator()(unsigned int i, unsigned int j, unsigned int k);
+		MultiBufferedSubDomain<T,N> *operator[](unsigned int n);
 
 	private:
 		unsigned int _domainWidth, _domainHeight, _domainLength;
@@ -36,10 +39,12 @@ class Domain {
 		unsigned int _nSplits;
 		unsigned int _splitsX, _splitsY, _splitsZ;
 
-		std::vector<SubDomain*> _subDomains;
+		std::vector<MultiBufferedSubDomain<T,N>*> _subDomains;
 
-		void splitDomain(unsigned int minSplits);
+		void splitDomain(unsigned int minSplits, InitialCond<float> *initialCond);
 		void linkSubDomains();
 };
+
+#include "domain.tpp"
 
 #endif /* end of include guard: DOMAIN_H */

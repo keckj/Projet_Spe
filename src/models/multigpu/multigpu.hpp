@@ -7,7 +7,9 @@
 #include "utils/headers.hpp"
 #include "model.hpp"
 
-#include "circleInitialCond.hpp"
+#include "domain.hpp"
+#include "initialCond.hpp"
+#include "deviceThread.hpp"
 
 #include <mutex>
 #include <condition_variable>
@@ -27,24 +29,25 @@ class MultiGpu : public Model {
 		cl::Platform _platform;
 		cl::Context _context;
 		std::vector<cl::Device> _devices;
+		std::vector<DeviceThread<>> _deviceThreads;
 		unsigned int _nDevices;
-		std::mutex mutex_t;
-		std::condition_variable cond_t;
+		
+		std::mutex _mutex;
+		std::condition_variable _cond;
 
 		unsigned int _nFunctions;
-		std::map<std::string, Grid<float>*> *_initialCondGrids;
-		
 		unsigned int _gridWidth, _gridHeight, _gridLength;
-		unsigned int *_subGridWidth, *_subGridHeight, *_subGridLength;
-	
-		unsigned int _order;
-		float *gridEdgesX, *gridEdgesY, *gridEdgesZ; 
-
+		std::map<std::string, MultiBufferedDomain<float,2u>> _domains;
+		
 		void initOpenClContext();
 		void createGlObjects();
 		
-		void initGrids(std::map<std::string, Grid<float>*> *initialCondGrids);
-		void checkGrids();
+		void initGrids(const std::map<std::string, InitialCond<float>*> &initialConditions);
+
+		const cl::Platform &platform();
+		const cl::Context &context();
+		std::map<std::string, MultiBufferedSubDomain<float,2u>*> takeSubDomain();
+		std::map<std::string, MultiBufferedSubDomain<float,2u>*> releaseSubDomain();
 
 
     signals:

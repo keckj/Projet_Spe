@@ -5,6 +5,9 @@
 #include "log.hpp"
 #include "domain.hpp"
 
+#include "circleInitialCond.hpp"
+#include "functionInitialCond.hpp"
+
 #include <sstream>
 
 using namespace log4cpp;
@@ -14,9 +17,7 @@ MultiGpu::MultiGpu(int nbIter) :
 	Model(10),
 	_nDevices(0),
 	_nFunctions(0),
-	_initialCondGrids(0),
-	_gridWidth(0), _gridHeight(0), _gridLength(0),
-	_subGridWidth(0), _subGridHeight(0), _subGridLength(0)
+	_gridWidth(0), _gridHeight(0), _gridLength(0)
 {
 }
 
@@ -25,10 +26,16 @@ MultiGpu::~MultiGpu()
 }
 
 void MultiGpu::initComputation() {
-	initGrids(NULL);
-	checkGrids();
+	
+	FunctionInitialCond<float> *zero = new FunctionInitialCond<float>([] (float,float,float) -> float { return 0;});
+	CircleInitialCond<float> *circle = new CircleInitialCond<float>(0.1,0.75,0.75,0.5);
+
+	std::map<std::string, InitialCond<float>*> initialConds;
+	initialConds.emplace("r", zero);
+	initialConds.emplace("e", circle);
 
 	initOpenClContext();
+	initGrids(initialConds);
 }
 
 void MultiGpu::computeStep(int i) {;}
@@ -117,42 +124,27 @@ void MultiGpu::initOpenClContext(){
 		_context = cl::Context(_devices, contextProperties, openclContextCallback, (void*)callbackData, &err);
 	}
 	CHK_ERRORS(err);
+		
+	for(cl::Device &dev : _devices) {
+		DeviceThread<> devThread(this, _platform, _context, dev);
+		_deviceThreads.push_back(devThread);
+	}
+
+	log_console->infoStream() << "Created " << _nDevices << " device threads !";
 }
 void MultiGpu::createGlObjects(){}
 		
 
-void MultiGpu::initGrids(std::map<std::string, Grid<float>*> *initialCondGrids) {
-		_initialCondGrids = new std::map<std::string, Grid<float>*>;
+void MultiGpu::initGrids(const std::map<std::string, InitialCond<float>*> &initialConditions) {
 		
-		Grid<float> *gridE = new Grid3D<float>(512u,512u,512u,0.01f);
-		Grid<float> *gridR = new Grid3D<float>(512u,512u,512u,0.01f);
+		_gridWidth = 511u;
+		_gridHeight = 123u;
+		_gridLength = 769;
+		_nFunctions = initialConditions.size();
 
-		(*_initialCondGrids)["e"] = gridE;
-		(*_initialCondGrids)["r"] = gridR;
-		
-		_gridWidth = 1233u;
-		_gridHeight = 457u;
-		_gridLength = 789u;
-		_nFunctions = _initialCondGrids->size();
-
-		Domain dom(_gridWidth, _gridHeight, _gridLength, 1u, 17);
-}
-
-void MultiGpu::checkGrids() {
-	for(auto grid = _initialCondGrids->begin(); grid != _initialCondGrids->end(); ++grid) {
-		if(!grid->second->isAllocated()) {
-			log_console->errorStream() << "Grid '" << grid->first << "' is not allocated, aborting.";
-			emit(finished());
+		for(auto &initialConds : initialConditions) {
+			MultiBufferedDomain<float,2u> dom(_gridWidth, _gridHeight, _gridLength, 1u, 4, initialConds.second);
+			_domains.emplace(initialConds.first, dom);
 		}
-		if(grid->second->width() != _gridWidth
-			|| grid->second->height() != _gridHeight
-			|| grid->second->length() != _gridLength) {
-			log_console->errorStream() << "Grid sizes are not coherent, aborting.";
-			emit(finished());
-		}
-		if(!grid->second->isOwner()) {
-			log_console->warnStream() << "Grid '" << grid->first << "' is allocated but is not data owner.";
-		}
-	}
 }
 

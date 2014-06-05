@@ -2,17 +2,22 @@
 #ifndef SUBDOMAIN_H
 #define SUBDOMAIN_H
 
+#include "initialCond.hpp"
 
-class SubDomain {
+
+template <typename T, unsigned int N = 2u>
+class MultiBufferedSubDomain {
 	
 	public:
-		SubDomain(unsigned int id, unsigned int nSubDomain,
+		MultiBufferedSubDomain(unsigned int id, unsigned int nSubDomain,
 				unsigned int idx, unsigned int idy, unsigned int idz, 
 				unsigned int nSubDomainX, unsigned int nSubDomainY, unsigned int nSubDomainZ,
+				unsigned int domainWidth, unsigned int domainHeight, unsigned int domainLength,
 				unsigned int subDomainWidth, unsigned int subDomainHeight, unsigned int subDomainLength,
-				unsigned int borderSize);
+				unsigned int borderSize,
+				InitialCond<T> *initialCondition);
 
-		~SubDomain();
+		~MultiBufferedSubDomain();
 
 		unsigned int id() const;
 		unsigned int nSubDomain() const;	
@@ -24,30 +29,38 @@ class SubDomain {
 		unsigned int nSubDomainX() const;		
 		unsigned int nSubDomainY() const;		
 		unsigned int nSubDomainZ() const;
+		
+		unsigned int domainWidth() const;		
+		unsigned int domainHeight() const;		
+		unsigned int domainLength() const;
 
 		unsigned int subDomainWidth() const;		
 		unsigned int subDomainHeight() const;		
 		unsigned int subDomainLength() const;
+		
+		unsigned int subDomainBaseWidth() const;		
+		unsigned int subDomainBaseHeight() const;		
+		unsigned int subDomainBaseLength() const;
 
 		unsigned int borderSize() const;
 
-		float *data() const;
+		T **data() const;
 		unsigned long size() const;
 		unsigned long bytes() const;
 		
-		float *internalEdgeLeft() const;
-		float *internalEdgeRight() const;
-		float *internalEdgeTop() const;
-		float *internalEdgeDown() const;
-		float *internalEdgeFront() const;
-		float *internalEdgeBack() const;
+		T* const* internalEdgesLeft() const;
+		T* const* internalEdgesRight() const;
+		T* const* internalEdgesTop() const;
+		T* const* internalEdgesDown() const;
+		T* const* internalEdgesFront() const;
+		T* const* internalEdgesBack() const;
 		
-		float *externalEdgeLeft() const;
-		float *externalEdgeRight() const;
-		float *externalEdgeTop() const;
-		float *externalEdgeDown() const;
-		float *externalEdgeFront() const;
-		float *externalEdgeBack() const;
+		T** externalEdgesLeft() const;
+		T** externalEdgesRight() const;
+		T** externalEdgesTop() const;
+		T** externalEdgesDown() const;
+		T** externalEdgesFront() const;
+		T** externalEdgesBack() const;
 
 		unsigned long edgeSizeX() const;
 		unsigned long edgeSizeY() const;
@@ -57,36 +70,45 @@ class SubDomain {
 		unsigned long edgeBytesY() const;
 		unsigned long edgeBytesZ() const;
 
-		unsigned int offsetX();
-		unsigned int offsetY();
-		unsigned int offsetZ();
+		unsigned int offsetX() const;
+		unsigned int offsetY() const;
+		unsigned int offsetZ() const;
 
-		void setExternalEdges(float *edgeLeft , float *edgeTop , float *edgeFront,
-							  float *edgeRight, float *edgeDown, float *edgeBack); 
+		unsigned long offset() const;
+
+		void setExternalEdges(T* const* edgeLeft, T* const* edgeTop, T* const* edgeFront,
+							  T* const* edgeRight, T* const* edgeDown, T* const* edgeBack); 
+
+		void initSubDomain(unsigned int bufferId);
 
 	private:
 		const unsigned int _id;
 		const unsigned int _nSubDomain;
 		const unsigned int _idx, _idy, _idz;
 		const unsigned int _nSubDomainX,  _nSubDomainY,  _nSubDomainZ;
+		const unsigned int _domainWidth,  _domainHeight,  _domainLength;
 		const unsigned int _subDomainWidth,  _subDomainHeight,  _subDomainLength;
+		const unsigned int _subDomainBaseWidth,  _subDomainBaseHeight,  _subDomainBaseLength;
 		const unsigned int _borderSize;
 		
 		const unsigned long _size, _bytes;
 		const unsigned long _edgeSizeX, _edgeSizeY, _edgeSizeZ;
 		const unsigned long _edgeBytesX, _edgeBytesY, _edgeBytesZ;
 
-		float *_data;
+		const InitialCond<T> *_initialCondition;
+
+		T *_data[N];
 		
-		float *_internalEdgeLeft, *_internalEdgeRight;
-		float *_internalEdgeTop, *_internalEdgeDown;
-		float *_internalEdgeFront, *_internalEdgeBack;
+		T *_internalEdgesLeft[N], *_internalEdgesRight[N];
+		T *_internalEdgesTop[N], *_internalEdgesDown[N];
+		T *_internalEdgesFront[N], *_internalEdgesBack[N];
 		
-		float *_externalEdgeLeft, *_externalEdgeRight;
-		float *_externalEdgeTop, *_externalEdgeDown;
-		float *_externalEdgeFront, *_externalEdgeBack;
+		T **_externalEdgesLeft, **_externalEdgesRight;
+		T **_externalEdgesTop, **_externalEdgesDown;
+		T **_externalEdgesFront, **_externalEdgesBack;
+		
 };
 
-
+#include "subDomain.tpp"
 
 #endif /* end of include guard: SUBPROBLEM_H */
