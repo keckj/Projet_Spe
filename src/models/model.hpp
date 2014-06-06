@@ -9,7 +9,7 @@ class Model : public QObject {
     Q_OBJECT
 
     public:
-        Model(int nbIter, unsigned int width = 200, unsigned int height = 200, unsigned int length = 0); 
+        Model(int nbIter, unsigned int width = 200, unsigned int height = 200, unsigned int length = 1); 
 		virtual ~Model() {};
 
     protected:
