@@ -3,6 +3,7 @@
 
 #include "headers.hpp"
 #include "parametersDialog.hpp"
+#include "initializationDialog.hpp"
 #include "argument.hpp"
 
 class SidePanel : public QWidget {
@@ -45,7 +46,8 @@ class SidePanel : public QWidget {
         //TODO initCond
         QString m_saveDirectory;
 
-        ParametersDialog *initDialog, *paramsDialog;
+        InitializationDialog *initDialog;
+        ParametersDialog *paramsDialog;
         QComboBox *modelComboBox;
         QSpinBox *iterSpinBox;
         QListWidget *variablesRenderedList;

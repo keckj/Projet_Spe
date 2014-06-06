@@ -3,6 +3,7 @@
 #include "sidePanel.moc"
 #include "mainWindow.hpp"
 #include "parametersDialog.hpp"
+#include "initializationDialog.hpp"
 #include "argument.hpp"
 #include "colormap.hpp"
 // Models
@@ -180,7 +181,7 @@ SidePanel::SidePanel(QWidget *parent_) : QWidget(parent_) {
     renderOptionsLayout->addWidget(gridSlider, 2, 1);
     
     // Init m_argsMap and m_varsMap
-    refreshParameters(0);
+    refreshParameters(modelComboBox->currentIndex());
 }
 
 SidePanel::~SidePanel() {
@@ -218,11 +219,12 @@ void SidePanel::setModelOptionsStatus(bool status) {
 }
 
 void SidePanel::openInitDialog() {
-    /*if (initDialog) initDialog->deleteLater();
+    if (initDialog) initDialog->deleteLater();
 
-    initDialog = new InitializationDialog(m_initialCond, , this);
+    //initDialog = new InitializationDialog(m_initialCond, this);
+    initDialog = new InitializationDialog(this);
     initDialog->setModal(true);
-    initDialog->show();*/
+    initDialog->show();
 }
 
 void SidePanel::openParametersDialog() {
@@ -285,12 +287,12 @@ std::map<std::string, bool> *SidePanel::getVariables() {
 }
 
 void SidePanel::keyPressEvent(QKeyEvent *k) {
-    switch (k->key()) {
+    /*switch (k->key()) {
         case Qt::Key_Return:
         case Qt::Key_Enter:
             start_pause_resume();
             break;
-    }
+    }*/
     emit childKeyEvent(k);
 }
 
