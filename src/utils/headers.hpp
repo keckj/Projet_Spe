@@ -65,6 +65,9 @@ static const char* CL_GL_SHARING_EXT ="cl_khr_gl_sharing";
 #include <QRectF>
 #include <QResizeEvent>
 #include <QTimer>
+#include <QString>
+#include <QStringList>
+#include <QMap>
 #include <QGenericMatrix>
 
 //GLX après QT (don't ask why)

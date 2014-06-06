@@ -12,8 +12,10 @@ class SidePanel : public QWidget {
 		SidePanel(QWidget *parent_ = 0);
 		~SidePanel();
 
-        std::map<std::string, bool> *getVariables();
         std::map<std::string, Argument> *getArguments();
+        std::map<std::string, bool> *getVariables();
+
+        static const QStringList modelsList;
 
     signals:
         void startPushed();
@@ -41,7 +43,6 @@ class SidePanel : public QWidget {
         std::map<std::string, Argument> *m_argsMap;
         std::map<std::string, bool> *m_varsMap;
         //TODO initCond
-
         QString m_saveDirectory;
 
         ParametersDialog *initDialog, *paramsDialog;

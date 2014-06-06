@@ -24,8 +24,6 @@ MainWindow::MainWindow() {
     m_total_steps = 100;
     m_auto_render = true;
 
-    //Register metaType
-    qRegisterMetaType<std::string>();
 
     // QT GUI
     QDesktopWidget widget;
@@ -52,6 +50,8 @@ MainWindow::MainWindow() {
     viewer->setViewportUpdateMode(QGraphicsView::FullViewportUpdate);
     OpenGLScene *scene = new OpenGLScene();
     viewer->setScene(scene);
+    
+    //connect(scene, SIGNAL(progressUpdate(int)), status, SLOT(progressUpdate(int)));
 
     panel = new SidePanel(this);
 
@@ -109,15 +109,15 @@ void MainWindow::changeNbIter(int nb) {
 }
 
 void MainWindow::startComputing() {
-    m_stored_grids->clear();
+    //m_stored_grids->clear();
     m_thread = new QThread;
     Model *mod;
     switch (m_selected_model) {
-		case 1:
+		case 0:
             mod = (Model *) new SimpleModel2D(m_total_steps, panel->getArguments());
 			log_console->infoStream() << "Started a simple model 2D simulation !";
 			break;
-		case 2:
+		case 1:
             mod = (Model *) new MultiGpu(m_total_steps);
 			log_console->infoStream() << "Started a yolo-swaggy bug multi-gpu model simulation !";
 			break;
@@ -131,11 +131,12 @@ void MainWindow::startComputing() {
     connect(this, SIGNAL(pauseThread(bool)), mod, SLOT(pauseComputing(bool)));
     connect(mod, SIGNAL(finished()), m_thread, SLOT(quit()));                   // kill thread
     connect(mod, SIGNAL(finished()), panel, SLOT(stop()));                      // update GUI buttons
-    //connect(mod, SIGNAL(finished()), mod, SLOT(deleteLater()));                 // cleanup (TODO thread safe signal)
-    connect(m_thread, SIGNAL(finished()), m_thread, SLOT(deleteLater()));       // cleanup
+    //connect(mod, SIGNAL(finished()), mod, SLOT(deleteLater()));               // TODO thread safe signal
+    connect(m_thread, SIGNAL(finished()), m_thread, SLOT(deleteLater()));
     connect(mod, SIGNAL(stepComputed(const Grid2D<float> *)), this, SLOT(updateGrid(const Grid2D<float> *)));
     //connect(this, SIGNAL(addTextureRequest(std::string)), mod, SLOT(addTexture(std::string)));
     //connect(this, SIGNAL(removeTextureRequest(std::string)), mod, SLOT(removeTexture(std::string)));
+    //connect(mod, SIGNAL(stepComputed(const QMap<QString, GLuint>)), scene, SLOT(textureUpdate(const QMap<QString, GLuint>)));
 
     m_thread->start();
 }
@@ -149,12 +150,13 @@ void MainWindow::stopComputing() {
 }
        
 void MainWindow::updateRenderedVars(QListWidgetItem *item) {
+    // Note: In case the signals
     if (item->checkState() == Qt::Unchecked) {
-        emit removeTextureRequest(item->text().toStdString());
-        qWarning() << "DEBUG :" << item->text() << " is unchecked";
+        emit removeTextureRequest(item->text());
+        //qWarning() << "DEBUG :" << item->text() << " is unchecked";
     } else {
-        emit addTextureRequest(item->text().toStdString());
-        qWarning() << "DEBUG :" << item->text() << " is checked";
+        emit addTextureRequest(item->text());
+        //qWarning() << "DEBUG :" << item->text() << " is checked";
     }
 }
 
@@ -176,6 +178,7 @@ void MainWindow::keyPressEvent(QKeyEvent *k) {
 
     switch (k->key()) {
         case Qt::Key_Escape:
+            emit stopThread();
             this->close();
             break;
     }

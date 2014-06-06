@@ -22,6 +22,7 @@ class Model : public QObject {
         void startComputing();
         void pauseComputing(bool b);
         void stopComputing();
+        //TODO addTexture / removeTexture
 
     /* Copy signals, inheritance does not work properly */
     signals:

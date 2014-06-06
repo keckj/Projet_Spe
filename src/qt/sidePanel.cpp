@@ -8,6 +8,8 @@
 // Models
 #include "simpleModel2D.hpp"
 
+const QStringList SidePanel::modelsList = QStringList() << "Simple Model 2D" << "->Multi-GPU<-" << "Default Model";
+
 SidePanel::SidePanel(QWidget *parent_) : QWidget(parent_) {
 
     // Get parent
@@ -83,9 +85,7 @@ SidePanel::SidePanel(QWidget *parent_) : QWidget(parent_) {
     
     // Dropdown list
     modelComboBox = new QComboBox;
-    modelComboBox->addItem("Default model");
-    modelComboBox->addItem("Simple Model 2D");
-    modelComboBox->addItem("->Multi-GPU<-");
+    modelComboBox->addItems(SidePanel::modelsList);
     connect(modelComboBox, SIGNAL(currentIndexChanged(int)), mainWin, SLOT(changeModel(int)));
     connect(modelComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(refreshParameters(int)));
 
@@ -256,10 +256,9 @@ void SidePanel::changeNbIterSlider(int nbIter) {
 
 void SidePanel::refreshParameters(int modelId) {
     switch(modelId) {
-        case 1:
+        case 0:
             m_argsMap = SimpleModel2D::getArguments();
-            //m_varsMap = SimpleModel2D::getVariables();
-            m_varsMap = new std::map<std::string, bool>;
+            m_varsMap = SimpleModel2D::getVariables();
             break;
         default:
             m_argsMap = new std::map<std::string, Argument>;
