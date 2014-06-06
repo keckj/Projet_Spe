@@ -103,6 +103,10 @@ static const char* CL_GL_SHARING_EXT ="cl_khr_gl_sharing";
 #else
 #define TRY(ans) {ans}
 #endif
+
+//print en multithread
+#define PRINT_ONCE(mess) {std::once_flag flag; std::call_once(flag, [](){std::cout << mess << std::endl;});}
+		
 	
 
 inline void clAssert(cl_int err, const std::string &file, int line, bool abort = true) {

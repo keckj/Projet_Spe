@@ -80,29 +80,36 @@ EXCLUDED_SUBDIRS = $(foreach DIR, $(EXCL), $(call subdirs, $(SRCDIR)/$(DIR)))
 
 SUBDIRS =  $(filter-out $(EXCLUDED_SUBDIRS), $(call subdirs, $(SRCDIR)))
 TARGET = main
+
 SRC_EXTENSIONS = c C cc cpp s S asm cu #cl
 WEXT = $(addprefix *., $(SRC_EXTENSIONS))
+SRC = $(foreach DIR, $(SUBDIRS), $(foreach EXT, $(WEXT), $(wildcard $(DIR)/$(EXT))))
+OBJ = $(subst $(SRCDIR), $(OBJDIR), $(addsuffix .o, $(basename $(SRC))))
+
+#DEP_EXTENSIONS = h hpp tpp
+#DEP_WEXT = $(addprefix *., $(DEP_EXTENSIONS))
+#DEP_SRC = $(foreach DIR, $(SUBDIRS), $(foreach EXT, $(DEP_WEXT), $(wildcard $(DIR)/$(EXT))))
 
 MOCSRC = $(shell grep -rlw $(SRCDIR) -e 'Q_OBJECT' --include=*.h --include=*.hpp | xargs) #need QT preprocessor
 MOCOUTPUT = $(addsuffix .moc, $(basename $(MOCSRC)))
 
-SRC = $(foreach DIR, $(SUBDIRS), $(foreach EXT, $(WEXT), $(wildcard $(DIR)/$(EXT))))
-OBJ = $(subst $(SRCDIR), $(OBJDIR), $(addsuffix .o, $(basename $(SRC))))
-
-
 #Compilateurs
+C_STANDART = c99
+CXX_STANDART = c++11
+
+
 LINK= g++
-LINKFLAGS= -W -Wall -Wextra -pedantic -std=c++0x
-LDFLAGS= $(VIEWER_LIBS) $(CUDA_LIBS) $(OPENCL_LIBS) -llog4cpp
+LINKFLAGS= -W -Wall -Wextra -pedantic -std=$(CXX_STANDART)
+LDFLAGS= $(VIEWER_LIBS) $(CUDA_LIBS) $(OPENCL_LIBS) -llog4cpp -pthread
 INCLUDE = -I$(SRCDIR) $(foreach dir, $(SUBDIRS), -I$(dir)) $(VIEWER_INCLUDEPATH) $(CUDA_INCLUDEPATH) $(OPENCL_INCLUDEPATH)
 LIBS = $(VIEWER_LIBPATH) $(CUDA_LIBPATH) $(OPENCL_LIBPATH)
 DEFINES= $(VIEWER_DEFINES) $(OPT) -D_N_MAIN=$(N_MAIN) 
 
 CC=gcc
-CFLAGS= -W -Wall -Wextra -pedantic -std=c99 -m64
+CFLAGS= -W -Wall -Wextra -pedantic -std=$(C_STANDART) -m64
 
 CXX=g++
-CXXFLAGS= -W -Wall -Wextra -Wshadow -Wstrict-aliasing -Werror -pedantic -std=c++0x -m64  -Wno-unused-parameter -Wno-comment -Wno-unused-variable -Wno-unused-result#-Weffc++
+CXXFLAGS= -W -Wall -Wextra -Wshadow -Wstrict-aliasing -Werror -pedantic -std=$(CXX_STANDART) -m64  -Wno-unused-parameter -Wno-comment -Wno-unused-variable -Wno-unused-result #-Weffc++
 
 #preprocesseur QT
 MOC=moc

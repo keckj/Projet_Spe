@@ -7,7 +7,7 @@
 
 template <typename T, unsigned int N = 2u>
 class MultiBufferedSubDomain {
-	
+
 	public:
 		MultiBufferedSubDomain(unsigned int id, unsigned int nSubDomain,
 				unsigned int idx, unsigned int idy, unsigned int idz, 
@@ -29,7 +29,7 @@ class MultiBufferedSubDomain {
 		unsigned int nSubDomainX() const;		
 		unsigned int nSubDomainY() const;		
 		unsigned int nSubDomainZ() const;
-		
+
 		unsigned int domainWidth() const;		
 		unsigned int domainHeight() const;		
 		unsigned int domainLength() const;
@@ -37,24 +37,24 @@ class MultiBufferedSubDomain {
 		unsigned int subDomainWidth() const;		
 		unsigned int subDomainHeight() const;		
 		unsigned int subDomainLength() const;
-		
+
 		unsigned int subDomainBaseWidth() const;		
 		unsigned int subDomainBaseHeight() const;		
 		unsigned int subDomainBaseLength() const;
 
 		unsigned int borderSize() const;
 
-		T **data() const;
+		T* const* data() const;
 		unsigned long size() const;
 		unsigned long bytes() const;
-		
+
 		T* const* internalEdgesLeft() const;
 		T* const* internalEdgesRight() const;
 		T* const* internalEdgesTop() const;
 		T* const* internalEdgesDown() const;
 		T* const* internalEdgesFront() const;
 		T* const* internalEdgesBack() const;
-		
+
 		T** externalEdgesLeft() const;
 		T** externalEdgesRight() const;
 		T** externalEdgesTop() const;
@@ -65,7 +65,7 @@ class MultiBufferedSubDomain {
 		unsigned long edgeSizeX() const;
 		unsigned long edgeSizeY() const;
 		unsigned long edgeSizeZ() const;
-		
+
 		unsigned long edgeBytesX() const;
 		unsigned long edgeBytesY() const;
 		unsigned long edgeBytesZ() const;
@@ -77,7 +77,7 @@ class MultiBufferedSubDomain {
 		unsigned long offset() const;
 
 		void setExternalEdges(T* const* edgeLeft, T* const* edgeTop, T* const* edgeFront,
-							  T* const* edgeRight, T* const* edgeDown, T* const* edgeBack); 
+				T* const* edgeRight, T* const* edgeDown, T* const* edgeBack); 
 
 		void initSubDomain(unsigned int bufferId);
 
@@ -90,7 +90,7 @@ class MultiBufferedSubDomain {
 		const unsigned int _subDomainWidth,  _subDomainHeight,  _subDomainLength;
 		const unsigned int _subDomainBaseWidth,  _subDomainBaseHeight,  _subDomainBaseLength;
 		const unsigned int _borderSize;
-		
+
 		const unsigned long _size, _bytes;
 		const unsigned long _edgeSizeX, _edgeSizeY, _edgeSizeZ;
 		const unsigned long _edgeBytesX, _edgeBytesY, _edgeBytesZ;
@@ -98,15 +98,15 @@ class MultiBufferedSubDomain {
 		const InitialCond<T> *_initialCondition;
 
 		T *_data[N];
-		
+
 		T *_internalEdgesLeft[N], *_internalEdgesRight[N];
 		T *_internalEdgesTop[N], *_internalEdgesDown[N];
 		T *_internalEdgesFront[N], *_internalEdgesBack[N];
-		
+
 		T **_externalEdgesLeft, **_externalEdgesRight;
 		T **_externalEdgesTop, **_externalEdgesDown;
 		T **_externalEdgesFront, **_externalEdgesBack;
-		
+
 };
 
 #include "subDomain.tpp"

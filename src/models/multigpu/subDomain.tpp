@@ -1,6 +1,10 @@
 
 #include "utils.hpp"
 
+#include "grid3D.hpp"
+#include "grid2D.hpp"
+#include "grid1D.hpp"
+
 using namespace log4cpp;
 using namespace utils;
 
@@ -121,22 +125,22 @@ unsigned int MultiBufferedSubDomain<T,N>::subDomainLength() const {
 }
 template <typename T, unsigned int N>
 unsigned int MultiBufferedSubDomain<T,N>::subDomainBaseWidth() const {
-			return _subDomainBaseWidth;
+	return _subDomainBaseWidth;
 }		
 template <typename T, unsigned int N>
 unsigned int MultiBufferedSubDomain<T,N>::subDomainBaseHeight() const {
-			return _subDomainBaseHeight;
+	return _subDomainBaseHeight;
 }		
 template <typename T, unsigned int N>
 unsigned int MultiBufferedSubDomain<T,N>::subDomainBaseLength() const {
-			return _subDomainBaseLength;
+	return _subDomainBaseLength;
 }
 template <typename T, unsigned int N>
 unsigned int MultiBufferedSubDomain<T,N>::borderSize() const {
 	return _borderSize;
 }
 template <typename T, unsigned int N>
-T **MultiBufferedSubDomain<T,N>::data() const {
+T* const* MultiBufferedSubDomain<T,N>::data() const {
 	return _data;
 }
 template <typename T, unsigned int N>
@@ -197,47 +201,48 @@ T** MultiBufferedSubDomain<T,N>::externalEdgesBack() const {
 }
 template <typename T, unsigned int N>
 unsigned long MultiBufferedSubDomain<T,N>::edgeSizeX() const {
-			return _edgeSizeX;
+	return _edgeSizeX;
 }
 template <typename T, unsigned int N>
 unsigned long MultiBufferedSubDomain<T,N>::edgeSizeY() const {
-			return _edgeSizeY;
+	return _edgeSizeY;
 }
 template <typename T, unsigned int N>
 unsigned long MultiBufferedSubDomain<T,N>::edgeSizeZ() const {
-			return _edgeSizeZ;
+	return _edgeSizeZ;
 }
 template <typename T, unsigned int N>
 unsigned long MultiBufferedSubDomain<T,N>::edgeBytesX() const {
-			return _edgeBytesX;
+	return _edgeBytesX;
 }
 template <typename T, unsigned int N>
 unsigned long MultiBufferedSubDomain<T,N>::edgeBytesY() const {
-			return _edgeBytesY;
+	return _edgeBytesY;
 }
 template <typename T, unsigned int N>
 unsigned long MultiBufferedSubDomain<T,N>::edgeBytesZ() const {
-			return _edgeBytesZ;
+	return _edgeBytesZ;
 }
-		
+
 
 template <typename T, unsigned int N>
 unsigned int MultiBufferedSubDomain<T,N>::offsetX() const {
-			return _idx*_subDomainBaseWidth;
+	return _idx*_subDomainBaseWidth;
 }
 template <typename T, unsigned int N>
 unsigned int MultiBufferedSubDomain<T,N>::offsetY() const {
-			return _idy*_subDomainBaseHeight;
+	return _idy*_subDomainBaseHeight;
 }
 template <typename T, unsigned int N>
 unsigned int MultiBufferedSubDomain<T,N>::offsetZ() const {
-			return _idz*_subDomainBaseLength;
+	return _idz*_subDomainBaseLength;
 }
 template <typename T, unsigned int N>
 unsigned long MultiBufferedSubDomain<T,N>::offset() const {
-			return _idz*_domainHeight*_domainWidth*_subDomainBaseLength
-				+ _idy*_domainWidth*_subDomainBaseHeight  
-				+ _idx*_subDomainBaseWidth;
+	return 0ul
+		+ offsetZ() * _domainHeight * _domainWidth
+		+ offsetY() * _domainWidth 
+		+ offsetZ();
 }
 
 
@@ -245,7 +250,7 @@ template <typename T, unsigned int N>
 void MultiBufferedSubDomain<T,N>::setExternalEdges(
 		T* const* edgeLeft_ , T* const* edgeTop_ , T* const* edgeFront_,
 		T* const* edgeRight_, T* const* edgeDown_, T* const* edgeBack_ ) { 
-	
+
 	_externalEdgesLeft = (T**)edgeLeft_;
 	_externalEdgesRight = (T**)edgeRight_;
 
@@ -255,7 +260,7 @@ void MultiBufferedSubDomain<T,N>::setExternalEdges(
 	_externalEdgesFront = (T**)edgeFront_;
 	_externalEdgesBack = (T**)edgeBack_;
 }
-		
+
 
 template <typename T, unsigned int N>
 void MultiBufferedSubDomain<T,N>::initSubDomain(unsigned int bufferId) {
@@ -264,4 +269,5 @@ void MultiBufferedSubDomain<T,N>::initSubDomain(unsigned int bufferId) {
 			_subDomainWidth, _subDomainHeight, _subDomainLength,
 			_domainWidth, _domainHeight, _domainHeight);
 }
+
 

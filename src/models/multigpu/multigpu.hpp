@@ -2,14 +2,13 @@
 #ifndef MULTIGPU_H
 #define MULTIGPU_H
 
+#include "deviceThread.hpp"
 #include "headers.hpp"
+#include "fence.hpp"
 
-#include "utils/headers.hpp"
 #include "model.hpp"
-
 #include "domain.hpp"
 #include "initialCond.hpp"
-#include "deviceThread.hpp"
 
 #include <mutex>
 #include <condition_variable>
@@ -24,37 +23,42 @@ class MultiGpu : public Model {
         void initComputation() override;
         void computeStep(int i) override;
         void finishComputation() override;
+		
+		bool subDomainAvailable();
+		bool tryToTakeSubDomain(std::map<std::string, MultiBufferedSubDomain<float,2u>*> &subdomain);
+		void releaseSubDomain(std::map<std::string, MultiBufferedSubDomain<float,2u>*> subDomain);
+
+		void initDone();
 
 	private:
 		cl::Platform _platform;
 		cl::Context _context;
 		std::vector<cl::Device> _devices;
-		std::vector<DeviceThread<>> _deviceThreads;
+		std::vector<DeviceThread<2u>> _deviceThreads;
 		unsigned int _nDevices;
 		
 		std::mutex _mutex;
 		std::condition_variable _cond;
+		std::list<unsigned int> _availableDomains;
 
 		unsigned int _nFunctions;
 		unsigned int _gridWidth, _gridHeight, _gridLength;
-		std::map<std::string, MultiBufferedDomain<float,2u>> _domains;
+		std::map<std::string, MultiBufferedDomain<float,2u>*> _domains;
+		unsigned int _splits;
+		bool _init;
 		
 		void initOpenClContext();
-		void createGlObjects();
 		
 		void initGrids(const std::map<std::string, InitialCond<float>*> &initialConditions);
-
-		const cl::Platform &platform();
-		const cl::Context &context();
-		std::map<std::string, MultiBufferedSubDomain<float,2u>*> takeSubDomain();
-		std::map<std::string, MultiBufferedSubDomain<float,2u>*> releaseSubDomain();
-
+		
 
     signals:
         void stepComputed(const Grid2D<float> *grid);
         void stepComputed(const Grid3D<float> *grid);
         void finished();
 };
+
+#include "deviceThread.tpp"
 
 
 #endif /* end of include guard: MULTIGPU_H */

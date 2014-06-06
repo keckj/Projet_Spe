@@ -44,7 +44,7 @@ $(OBJDIR)%.o : $(SRCDIR)%.C
 $(OBJDIR)%.o : $(SRCDIR)%.cc 
 	$(CXX) $(INCLUDE) -o $@ -c $^ $(CXXFLAGS) $(DEFINES)
 	@echo
-$(OBJDIR)%.o : $(SRCDIR)%.cpp 
+$(OBJDIR)%.o : $(SRCDIR)%.cpp
 	$(CXX) $(INCLUDE) -o $@ -c $^ $(CXXFLAGS) $(DEFINES)
 	@echo
 

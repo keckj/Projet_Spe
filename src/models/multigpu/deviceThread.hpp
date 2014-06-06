@@ -1,11 +1,12 @@
 
-
 #ifndef DEVICETHREAD_H
 #define DEVICETHREAD_H
 
 #include "headers.hpp"
-#include "multigpu.hpp"
+#include "subDomain.hpp"
+#include "fence.hpp"
 
+#include <functional>
 
 class MultiGpu;
 
@@ -16,13 +17,15 @@ class DeviceThread {
 		DeviceThread(MultiGpu *simulation, 
 				const cl::Platform &platform,
 				const cl::Context &context,
-				const cl::Device &device);
+				const cl::Device &device,
+				Fence *fence);
 
 		~DeviceThread();
+		
+		void operator()();
 
 	private:
-		void takeSubDomain();
-		void releaseSubDomain();
+		void init();
 
 		MultiGpu *_simulation;
 
@@ -30,9 +33,34 @@ class DeviceThread {
 		const cl::Context _context;
 		const cl::Device _device;
 
-		cl::CommandQueue _commandQueues[nCommandQueues];
-};
+		Fence *_fence;
 
-#include "deviceThread.tpp"
+		cl::CommandQueue _commandQueues[nCommandQueues];
+
+		std::map<std::string, MultiBufferedSubDomain<float,2u>*> _currentDomain; 
+		
+		static std::mutex _mutex;
+		static std::condition_variable _cond;
+		static bool _called;
+
+		template <typename Ret, class... Args>
+		static void callOnce(std::function<Ret(Args...)> f, Fence *fence, Args... args);
+};
+		
+template <unsigned int nCommandQueues>
+template <typename Ret, class... Args>
+void DeviceThread<nCommandQueues>::callOnce(std::function<Ret(Args...)> f, Fence *fence, Args... args) {
+	(*fence)();
+	_called = false;
+	{
+		std::unique_lock<std::mutex> lock(DeviceThread::_mutex);
+		if(!_called) {
+			f(args...);		
+			_called = true;
+		}
+		_cond.notify_one();
+	}
+	(*fence)();
+}
 
 #endif /* end of include guard: DEVICETHREAD_H */

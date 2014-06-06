@@ -30,12 +30,29 @@ void InitialCond<T>::initializeSubGrid(
 	for (unsigned int k = 0; k < subGridLength; k++) {
 		for (unsigned int j = 0; j < subGridHeight; j++) {
 			for (unsigned int i = 0; i < subGridWidth; i++) {
-				unsigned long offset = k*subGridHeight*subGridWidth + j*subGridWidth + i;
+				unsigned long offset = 0ul
+					+ (k+offsetZ)*subGridHeight*subGridWidth 
+					+ (j+offsetY)*subGridWidth 
+					+ (i+offsetX);
+
 				x = (gridWidth -1u==0u ? T(0.5) : (T)(offsetX + i) / (T)(gridWidth -1));
 				y = (gridHeight-1u==0u ? T(0.5) : (T)(offsetY + j) / (T)(gridHeight-1));
 				z = (gridLength-1u==0u ? T(0.5) : (T)(offsetZ + k) / (T)(gridLength-1));
+
+				if(i==0 && j==0 && k==0) {
+					log_console->debugStream() << "Initialize grid offset=" << offset << " , grid size=" 
+						<< utils::toStringDimension(gridWidth,gridHeight,gridLength) << " subgrid size="
+						<< utils::toStringDimension(subGridWidth,subGridHeight,subGridLength) << " !";
+				}
+
 				data[offset] = F(x,y,z);
 			}
 		}
 	}
+	log_console->debugStream() << F(0,0,0.5)   << " " <<  F(0.1,0,0.5) << " " 
+							   << F(0.2,0,0.5) << " " << F(0.3,0,0.5) << " "
+							   << F(0.4,0,0.5) << " " << F(0.5,0,0.5) << " "
+							   << F(0.6,0,0.5) << " " << F(0.7,0,0.5) << " "
+							   << F(0.8,0,0.5) << " " << F(0.9,0,0.5) << " "
+							   << F(1.0,0,0.5);
 }

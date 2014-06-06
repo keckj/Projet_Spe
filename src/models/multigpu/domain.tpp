@@ -2,6 +2,7 @@
 #include "domain.hpp"
 #include "log.hpp"
 #include <cassert>
+#include <thread>
 
 using namespace log4cpp;
 		
@@ -26,6 +27,8 @@ template <typename T, unsigned int N>
 MultiBufferedDomain<T,N>::~MultiBufferedDomain() {
 	for(MultiBufferedSubDomain<T,N> *dom : _subDomains)
 		delete dom;
+
+	log_console->debugStream() << "A multiBufferedDomain has been killed by thread " << std::this_thread::get_id() << " !";
 }
 
 template <typename T, unsigned int N>
@@ -157,4 +160,43 @@ void MultiBufferedDomain<T,N>::linkSubDomains() {
 		);
 
 	}
+}
+
+template <typename T, unsigned int N>
+Grid<T>* MultiBufferedDomain<T,N>::toGrid(unsigned int buffer) {
+
+	Grid<T> *grid;
+
+	log_console->infoStream() << "Creating a grid from domain : " << toStringDimension(_domainWidth, _domainHeight, _domainLength);
+
+	if(_domainLength == 1u && _domainHeight == 1u) 
+		grid = new Grid1D<T>(1.0f, _domainWidth, true);
+	else if(_domainLength == 1u) 
+		grid = new Grid2D<T>(1.0f, 1.0f, _domainWidth, _domainHeight, true);
+	else 
+		grid = new Grid3D<T>(1.0f, 1.0f, 1.0f, _domainWidth, _domainHeight, _domainHeight, true);
+	
+	T* dstData = grid->data();
+	for (unsigned int k = 0; k < _splitsZ; k++ ) {
+		for (unsigned int j = 0; j < _splitsY; j++) {
+			for (unsigned int i = 0; i < _splitsX; i++) {
+				MultiBufferedSubDomain<T,N> *subDomain = (*this)(i,j,k);
+				T* srcData = *(subDomain->data() + buffer);
+				for (unsigned int kk = 0; kk < subDomain->subDomainLength(); kk++) {
+					for (unsigned int jj = 0; jj < subDomain->subDomainHeight(); jj++) {
+						unsigned long dstOffset = 0ul
+							+ subDomain->offset() 
+							+ kk*_domainHeight*_domainWidth 
+							+ jj*_domainWidth;
+						unsigned long srcOffset = 0ul
+							+ kk*subDomain->subDomainHeight()*subDomain->subDomainWidth()
+							+ jj*subDomain->subDomainWidth();
+						memcpy(dstData + dstOffset, srcData + srcOffset, subDomain->subDomainWidth()*sizeof(T));
+					}
+				}
+			}
+		}
+	}
+
+	return grid;
 }

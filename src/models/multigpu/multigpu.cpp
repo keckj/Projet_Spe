@@ -17,7 +17,8 @@ MultiGpu::MultiGpu(int nbIter) :
 	Model(10),
 	_nDevices(0),
 	_nFunctions(0),
-	_gridWidth(0), _gridHeight(0), _gridLength(0)
+	_gridWidth(0), _gridHeight(0), _gridLength(0),
+	_init(false)
 {
 }
 
@@ -27,18 +28,31 @@ MultiGpu::~MultiGpu()
 
 void MultiGpu::initComputation() {
 	
-	FunctionInitialCond<float> *zero = new FunctionInitialCond<float>([] (float,float,float) -> float { return 0;});
-	CircleInitialCond<float> *circle = new CircleInitialCond<float>(0.1,0.75,0.75,0.5);
+	FunctionInitialCond<float> *zero = new FunctionInitialCond<float>([] (float,float,float)->float {return 0;});
+	CircleInitialCond<float> *circle = new CircleInitialCond<float>(0.7,0.5,0.5,0.5);
+	FunctionInitialCond<float> *one = new FunctionInitialCond<float>([] (float,float,float)->float {return 1;});
+	FunctionInitialCond<float> *sine = new FunctionInitialCond<float>([] (float x,float y,float)->float {return abs(cos(2*3.14*2*x)*cos(2*3.14*2*y));});
+	FunctionInitialCond<float> *halfPlane = new FunctionInitialCond<float>([] (float x,float,float)->float {return x<=0.5;});
 
 	std::map<std::string, InitialCond<float>*> initialConds;
+	initialConds.emplace("e", sine);
 	initialConds.emplace("r", zero);
-	initialConds.emplace("e", circle);
+
+	initGrids(initialConds);
 
 	initOpenClContext();
-	initGrids(initialConds);
 }
 
-void MultiGpu::computeStep(int i) {;}
+void MultiGpu::computeStep(int i) {
+	while(!_init)
+		std::this_thread::sleep_for(std::chrono::milliseconds(10));
+
+	log_console->infoStream() << "LOCKED IN COMPUTE STEP !";
+
+	while(true)
+		std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+}
+
 void MultiGpu::finishComputation() {;}
 
 void MultiGpu::initOpenClContext(){
@@ -124,27 +138,75 @@ void MultiGpu::initOpenClContext(){
 		_context = cl::Context(_devices, contextProperties, openclContextCallback, (void*)callbackData, &err);
 	}
 	CHK_ERRORS(err);
-		
-	for(cl::Device &dev : _devices) {
-		DeviceThread<> devThread(this, _platform, _context, dev);
-		_deviceThreads.push_back(devThread);
-	}
 
 	log_console->infoStream() << "Created " << _nDevices << " device threads !";
+	
+	Fence *fence = new Fence(_devices.size());
+	for(auto dev : _devices) {
+		DeviceThread<2u> *dt = new DeviceThread<2u>(this, _platform, _context, dev, fence);
+		std::thread t(*dt);
+		t.detach();
+	}
 }
-void MultiGpu::createGlObjects(){}
 		
-
 void MultiGpu::initGrids(const std::map<std::string, InitialCond<float>*> &initialConditions) {
 		
-		_gridWidth = 511u;
-		_gridHeight = 123u;
-		_gridLength = 769;
+		_gridWidth = 128u;
+		_gridHeight = 128u;
+		_gridLength = 1u;
 		_nFunctions = initialConditions.size();
-
+	
 		for(auto &initialConds : initialConditions) {
-			MultiBufferedDomain<float,2u> dom(_gridWidth, _gridHeight, _gridLength, 1u, 4, initialConds.second);
+			MultiBufferedDomain<float,2u> *dom = 
+				new MultiBufferedDomain<float,2u>(_gridWidth, _gridHeight, _gridLength, 1u, 1, initialConds.second);
 			_domains.emplace(initialConds.first, dom);
 		}
+			
+		_splits = _domains.begin()->second->nSplits();		
+
+		for (unsigned int i = 0; i < _splits; i++) {
+			_availableDomains.push_back(i);
+		}
+}
+		
+bool MultiGpu::subDomainAvailable() {
+		return _availableDomains.size() > 0;
+}
+		
+bool MultiGpu::tryToTakeSubDomain(std::map<std::string, MultiBufferedSubDomain<float,2u>*> &subDomain) {
+	
+	subDomain.clear();
+	unsigned int id;
+	{
+		std::unique_lock<std::mutex> lock(_mutex);
+		_cond.notify_one();
+		if (!_availableDomains.size() > 0)
+			return false;
+
+		id = _availableDomains.front();
+		_availableDomains.pop_front();
+	}
+	
+	for(std::pair<std::string,MultiBufferedDomain<float,2u>*> subdom : _domains) {
+		subDomain.emplace(subdom.first, (*subdom.second)[id]);
+	}
+
+	return true;
 }
 
+void MultiGpu::releaseSubDomain(std::map<std::string, MultiBufferedSubDomain<float,2u>*> subDomain){
+	std::unique_lock<std::mutex> lock(_mutex);
+	assert(_availableDomains.size()<=_splits);
+	_availableDomains.push_back(subDomain.begin()->second->id());
+	_cond.notify_one();
+}
+
+void MultiGpu::initDone() {
+	std::cout << "INIT DONE !!" << std::endl;
+
+	Grid<float>* grid = _domains.begin()->second->toGrid(0); 
+    stepComputed(dynamic_cast<Grid2D<float>*>(grid));
+
+	_init = true;
+	
+}
