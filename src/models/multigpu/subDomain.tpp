@@ -242,7 +242,7 @@ unsigned long MultiBufferedSubDomain<T,N>::offset() const {
 	return 0ul
 		+ offsetZ() * _domainHeight * _domainWidth
 		+ offsetY() * _domainWidth 
-		+ offsetZ();
+		+ offsetX();
 }
 
 
@@ -267,7 +267,7 @@ void MultiBufferedSubDomain<T,N>::initSubDomain(unsigned int bufferId) {
 	_initialCondition->initializeSubGrid(_data[bufferId], 
 			offsetX(), offsetY(), offsetZ(), 
 			_subDomainWidth, _subDomainHeight, _subDomainLength,
-			_domainWidth, _domainHeight, _domainHeight);
+			_domainWidth, _domainHeight, _domainLength);
 }
 
 

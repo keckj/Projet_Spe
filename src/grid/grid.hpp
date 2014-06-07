@@ -36,7 +36,6 @@ class Grid {
 		
 		T *data() const;
 
-
 		void setData(T* data_, bool isOwner_);
 		void allocate();
 		void free();

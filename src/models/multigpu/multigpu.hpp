@@ -25,16 +25,18 @@ class MultiGpu : public Model {
         void finishComputation() override;
 		
 		bool subDomainAvailable();
-		bool tryToTakeSubDomain(std::map<std::string, MultiBufferedSubDomain<float,2u>*> &subdomain);
-		void releaseSubDomain(std::map<std::string, MultiBufferedSubDomain<float,2u>*> subDomain);
+		bool tryToTakeSubDomain(std::map<std::string, MultiBufferedSubDomain<float,1u>*> &subdomain);
+		void releaseSubDomain(std::map<std::string, MultiBufferedSubDomain<float,1u>*> subDomain);
+		void resetSubDomains();
 
 		void initDone();
+		void stepDone();
 
 	private:
 		cl::Platform _platform;
 		cl::Context _context;
 		std::vector<cl::Device> _devices;
-		std::vector<DeviceThread<2u>> _deviceThreads;
+		std::vector<DeviceThread<1u>> _deviceThreads;
 		unsigned int _nDevices;
 		
 		std::mutex _mutex;
@@ -43,9 +45,11 @@ class MultiGpu : public Model {
 
 		unsigned int _nFunctions;
 		unsigned int _gridWidth, _gridHeight, _gridLength;
-		std::map<std::string, MultiBufferedDomain<float,2u>*> _domains;
+		std::map<std::string, MultiBufferedDomain<float,1u>*> _domains;
 		unsigned int _splits;
 		bool _init;
+
+		Grid<float> *_grid;
 		
 		void initOpenClContext();
 		

@@ -121,7 +121,7 @@ void MultiBufferedDomain<T,N>::splitDomain(unsigned int minSplits, InitialCond<f
 	for (unsigned int k = 0; k < _splitsZ; k++) {
 		for (unsigned int j = 0; j < _splitsY; j++) {
 			for (unsigned int i = 0; i < _splitsX; i++) {
-				dom = new MultiBufferedSubDomain<float,2u>(
+				dom = new MultiBufferedSubDomain<float,N>(
 					k*_splitsY*_splitsX + j*_splitsX + i,
 					_nSplits,
 					i,j,k,
@@ -174,7 +174,7 @@ Grid<T>* MultiBufferedDomain<T,N>::toGrid(unsigned int buffer) {
 	else if(_domainLength == 1u) 
 		grid = new Grid2D<T>(1.0f, 1.0f, _domainWidth, _domainHeight, true);
 	else 
-		grid = new Grid3D<T>(1.0f, 1.0f, 1.0f, _domainWidth, _domainHeight, _domainHeight, true);
+		grid = new Grid3D<T>(1.0f, 1.0f, 1.0f, _domainWidth, _domainHeight, _domainLength, true);
 	
 	T* dstData = grid->data();
 	for (unsigned int k = 0; k < _splitsZ; k++ ) {

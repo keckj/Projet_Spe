@@ -1,6 +1,6 @@
 
 #include "headers.hpp"
-#include "multigpu.hpp"
+							#include "multigpu.hpp"
 #include "multigpu.moc"
 #include "log.hpp"
 #include "domain.hpp"
@@ -18,7 +18,8 @@ MultiGpu::MultiGpu(int nbIter) :
 	_nDevices(0),
 	_nFunctions(0),
 	_gridWidth(0), _gridHeight(0), _gridLength(0),
-	_init(false)
+	_init(false),
+	_grid(0)
 {
 }
 
@@ -29,10 +30,11 @@ MultiGpu::~MultiGpu()
 void MultiGpu::initComputation() {
 	
 	FunctionInitialCond<float> *zero = new FunctionInitialCond<float>([] (float,float,float)->float {return 0;});
-	CircleInitialCond<float> *circle = new CircleInitialCond<float>(0.7,0.5,0.5,0.5);
+	CircleInitialCond<float> *circle = new CircleInitialCond<float>(0.1,0.5,0.5,0.5);
 	FunctionInitialCond<float> *one = new FunctionInitialCond<float>([] (float,float,float)->float {return 1;});
 	FunctionInitialCond<float> *sine = new FunctionInitialCond<float>([] (float x,float y,float)->float {return abs(cos(2*3.14*2*x)*cos(2*3.14*2*y));});
-	FunctionInitialCond<float> *halfPlane = new FunctionInitialCond<float>([] (float x,float,float)->float {return x<=0.5;});
+	FunctionInitialCond<float> *halfPlane = new FunctionInitialCond<float>([] (float x,float y,float)->float 
+			{return (x<=0.5 && y<=0.5)||(x>0.5 && y>0.5);});
 
 	std::map<std::string, InitialCond<float>*> initialConds;
 	initialConds.emplace("e", sine);
@@ -139,11 +141,18 @@ void MultiGpu::initOpenClContext(){
 	}
 	CHK_ERRORS(err);
 
+	//Load sources
+	cl::Program::Sources sources = utils::loadSourcesFromFile("src/kernels/basicSystem.cl");	
+
+	//Make program
+	cl::Program program(_context, sources, &err); CHK_ERRORS(err);
+	utils::buildProgram(program, _devices, "", "Basic System Kernel");
+
 	log_console->infoStream() << "Created " << _nDevices << " device threads !";
 	
 	Fence *fence = new Fence(_devices.size());
 	for(auto dev : _devices) {
-		DeviceThread<2u> *dt = new DeviceThread<2u>(this, _platform, _context, dev, fence);
+		DeviceThread<1u> *dt = new DeviceThread<1u>(this, _platform, _context, program, dev, fence);
 		std::thread t(*dt);
 		t.detach();
 	}
@@ -151,29 +160,33 @@ void MultiGpu::initOpenClContext(){
 		
 void MultiGpu::initGrids(const std::map<std::string, InitialCond<float>*> &initialConditions) {
 		
-		_gridWidth = 128u;
-		_gridHeight = 128u;
+		_gridWidth = 256u;
+		_gridHeight = 256u;
 		_gridLength = 1u;
 		_nFunctions = initialConditions.size();
 	
 		for(auto &initialConds : initialConditions) {
-			MultiBufferedDomain<float,2u> *dom = 
-				new MultiBufferedDomain<float,2u>(_gridWidth, _gridHeight, _gridLength, 1u, 1, initialConds.second);
+			MultiBufferedDomain<float,1u> *dom = 
+				new MultiBufferedDomain<float,1u>(_gridWidth, _gridHeight, _gridLength, 1u, 2, initialConds.second);
 			_domains.emplace(initialConds.first, dom);
 		}
 			
 		_splits = _domains.begin()->second->nSplits();		
+		resetSubDomains();
+}
 
+void MultiGpu::resetSubDomains() {
 		for (unsigned int i = 0; i < _splits; i++) {
 			_availableDomains.push_back(i);
 		}
 }
 		
+		
 bool MultiGpu::subDomainAvailable() {
 		return _availableDomains.size() > 0;
 }
 		
-bool MultiGpu::tryToTakeSubDomain(std::map<std::string, MultiBufferedSubDomain<float,2u>*> &subDomain) {
+bool MultiGpu::tryToTakeSubDomain(std::map<std::string, MultiBufferedSubDomain<float,1u>*> &subDomain) {
 	
 	subDomain.clear();
 	unsigned int id;
@@ -187,14 +200,14 @@ bool MultiGpu::tryToTakeSubDomain(std::map<std::string, MultiBufferedSubDomain<f
 		_availableDomains.pop_front();
 	}
 	
-	for(std::pair<std::string,MultiBufferedDomain<float,2u>*> subdom : _domains) {
+	for(std::pair<std::string,MultiBufferedDomain<float,1u>*> subdom : _domains) {
 		subDomain.emplace(subdom.first, (*subdom.second)[id]);
 	}
 
 	return true;
 }
 
-void MultiGpu::releaseSubDomain(std::map<std::string, MultiBufferedSubDomain<float,2u>*> subDomain){
+void MultiGpu::releaseSubDomain(std::map<std::string, MultiBufferedSubDomain<float,1u>*> subDomain){
 	std::unique_lock<std::mutex> lock(_mutex);
 	assert(_availableDomains.size()<=_splits);
 	_availableDomains.push_back(subDomain.begin()->second->id());
@@ -204,9 +217,16 @@ void MultiGpu::releaseSubDomain(std::map<std::string, MultiBufferedSubDomain<flo
 void MultiGpu::initDone() {
 	std::cout << "INIT DONE !!" << std::endl;
 
-	Grid<float>* grid = _domains.begin()->second->toGrid(0); 
-    stepComputed(dynamic_cast<Grid2D<float>*>(grid));
+	_grid = _domains.begin()->second->toGrid(0); 
+    stepComputed(dynamic_cast<Grid2D<float>*>(_grid));
 
 	_init = true;
-	
+	resetSubDomains();
+}
+		
+void MultiGpu::stepDone() {
+	delete _grid;
+	_grid = _domains.begin()->second->toGrid(0);
+	std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    stepComputed(dynamic_cast<Grid2D<float>*>(_grid));
 }

@@ -17,6 +17,7 @@ class DeviceThread {
 		DeviceThread(MultiGpu *simulation, 
 				const cl::Platform &platform,
 				const cl::Context &context,
+				const cl::Program &program,
 				const cl::Device &device,
 				Fence *fence);
 
@@ -31,13 +32,14 @@ class DeviceThread {
 
 		const cl::Platform _platform;
 		const cl::Context _context;
+		const cl::Program _program;
 		const cl::Device _device;
 
 		Fence *_fence;
 
 		cl::CommandQueue _commandQueues[nCommandQueues];
 
-		std::map<std::string, MultiBufferedSubDomain<float,2u>*> _currentDomain; 
+		std::map<std::string, MultiBufferedSubDomain<float,1u>*> _currentDomain; 
 		
 		static std::mutex _mutex;
 		static std::condition_variable _cond;
