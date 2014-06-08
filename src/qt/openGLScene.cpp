@@ -4,6 +4,8 @@
 #include "globals.hpp"
 #include "colormap.hpp"
 
+using namespace log4cpp;
+
 OpenGLScene::OpenGLScene() :
 	m_drawProgram(0),
 	m_drawProgramUniformLocationMap(),
@@ -14,6 +16,7 @@ OpenGLScene::OpenGLScene() :
 	m_colormapsUBO(),
 	m_colorId(0)
 {
+        m_texMap = new QMap<QString, GLuint>;
 		makeArrays();
 		makeProgramm();
 		makeColorMaps();
@@ -33,17 +36,64 @@ void OpenGLScene::textureUpdate(const Grid2D<float> *grid) {
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, grid->width(), grid->height(), 0, GL_LUMINANCE, GL_FLOAT, (GLvoid*) grid->data());
 }
 
-/*
-void textureUpdate(const QMap<QString, GLuint> &texMap) {
-    //TODO update local map
-    //TODO glBufferData with new arrays
+void OpenGLScene::updateTextures(const QMap<QString, GLuint> &texMap) {
     //TODO new QGraphicsTextItem for each texture
+   
+    // Check if we need to change layout
+    if (texMap.size() == m_texMap->size()) {
+        // Notify the GUI that we have made progress
+        emit stepRendered();
+        return;
+    }
+
+    // Free the old map and copy the new map
+    delete m_texMap;
+    m_texMap = new QMap<QString, GLuint>(texMap);
+
+    // Find best layout
+    switch(texMap.size()) {
+        case 0:
+            m_nTexturesWidth  = 0;
+            m_nTexturesHeight = 0;
+            break;
+        case 1:
+            m_nTexturesWidth  = 1;
+            m_nTexturesHeight = 1;
+            break;
+        case 2:
+            m_nTexturesWidth  = 2;
+            m_nTexturesHeight = 1;
+            break;
+        case 3:
+        case 4:
+            m_nTexturesWidth  = 2;
+            m_nTexturesHeight = 2;
+            break;
+        case 5:
+        case 6:
+            m_nTexturesWidth  = 3;
+            m_nTexturesHeight = 2;
+            break;
+        case 7:
+        case 8:
+        case 9:
+            m_nTexturesWidth  = 3;
+            m_nTexturesHeight = 3;
+            break;
+        default:
+            log_console->warnStream() << "[OpenGLScene] Too many variables to render !";
+    }
+
+    // Buffer new arrays
+    makeArrays();
+
+    // Notify the GUI that we have made progress
+    emit stepRendered();
 }
-*/
 
 void OpenGLScene::drawBackground(QPainter *painter, const QRectF &) {
 
-	glClearColor(0.2,0.2,0.2,1.0);
+	glClearColor(0.0,0.0,0.0,1.0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	m_drawProgram->use();
@@ -51,8 +101,8 @@ void OpenGLScene::drawBackground(QPainter *painter, const QRectF &) {
 	glUniform1i(m_drawProgramUniformLocationMap["colormapId"], m_colorId); //[0-11] pour le moment
 	glUniform1f(m_drawProgramUniformLocationMap["minVal"], 0.0f);
 	glUniform1f(m_drawProgramUniformLocationMap["maxVal"], 1.0f);
-
-	glEnable(GL_TEXTURE_2D);
+	
+    glEnable(GL_TEXTURE_2D);
 	glBindTexture(GL_TEXTURE_2D, m_texture);
 	glActiveTexture(GL_TEXTURE0);
 
@@ -88,16 +138,27 @@ void OpenGLScene::makeProgramm() {
 	m_drawProgramUniformLocationMap = m_drawProgram->getUniformLocationsMap("colormapId minVal maxVal" ,true);
 }
 
+// TODO: use layout to fill arrays
 void OpenGLScene::makeArrays() {
-	float texCoords[] = {0,0,  0,1,  1,1,  1,0};
+	
+    // Delete unused VBOs
+    if (m_texCoordsVBO)
+        glDeleteBuffers(1, &m_texCoordsVBO);
+    if (m_vertexCoordsVBO)
+        glDeleteBuffers(1, &m_vertexCoordsVBO);
+    
+    // TODO dynamic gen buffers according to m_nTexturesWidth & m_nTexturesHeight 
+    float texCoords[] = {0,0,  0,1,  1,1,  1,0};
 	float vertexCoords[] = {-1,1,  -1,-1,  1,-1,  1,1};
 
 	glGenBuffers(1, &m_texCoordsVBO);
 	glBindBuffer(GL_ARRAY_BUFFER, m_texCoordsVBO);
+	//glBufferData(GL_ARRAY_BUFFER, 8*m_texMap->size()*sizeof(float), texCoords, GL_STATIC_DRAW);
 	glBufferData(GL_ARRAY_BUFFER, 8*sizeof(float), texCoords, GL_STATIC_DRAW);
 
 	glGenBuffers(1, &m_vertexCoordsVBO);
 	glBindBuffer(GL_ARRAY_BUFFER, m_vertexCoordsVBO);
+	//glBufferData(GL_ARRAY_BUFFER, 8*m_texMap->size()*sizeof(float), vertexCoords, GL_STATIC_DRAW);
 	glBufferData(GL_ARRAY_BUFFER, 8*sizeof(float), vertexCoords, GL_STATIC_DRAW);
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0);

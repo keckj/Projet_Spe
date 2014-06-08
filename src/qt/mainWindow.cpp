@@ -18,10 +18,11 @@
 
 MainWindow::MainWindow() {
 
-    // Grids
-    m_stored_grids = new std::vector<Grid2D<float>>();
-    m_min_val = FLT_MAX; m_max_val = -FLT_MAX;
-    m_total_steps = 100;
+    // Simulation
+    //m_stored_grids = new std::vector<Grid2D<float>>();
+    m_selected_model = 0;
+    m_current_step = 0;
+    m_total_steps = SidePanel::defaultNumberOfSteps;
     m_auto_render = true;
 
 
@@ -51,7 +52,7 @@ MainWindow::MainWindow() {
     OpenGLScene *scene = new OpenGLScene();
     viewer->setScene(scene);
     
-    //connect(scene, SIGNAL(progressUpdate(int)), status, SLOT(progressUpdate(int)));
+    connect(scene, SIGNAL(stepRendered()), this, SLOT(onStepRender()));
 
     panel = new SidePanel(this);
 
@@ -115,6 +116,8 @@ void MainWindow::startComputing() {
     unsigned int gridHeight = panel->getGridHeight();
     unsigned int gridLength = panel->getGridLength();
 
+    //TODO: panel->getVariables(), panel->getArguments()
+
     m_thread = new QThread;
     Model *mod;
     switch (m_selected_model) {
@@ -136,14 +139,18 @@ void MainWindow::startComputing() {
     connect(this, SIGNAL(pauseThread(bool)), mod, SLOT(pauseComputing(bool)));
     connect(mod, SIGNAL(finished()), m_thread, SLOT(quit()));                   // kill thread
     connect(mod, SIGNAL(finished()), panel, SLOT(stop()));                      // update GUI buttons
-    //connect(mod, SIGNAL(finished()), mod, SLOT(deleteLater()));               // TODO thread safe signal
+    //connect(mod, SIGNAL(finished()), mod, SLOT(deleteLater()));               // TODO decomment switch archi
     connect(m_thread, SIGNAL(finished()), m_thread, SLOT(deleteLater()));
     connect(mod, SIGNAL(stepComputed(const Grid2D<float> *)), this, SLOT(updateGrid(const Grid2D<float> *)));
-    //connect(this, SIGNAL(addTextureRequest(std::string)), mod, SLOT(addTexture(std::string)));
-    //connect(this, SIGNAL(removeTextureRequest(std::string)), mod, SLOT(removeTexture(std::string)));
-    //connect(mod, SIGNAL(stepComputed(const QMap<QString, GLuint>)), scene, SLOT(textureUpdate(const QMap<QString, GLuint>)));
+    //connect(this, SIGNAL(addTextureRequest(QString)), mod, SLOT(addTexture(QString)));
+    //connect(this, SIGNAL(removeTextureRequest(QString)), mod, SLOT(removeTexture(QString)));
+    //connect(mod, SIGNAL(stepComputed(const QMap<QString, GLuint> &)), scene, SLOT(updateTextures(const QMap<QString, GLuint> &)));
 
     m_thread->start();
+
+    // Reset progress and progress bar
+    m_current_step = 0;
+    emit progressUpdate(0);
 }
 
 void MainWindow::pauseComputing(bool b) {
@@ -155,7 +162,6 @@ void MainWindow::stopComputing() {
 }
        
 void MainWindow::updateRenderedVars(QListWidgetItem *item) {
-    // Note: In case the signals
     if (item->checkState() == Qt::Unchecked) {
         emit removeTextureRequest(item->text());
         //qWarning() << "DEBUG :" << item->text() << " is unchecked";
@@ -163,6 +169,11 @@ void MainWindow::updateRenderedVars(QListWidgetItem *item) {
         emit addTextureRequest(item->text());
         //qWarning() << "DEBUG :" << item->text() << " is checked";
     }
+}
+
+void MainWindow::onStepRender() {
+    m_current_step++;
+    emit progressUpdate((float) m_current_step / m_total_steps * 100);
 }
 
 void MainWindow::changeColormap(const QString &colormapName) {
@@ -180,7 +191,6 @@ void MainWindow::changeDisplayedGrid(int n) {
 
 
 void MainWindow::keyPressEvent(QKeyEvent *k) {
-
     switch (k->key()) {
         case Qt::Key_Escape:
             emit stopThread();

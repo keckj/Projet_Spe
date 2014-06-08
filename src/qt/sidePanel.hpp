@@ -20,6 +20,7 @@ class SidePanel : public QWidget {
         std::map<std::string, bool> *getVariables();
 
         static const QStringList modelsList;
+        static const int defaultNumberOfSteps;
         static const std::vector<unsigned int> defaultGridSize;
 
     signals:
@@ -39,6 +40,7 @@ class SidePanel : public QWidget {
         void showSlider(int checkboxState);
         void changeNbIterSlider(int nbIter);
         void refreshParameters(int modelId);
+        void updateRenderedVars(QListWidgetItem *item);
 
     private:
         void setModelOptionsStatus(bool status);
