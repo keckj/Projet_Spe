@@ -10,6 +10,7 @@
 #include "simpleModel2D.hpp"
 
 const QStringList SidePanel::modelsList = QStringList() << "Simple Model 2D" << "->Multi-GPU<-" << "Default Model";
+const std::vector<unsigned int> SidePanel::defaultGridSize { 512, 512, 1};
 
 SidePanel::SidePanel(QWidget *parent_) : QWidget(parent_) {
 
@@ -19,6 +20,9 @@ SidePanel::SidePanel(QWidget *parent_) : QWidget(parent_) {
         log4cpp::log_console->errorStream() << "SidePanel does not have a parent !";
 
     m_paused = true;
+    m_gridWidth = defaultGridSize[0];
+    m_gridHeight = defaultGridSize[1];
+    m_gridLength = defaultGridSize[2];
     initDialog = NULL;
     paramsDialog = NULL;
 
@@ -222,7 +226,7 @@ void SidePanel::openInitDialog() {
     if (initDialog) initDialog->deleteLater();
 
     //initDialog = new InitializationDialog(m_initialCond, this);
-    initDialog = new InitializationDialog(this);
+    initDialog = new InitializationDialog(&m_gridWidth, &m_gridHeight, &m_gridLength, this);
     initDialog->setModal(true);
     initDialog->show();
 }
@@ -276,6 +280,18 @@ void SidePanel::refreshParameters(int modelId) {
         item->setCheckState(Qt::Unchecked);
         this->variablesRenderedList->addItem(item);
     }
+}
+
+unsigned int SidePanel::getGridWidth() {
+    return m_gridWidth;
+}
+
+unsigned int SidePanel::getGridHeight() {
+    return m_gridHeight;
+}
+
+unsigned int SidePanel::getGridLength() {
+    return m_gridLength;
 }
 
 std::map<std::string, Argument> *SidePanel::getArguments() {

@@ -10,13 +10,17 @@ class SidePanel : public QWidget {
     Q_OBJECT
 
     public:
-		SidePanel(QWidget *parent_ = 0);
-		~SidePanel();
+        SidePanel(QWidget *parent_ = 0);
+        ~SidePanel();
 
+        unsigned int getGridWidth();
+        unsigned int getGridHeight();
+        unsigned int getGridLength();
         std::map<std::string, Argument> *getArguments();
         std::map<std::string, bool> *getVariables();
 
         static const QStringList modelsList;
+        static const std::vector<unsigned int> defaultGridSize;
 
     signals:
         void startPushed();
@@ -41,6 +45,7 @@ class SidePanel : public QWidget {
         void keyPressEvent(QKeyEvent *k);
 
         bool m_paused;
+        unsigned int m_gridWidth, m_gridHeight, m_gridLength;
         std::map<std::string, Argument> *m_argsMap;
         std::map<std::string, bool> *m_varsMap;
         //TODO initCond

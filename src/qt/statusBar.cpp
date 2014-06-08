@@ -22,8 +22,6 @@ progressBar(0), message(0)
 }
 	
 StatusBar::~StatusBar() {
-    delete progressBar;
-    delete message;
 }
 
 void StatusBar::progressUpdate(int p) {

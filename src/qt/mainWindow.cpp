@@ -110,11 +110,16 @@ void MainWindow::changeNbIter(int nb) {
 
 void MainWindow::startComputing() {
     //m_stored_grids->clear();
+    
+    unsigned int gridWidth = panel->getGridWidth();
+    unsigned int gridHeight = panel->getGridHeight();
+    unsigned int gridLength = panel->getGridLength();
+
     m_thread = new QThread;
     Model *mod;
     switch (m_selected_model) {
 		case 0:
-            mod = (Model *) new SimpleModel2D(m_total_steps, panel->getArguments());
+            mod = (Model *) new SimpleModel2D(m_total_steps, panel->getArguments(), gridWidth, gridHeight);
 			log_console->infoStream() << "Started a simple model 2D simulation !";
 			break;
 		case 1:
