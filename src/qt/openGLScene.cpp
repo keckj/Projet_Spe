@@ -18,7 +18,7 @@ OpenGLScene::OpenGLScene() :
 {
         m_texMap = new QMap<QString, GLuint>;
 		makeArrays();
-		makeProgramm();
+		makeProgram();
 		makeColorMaps();
 }
 
@@ -117,6 +117,7 @@ void OpenGLScene::drawBackground(QPainter *painter, const QRectF &) {
 	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, 0);
 	glEnableVertexAttribArray(1);
 
+	//glDrawArrays(GL_QUADS, 0, 4*m_texMap->size());
 	glDrawArrays(GL_QUADS, 0, 4);
 
 	glBindTexture(GL_TEXTURE_2D, 0); 
@@ -125,7 +126,7 @@ void OpenGLScene::drawBackground(QPainter *painter, const QRectF &) {
 	QTimer::singleShot(0, this, SLOT(update()));
 }
 
-void OpenGLScene::makeProgramm() {
+void OpenGLScene::makeProgram() {
 	m_drawProgram = new Program("Draw texture");
 	m_drawProgram->bindAttribLocations("0 1", "vertexPos texCoord");
 	m_drawProgram->bindFragDataLocation(0, "out_colour");
@@ -138,9 +139,7 @@ void OpenGLScene::makeProgramm() {
 	m_drawProgramUniformLocationMap = m_drawProgram->getUniformLocationsMap("colormapId minVal maxVal" ,true);
 }
 
-// TODO: use layout to fill arrays
 void OpenGLScene::makeArrays() {
-	
     // Delete unused VBOs
     if (m_texCoordsVBO)
         glDeleteBuffers(1, &m_texCoordsVBO);
@@ -148,6 +147,37 @@ void OpenGLScene::makeArrays() {
         glDeleteBuffers(1, &m_vertexCoordsVBO);
     
     // TODO dynamic gen buffers according to m_nTexturesWidth & m_nTexturesHeight 
+    /*
+    float vertexCoords[8*m_texMap->size()];
+    float texCoords[8*m_texMap->size()];
+    float margin = 0.01; //TODO
+    float deltaWv = 2.0 / m_nTexturesWidth; 
+    float deltaHv = 2.0 / m_nTexturesHeight;
+    float deltaWt = 1.0 / m_nTexturesWidth;
+    float deltaHt = 1.0 / m_nTexturesHeight;
+
+    int idx = 0;
+    for (int w = 0; w < m_nTexturesWidth; w++) {
+        for (int h = 0; h < m_nTexturesHeight; h++) {
+            // Do not draw a quad if there is no texture left
+            if (idx == 8*m_texMap->size()) {
+                break;
+            }
+            // 1st point (top left)
+            vertexCoords[idx] = -1 + w*deltaWv    ; texCoords[idx++]  =  w*deltaWt    ;
+            vertexCoords[idx] =  1 - h*deltaHv    ; texCoords[idx++]  =  h*deltaHt    ;
+            // 2nd point (bottom left)
+            vertexCoords[idx] = -1 + w*deltaWv    ; texCoords[idx++]  =  w*deltaWt    ;
+            vertexCoords[idx] =  1 - (h+1)*deltaHv; texCoords[idx++]  =  (h+1)*deltaHt;
+            // 3rd point (bottom right)
+            vertexCoords[idx] = -1 + (w+1)*deltaWv; texCoords[idx++]  =  (w+1)*deltaWt;
+            vertexCoords[idx] =  1 - (h+1)*deltaHv; texCoords[idx++]  =  (h+1)*deltaHt;
+            // 4th point (top right)
+            vertexCoords[idx] = -1 + (w+1)*deltaWv; texCoords[idx++]  =  (w+1)*deltaWt;
+            vertexCoords[idx] =  1 - h*deltaHv    ; texCoords[idx++]  =  h*deltaHt    ;
+        }
+    }
+    */
     float texCoords[] = {0,0,  0,1,  1,1,  1,0};
 	float vertexCoords[] = {-1,1,  -1,-1,  1,-1,  1,1};
 
@@ -173,9 +203,9 @@ void OpenGLScene::makeColorMaps() {
     glBufferData(GL_UNIFORM_BUFFER, maps.size()*4*_COLOR_PER_COLORMAP*sizeof(GLfloat), 0, GL_STATIC_DRAW);
 	for (std::pair<std::string, std::pair<unsigned int, float*> > colorMap : maps) {
 		glBufferSubData(GL_UNIFORM_BUFFER,  
-				colorMap.second.first*4*_COLOR_PER_COLORMAP*sizeof(GLfloat), 
-				4*_COLOR_PER_COLORMAP*sizeof(GLfloat), 
-				colorMap.second.second);
+				        colorMap.second.first*4*_COLOR_PER_COLORMAP*sizeof(GLfloat), 
+				        4*_COLOR_PER_COLORMAP*sizeof(GLfloat), 
+				        colorMap.second.second);
 	}
 	glBindBuffer(GL_UNIFORM_BUFFER, 0);
 }

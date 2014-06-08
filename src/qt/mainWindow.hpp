@@ -2,6 +2,7 @@
 #define MAINWINDOW_HPP
 
 #include "headers.hpp"
+#include "openGLScene.hpp"
 #include "sidePanel.hpp"
 #include <vector>
 #include "grid2D.hpp"
@@ -38,6 +39,7 @@ class MainWindow : public QMainWindow {
 	private:
 		void keyPressEvent(QKeyEvent *k);
 
+        OpenGLScene *scene;
         SidePanel *panel;
 
         QThread *m_thread;

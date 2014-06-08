@@ -22,13 +22,15 @@ class Model : public QObject {
         void startComputing();
         void pauseComputing(bool b);
         void stopComputing();
-        //TODO addTexture / removeTexture
+        //TODO
+        //void addTexture(QString texName);
+        //void removeTexture(QString texName);
 
     /* Copy signals, inheritance does not work properly */
     signals:
         void stepComputed(const Grid2D<float> *grid);
         void stepComputed(const Grid3D<float> *grid);
-        //void stepComputed(std::map<std::string, GLuint> *textures);
+        void stepComputed(const QMap<QString, GLuint> &texMap);
         void finished();
 
     protected:

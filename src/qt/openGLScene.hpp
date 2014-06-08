@@ -35,7 +35,7 @@ class OpenGLScene : public QGraphicsScene {
 		unsigned int m_colormapsUBO;
 		unsigned int m_colorId;
 		
-		void makeProgramm();
+		void makeProgram();
 		void makeColorMaps();
 		void makeArrays();
 

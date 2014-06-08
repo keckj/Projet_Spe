@@ -49,7 +49,7 @@ MainWindow::MainWindow() {
     GraphicsViewer *viewer = new GraphicsViewer();
     viewer->setViewport(qglwidget);
     viewer->setViewportUpdateMode(QGraphicsView::FullViewportUpdate);
-    OpenGLScene *scene = new OpenGLScene();
+    scene = new OpenGLScene();
     viewer->setScene(scene);
     
     connect(scene, SIGNAL(stepRendered()), this, SLOT(onStepRender()));
@@ -98,7 +98,7 @@ void MainWindow::updateGrid(const Grid2D<float> *grid) {
     emit textureUpdate(grid);
 
     // Update progress bar TODO: * nb_it to render
-    emit progressUpdate((float) m_stored_grids->size() / m_total_steps * 100);
+    //emit progressUpdate((float) m_stored_grids->size() / m_total_steps * 100);
 }
 
 void MainWindow::changeModel(int model) {
@@ -133,14 +133,15 @@ void MainWindow::startComputing() {
             mod = (Model *) new ExampleModel(m_total_steps);
 			log_console->infoStream() << "Started an example model simulation !";
     }
-
     mod->moveToThread(m_thread);
+    
     connect(m_thread, SIGNAL(started()), mod, SLOT(startComputing()));
     connect(this, SIGNAL(pauseThread(bool)), mod, SLOT(pauseComputing(bool)));
     connect(mod, SIGNAL(finished()), m_thread, SLOT(quit()));                   // kill thread
     connect(mod, SIGNAL(finished()), panel, SLOT(stop()));                      // update GUI buttons
     //connect(mod, SIGNAL(finished()), mod, SLOT(deleteLater()));               // TODO decomment switch archi
     connect(m_thread, SIGNAL(finished()), m_thread, SLOT(deleteLater()));
+   
     connect(mod, SIGNAL(stepComputed(const Grid2D<float> *)), this, SLOT(updateGrid(const Grid2D<float> *)));
     //connect(this, SIGNAL(addTextureRequest(QString)), mod, SLOT(addTexture(QString)));
     //connect(this, SIGNAL(removeTextureRequest(QString)), mod, SLOT(removeTexture(QString)));
@@ -148,7 +149,7 @@ void MainWindow::startComputing() {
 
     m_thread->start();
 
-    // Reset progress and progress bar
+    // Reset current step and progress bar
     m_current_step = 0;
     emit progressUpdate(0);
 }
@@ -181,7 +182,7 @@ void MainWindow::changeColormap(const QString &colormapName) {
 }
 
 void MainWindow::changeAutoRendering(int checkboxState) {
-    m_auto_render = (checkboxState > 0);
+    m_auto_render = (checkboxState > Qt::Unchecked);
 }
 
 void MainWindow::changeDisplayedGrid(int n) {
