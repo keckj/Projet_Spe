@@ -204,3 +204,11 @@ std::map<std::string, Argument> *SimpleModel2D::getArguments() {
 			
 	return args;
 }
+       
+std::map<std::string, bool> *SimpleModel2D::getVariables() {
+    std::map<std::string, bool> *vars = new std::map<std::string, bool>;
+    vars->emplace("e", true);
+    vars->emplace("r", false);
+
+    return vars;
+}

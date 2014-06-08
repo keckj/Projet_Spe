@@ -14,6 +14,14 @@ class OpenGLScene : public QGraphicsScene {
 
         void drawBackground(QPainter *painter, const QRectF &);
 
+    //signals:
+    //    void progressUpdate(int p);
+
+    public slots:
+        void textureUpdate(const Grid2D<float> *grid);
+        //void textureUpdate(const QMap<QString, GLuint> &texMap);
+		void changeColormap(const QString &colormapName);
+
     private:
 		Program *m_drawProgram;
 		std::map<std::string, int> m_drawProgramUniformLocationMap;
@@ -28,9 +36,6 @@ class OpenGLScene : public QGraphicsScene {
 		void makeColorMaps();
 		void makeArrays();
 
-    public slots:
-        void textureUpdate(const Grid2D<float> *grid);
-		void changeColormap(const QString &colormapName);
 };
 #endif
 

@@ -3,10 +3,13 @@
 #include "sidePanel.moc"
 #include "mainWindow.hpp"
 #include "parametersDialog.hpp"
+#include "initializationDialog.hpp"
 #include "argument.hpp"
 #include "colormap.hpp"
 // Models
 #include "simpleModel2D.hpp"
+
+const QStringList SidePanel::modelsList = QStringList() << "Simple Model 2D" << "->Multi-GPU<-" << "Default Model";
 
 SidePanel::SidePanel(QWidget *parent_) : QWidget(parent_) {
 
@@ -83,9 +86,7 @@ SidePanel::SidePanel(QWidget *parent_) : QWidget(parent_) {
     
     // Dropdown list
     modelComboBox = new QComboBox;
-    modelComboBox->addItem("Default model");
-    modelComboBox->addItem("Simple Model 2D");
-    modelComboBox->addItem("->Multi-GPU<-");
+    modelComboBox->addItems(SidePanel::modelsList);
     connect(modelComboBox, SIGNAL(currentIndexChanged(int)), mainWin, SLOT(changeModel(int)));
     connect(modelComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(refreshParameters(int)));
 
@@ -180,7 +181,7 @@ SidePanel::SidePanel(QWidget *parent_) : QWidget(parent_) {
     renderOptionsLayout->addWidget(gridSlider, 2, 1);
     
     // Init m_argsMap and m_varsMap
-    refreshParameters(0);
+    refreshParameters(modelComboBox->currentIndex());
 }
 
 SidePanel::~SidePanel() {
@@ -218,11 +219,12 @@ void SidePanel::setModelOptionsStatus(bool status) {
 }
 
 void SidePanel::openInitDialog() {
-    /*if (initDialog) initDialog->deleteLater();
+    if (initDialog) initDialog->deleteLater();
 
-    initDialog = new InitializationDialog(m_initialCond, , this);
+    //initDialog = new InitializationDialog(m_initialCond, this);
+    initDialog = new InitializationDialog(this);
     initDialog->setModal(true);
-    initDialog->show();*/
+    initDialog->show();
 }
 
 void SidePanel::openParametersDialog() {
@@ -256,10 +258,9 @@ void SidePanel::changeNbIterSlider(int nbIter) {
 
 void SidePanel::refreshParameters(int modelId) {
     switch(modelId) {
-        case 1:
+        case 0:
             m_argsMap = SimpleModel2D::getArguments();
-            //m_varsMap = SimpleModel2D::getVariables();
-            m_varsMap = new std::map<std::string, bool>;
+            m_varsMap = SimpleModel2D::getVariables();
             break;
         default:
             m_argsMap = new std::map<std::string, Argument>;
@@ -286,12 +287,12 @@ std::map<std::string, bool> *SidePanel::getVariables() {
 }
 
 void SidePanel::keyPressEvent(QKeyEvent *k) {
-    switch (k->key()) {
+    /*switch (k->key()) {
         case Qt::Key_Return:
         case Qt::Key_Enter:
             start_pause_resume();
             break;
-    }
+    }*/
     emit childKeyEvent(k);
 }
 

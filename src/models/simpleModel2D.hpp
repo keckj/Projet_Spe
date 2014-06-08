@@ -26,6 +26,7 @@ class SimpleModel2D : public Model {
         void finishComputation() override;
 
 		static std::map<std::string, Argument> *getArguments();
+        static std::map<std::string, bool> *getVariables();
 
 	private:
 		float computeOptimalTimestep();

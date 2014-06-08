@@ -16,15 +16,15 @@ void Model::startComputing() {
 
     for (int i = 0; i < m_nbIter; i++) {
         m_mutex.lock();
-        if (m_stop) {
-            emit finished();
-            m_mutex.unlock();
-            return;
-        }
         while (m_pause) {
             m_cond.wait(&m_mutex);
         }
+        bool stop = m_stop;
         m_mutex.unlock();
+        
+        if (stop) {
+            break;
+        }
 
         computeStep(i);
         //emit(computeStep(i)); TODO TODO TODO map<string variable, GLuint texture> *
@@ -36,11 +36,14 @@ void Model::startComputing() {
 void Model::pauseComputing(bool b) {
     m_mutex.lock();
     m_pause = b;
+    if (!b)
+        m_cond.wakeAll();
     m_mutex.unlock();
 }
 
 void Model::stopComputing() {
     m_mutex.lock();
     m_stop = true;
+    m_cond.wakeAll();
     m_mutex.unlock();
 }

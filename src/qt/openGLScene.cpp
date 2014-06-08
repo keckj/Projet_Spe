@@ -33,6 +33,14 @@ void OpenGLScene::textureUpdate(const Grid2D<float> *grid) {
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, grid->width(), grid->height(), 0, GL_LUMINANCE, GL_FLOAT, (GLvoid*) grid->data());
 }
 
+/*
+void textureUpdate(const QMap<QString, GLuint> &texMap) {
+    //TODO update local map
+    //TODO glBufferData with new arrays
+    //TODO new QGraphicsTextItem for each texture
+}
+*/
+
 void OpenGLScene::drawBackground(QPainter *painter, const QRectF &) {
 
 	glClearColor(0.2,0.2,0.2,1.0);

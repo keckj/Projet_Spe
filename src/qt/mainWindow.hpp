@@ -6,8 +6,6 @@
 #include <vector>
 #include "grid2D.hpp"
 
-Q_DECLARE_METATYPE(std::string)
-
 class MainWindow : public QMainWindow {
 	Q_OBJECT
 	
@@ -18,8 +16,8 @@ class MainWindow : public QMainWindow {
     signals:
         void textureUpdate(const Grid2D<float> *grid);
         void progressUpdate(int p);
-        void addTextureRequest(std::string);
-        void removeTextureRequest(std::string);
+        void addTextureRequest(const QString &texName);
+        void removeTextureRequest(const QString &texName);
 		void colormapUpdate(const QString &colormapName);
         void pauseThread(bool b);
         void stopThread();
