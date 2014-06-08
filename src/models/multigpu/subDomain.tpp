@@ -271,3 +271,30 @@ void MultiBufferedSubDomain<T,N>::initSubDomain(unsigned int bufferId) {
 }
 
 
+template <typename T, unsigned int N>
+T* const** MultiBufferedSubDomain<T,N>::internalEdges() const {
+
+	T* const** edges = new T* const*[6];
+	edges[0] = _internalEdgesLeft;
+	edges[1] = _internalEdgesRight;
+	edges[2] = _internalEdgesTop;
+	edges[3] = _internalEdgesDown;
+	edges[4] = _internalEdgesFront;
+	edges[5] = _internalEdgesBack;
+
+	return edges;
+}
+
+template <typename T, unsigned int N>
+T*** MultiBufferedSubDomain<T,N>::externalEdges() const {
+
+	T*** edges = new T**[6];
+	edges[0] = _externalEdgesLeft;
+	edges[1] = _externalEdgesRight;
+	edges[2] = _externalEdgesTop;
+	edges[3] = _externalEdgesDown;
+	edges[4] = _externalEdgesFront;
+	edges[5] = _externalEdgesBack;
+
+	return edges;
+}

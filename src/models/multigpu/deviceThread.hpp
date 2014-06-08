@@ -26,7 +26,9 @@ class DeviceThread {
 		void operator()();
 
 	private:
-		void init();
+		void initSubDomain(std::map<std::string, MultiBufferedSubDomain<float, 1u>*> subDomain);
+		void computeSubDomainStep(unsigned int domainId, unsigned int stepId);
+		void finishCommandQueues();
 
 		MultiGpu *_simulation;
 
@@ -34,13 +36,22 @@ class DeviceThread {
 		const cl::Context _context;
 		const cl::Program _program;
 		const cl::Device _device;
+		cl::Kernel _kernel;
 
 		Fence *_fence;
 
 		cl::CommandQueue _commandQueues[nCommandQueues];
 
-		std::map<std::string, MultiBufferedSubDomain<float,1u>*> _currentDomain; 
+		std::vector<std::map<std::string, MultiBufferedSubDomain<float,1u>*>> _acquiredDomains; 
+	
+		std::vector<std::map<std::string, std::vector<cl::Buffer>>> _acquiredDomainsVarBuffers;
+		std::vector<std::map<std::string, std::vector<cl::Buffer>>> _acquiredDomainsInternalEdgeBuffers;
+		std::vector<std::map<std::string, std::vector<cl::Buffer>>> _acquiredDomainsExternalEdgeBuffers;
+		std::vector<std::map<std::string, float* const**>> _acquiredDomainsInternalEdgeHostData;
+		std::vector<std::map<std::string, float***>> _acquiredDomainsExternalEdgeHostData;
 		
+		std::vector<bool> _acquiredDomainsIsInitialDataSent;
+
 		static std::mutex _mutex;
 		static std::condition_variable _cond;
 		static bool _called;

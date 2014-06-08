@@ -54,6 +54,7 @@ class MultiBufferedSubDomain {
 		T* const* internalEdgesDown() const;
 		T* const* internalEdgesFront() const;
 		T* const* internalEdgesBack() const;
+		T* const** internalEdges() const;
 
 		T** externalEdgesLeft() const;
 		T** externalEdgesRight() const;
@@ -61,6 +62,7 @@ class MultiBufferedSubDomain {
 		T** externalEdgesDown() const;
 		T** externalEdgesFront() const;
 		T** externalEdgesBack() const;
+		T*** externalEdges() const;
 
 		unsigned long edgeSizeX() const;
 		unsigned long edgeSizeY() const;

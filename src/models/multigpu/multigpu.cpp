@@ -37,7 +37,7 @@ void MultiGpu::initComputation() {
 			{return (x<=0.5 && y<=0.5)||(x>0.5 && y>0.5);});
 
 	std::map<std::string, InitialCond<float>*> initialConds;
-	initialConds.emplace("e", sine);
+	initialConds.emplace("e", circle);
 	initialConds.emplace("r", zero);
 
 	initGrids(initialConds);
@@ -142,11 +142,11 @@ void MultiGpu::initOpenClContext(){
 	CHK_ERRORS(err);
 
 	//Load sources
-	cl::Program::Sources sources = utils::loadSourcesFromFile("src/kernels/basicSystem.cl");	
+	cl::Program::Sources sources = utils::loadSourcesFromFile("src/kernels/multigpu.cl");	
 
 	//Make program
 	cl::Program program(_context, sources, &err); CHK_ERRORS(err);
-	utils::buildProgram(program, _devices, "", "Basic System Kernel");
+	utils::buildProgram(program, _devices, "", "MultiGpu Kernel");
 
 	log_console->infoStream() << "Created " << _nDevices << " device threads !";
 	
@@ -167,7 +167,7 @@ void MultiGpu::initGrids(const std::map<std::string, InitialCond<float>*> &initi
 	
 		for(auto &initialConds : initialConditions) {
 			MultiBufferedDomain<float,1u> *dom = 
-				new MultiBufferedDomain<float,1u>(_gridWidth, _gridHeight, _gridLength, 1u, 2, initialConds.second);
+				new MultiBufferedDomain<float,1u>(_gridWidth, _gridHeight, _gridLength, 1u, 4, initialConds.second);
 			_domains.emplace(initialConds.first, dom);
 		}
 			
