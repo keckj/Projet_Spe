@@ -20,15 +20,12 @@ class OpenGLScene : public QGraphicsScene {
 		static std::mutex glMutex;
 		static std::condition_variable glConditionVariable;
 
-		static GLXContext glContext;
-		static Display *glDisplay;
-	
-    //signals:
-    //    void progressUpdate(int p);
+    signals:
+        void stepRendered();
 
     public slots:
         void textureUpdate(const Grid2D<float> *grid);
-        //void textureUpdate(const QMap<QString, GLuint> &texMap);
+        void updateTextures(const QMap<QString, GLuint> &texMap);
 		void changeColormap(const QString &colormapName);
 
     private:
@@ -38,10 +35,13 @@ class OpenGLScene : public QGraphicsScene {
 		unsigned int m_texCoordsVBO;
 		unsigned int m_vertexCoordsVBO;
 		unsigned int m_texture;
+        QMap<QString, GLuint> *m_texMap;
+        int m_nTexturesWidth;
+        int m_nTexturesHeight;
 		unsigned int m_colormapsUBO;
 		unsigned int m_colorId;
 		
-		void makeProgramm();
+		void makeProgram();
 		void makeColorMaps();
 		void makeArrays();
 

@@ -9,7 +9,15 @@
 // Models
 #include "simpleModel2D.hpp"
 
+
+
+// ************************
 const QStringList SidePanel::modelsList = QStringList() << "Simple Model 2D" << "->Multi-GPU<-" << "Default Model";
+const int SidePanel::defaultNumberOfSteps = 100;
+const std::vector<unsigned int> SidePanel::defaultGridSize { 512, 512, 1};
+// ************************
+
+
 
 SidePanel::SidePanel(QWidget *parent_) : QWidget(parent_) {
 
@@ -19,6 +27,9 @@ SidePanel::SidePanel(QWidget *parent_) : QWidget(parent_) {
         log4cpp::log_console->errorStream() << "SidePanel does not have a parent !";
 
     m_paused = true;
+    m_gridWidth = defaultGridSize[0];
+    m_gridHeight = defaultGridSize[1];
+    m_gridLength = defaultGridSize[2];
     initDialog = NULL;
     paramsDialog = NULL;
 
@@ -94,7 +105,7 @@ SidePanel::SidePanel(QWidget *parent_) : QWidget(parent_) {
     iterSpinBox = new QSpinBox();
     iterSpinBox->setRange(1, 1000000);
     iterSpinBox->setSingleStep(10);
-    iterSpinBox->setValue(100);
+    iterSpinBox->setValue(defaultNumberOfSteps);
     connect(iterSpinBox, SIGNAL(valueChanged(int)), mainWin, SLOT(changeNbIter(int)));
     connect(iterSpinBox, SIGNAL(valueChanged(int)), this, SLOT(changeNbIterSlider(int)));
 
@@ -124,6 +135,7 @@ SidePanel::SidePanel(QWidget *parent_) : QWidget(parent_) {
     variablesRenderedList->setSizePolicy(QSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored));
     variablesRenderedList->setMinimumSize(QSize(30,100)); //modify if needed (height = nItems * cst?)
     connect(variablesRenderedList, SIGNAL(itemChanged(QListWidgetItem *)), mainWin, SLOT(updateRenderedVars(QListWidgetItem *)));
+    connect(variablesRenderedList, SIGNAL(itemChanged(QListWidgetItem *)), this, SLOT(updateRenderedVars(QListWidgetItem *)));
 
     // Rendering colormap label & dropdown list
     QLabel *colorLabel = new QLabel("Colormap :");
@@ -222,7 +234,7 @@ void SidePanel::openInitDialog() {
     if (initDialog) initDialog->deleteLater();
 
     //initDialog = new InitializationDialog(m_initialCond, this);
-    initDialog = new InitializationDialog(this);
+    initDialog = new InitializationDialog(&m_gridWidth, &m_gridHeight, &m_gridLength, this);
     initDialog->setModal(true);
     initDialog->show();
 }
@@ -276,6 +288,22 @@ void SidePanel::refreshParameters(int modelId) {
         item->setCheckState(Qt::Unchecked);
         this->variablesRenderedList->addItem(item);
     }
+}
+
+void SidePanel::updateRenderedVars(QListWidgetItem *item) {
+    m_varsMap->at(item->text().toStdString()) = (item->checkState() != Qt::Unchecked);
+}
+
+unsigned int SidePanel::getGridWidth() {
+    return m_gridWidth;
+}
+
+unsigned int SidePanel::getGridHeight() {
+    return m_gridHeight;
+}
+
+unsigned int SidePanel::getGridLength() {
+    return m_gridLength;
 }
 
 std::map<std::string, Argument> *SidePanel::getArguments() {

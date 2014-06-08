@@ -6,8 +6,8 @@
 		
 std::mutex OpenGLScene::glMutex;
 std::condition_variable OpenGLScene::glConditionVariable;
-GLXContext OpenGLScene::glContext;
-Display* OpenGLScene::glDisplay;
+
+using namespace log4cpp;
 
 OpenGLScene::OpenGLScene() :
 	m_drawProgram(0),
@@ -19,11 +19,9 @@ OpenGLScene::OpenGLScene() :
 	m_colormapsUBO(),
 	m_colorId(0)
 {
-		glContext = glXGetCurrentContext();
-		glDisplay = glXGetCurrentDisplay();
-
+        m_texMap = new QMap<QString, GLuint>;
 		makeArrays();
-		makeProgramm();
+		makeProgram();
 		makeColorMaps();
 }
 
@@ -43,18 +41,65 @@ void OpenGLScene::textureUpdate(const Grid2D<float> *grid) {
 	glConditionVariable.notify_one();
 }
 
-/*
-void textureUpdate(const QMap<QString, GLuint> &texMap) {
-    //TODO update local map
-    //TODO glBufferData with new arrays
+void OpenGLScene::updateTextures(const QMap<QString, GLuint> &texMap) {
     //TODO new QGraphicsTextItem for each texture
+   
+    // Check if we need to change layout
+    if (texMap.size() == m_texMap->size()) {
+        // Notify the GUI that we have made progress
+        emit stepRendered();
+        return;
+    }
+
+    // Free the old map and copy the new map
+    delete m_texMap;
+    m_texMap = new QMap<QString, GLuint>(texMap);
+
+    // Find best layout
+    switch(texMap.size()) {
+        case 0:
+            m_nTexturesWidth  = 0;
+            m_nTexturesHeight = 0;
+            break;
+        case 1:
+            m_nTexturesWidth  = 1;
+            m_nTexturesHeight = 1;
+            break;
+        case 2:
+            m_nTexturesWidth  = 2;
+            m_nTexturesHeight = 1;
+            break;
+        case 3:
+        case 4:
+            m_nTexturesWidth  = 2;
+            m_nTexturesHeight = 2;
+            break;
+        case 5:
+        case 6:
+            m_nTexturesWidth  = 3;
+            m_nTexturesHeight = 2;
+            break;
+        case 7:
+        case 8:
+        case 9:
+            m_nTexturesWidth  = 3;
+            m_nTexturesHeight = 3;
+            break;
+        default:
+            log_console->warnStream() << "[OpenGLScene] Too many variables to render !";
+    }
+
+    // Buffer new arrays
+    makeArrays();
+
+    // Notify the GUI that we have made progress
+    emit stepRendered();
 }
-*/
 
 void OpenGLScene::drawBackground(QPainter *painter, const QRectF &) {
 	std::unique_lock<std::mutex> lock(glMutex);
 
-	glClearColor(0.2,0.2,0.2,1.0);
+	glClearColor(0.0,0.0,0.0,1.0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	m_drawProgram->use();
@@ -62,8 +107,8 @@ void OpenGLScene::drawBackground(QPainter *painter, const QRectF &) {
 	glUniform1i(m_drawProgramUniformLocationMap["colormapId"], m_colorId);
 	glUniform1f(m_drawProgramUniformLocationMap["minVal"], 0.0f);
 	glUniform1f(m_drawProgramUniformLocationMap["maxVal"], 1.0f);
-
-	glEnable(GL_TEXTURE_2D);
+	
+    glEnable(GL_TEXTURE_2D);
 	glBindTexture(GL_TEXTURE_2D, m_texture);
 	glActiveTexture(GL_TEXTURE0);
 
@@ -78,6 +123,7 @@ void OpenGLScene::drawBackground(QPainter *painter, const QRectF &) {
 	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, 0);
 	glEnableVertexAttribArray(1);
 
+	//glDrawArrays(GL_QUADS, 0, 4*m_texMap->size());
 	glDrawArrays(GL_QUADS, 0, 4);
 
 	glBindTexture(GL_TEXTURE_2D, 0); 
@@ -88,9 +134,8 @@ void OpenGLScene::drawBackground(QPainter *painter, const QRectF &) {
 	glConditionVariable.notify_one();
 }
 
-void OpenGLScene::makeProgramm() {
+void OpenGLScene::makeProgram() {
 	std::unique_lock<std::mutex> lock(glMutex);
-
 	m_drawProgram = new Program("Draw texture");
 	m_drawProgram->bindAttribLocations("0 1", "vertexPos texCoord");
 	m_drawProgram->bindFragDataLocation(0, "out_colour");
@@ -108,15 +153,56 @@ void OpenGLScene::makeProgramm() {
 void OpenGLScene::makeArrays() {
 	std::unique_lock<std::mutex> lock(glMutex);
 
-	float texCoords[] = {0,0,  0,1,  1,1,  1,0};
+    float texCoords[] = {0,0,  0,1,  1,1,  1,0};
 	float vertexCoords[] = {-1,1,  -1,-1,  1,-1,  1,1};
+    
+	// Delete unused VBOs
+    //if (m_texCoordsVBO)
+        //glDeleteBuffers(1, &m_texCoordsVBO);
+    //if (m_vertexCoordsVBO)
+        //glDeleteBuffers(1, &m_vertexCoordsVBO);
+    
+    // TODO dynamic gen buffers according to m_nTexturesWidth & m_nTexturesHeight 
+    /*
+    float vertexCoords[8*m_texMap->size()];
+    float texCoords[8*m_texMap->size()];
+    float margin = 0.01; //TODO
+    float deltaWv = 2.0 / m_nTexturesWidth; 
+    float deltaHv = 2.0 / m_nTexturesHeight;
+    float deltaWt = 1.0 / m_nTexturesWidth;
+    float deltaHt = 1.0 / m_nTexturesHeight;
+
+    int idx = 0;
+    for (int w = 0; w < m_nTexturesWidth; w++) {
+        for (int h = 0; h < m_nTexturesHeight; h++) {
+            // Do not draw a quad if there is no texture left
+            if (idx == 8*m_texMap->size()) {
+                break;
+            }
+            // 1st point (top left)
+            vertexCoords[idx] = -1 + w*deltaWv    ; texCoords[idx++]  =  w*deltaWt    ;
+            vertexCoords[idx] =  1 - h*deltaHv    ; texCoords[idx++]  =  h*deltaHt    ;
+            // 2nd point (bottom left)
+            vertexCoords[idx] = -1 + w*deltaWv    ; texCoords[idx++]  =  w*deltaWt    ;
+            vertexCoords[idx] =  1 - (h+1)*deltaHv; texCoords[idx++]  =  (h+1)*deltaHt;
+            // 3rd point (bottom right)
+            vertexCoords[idx] = -1 + (w+1)*deltaWv; texCoords[idx++]  =  (w+1)*deltaWt;
+            vertexCoords[idx] =  1 - (h+1)*deltaHv; texCoords[idx++]  =  (h+1)*deltaHt;
+            // 4th point (top right)
+            vertexCoords[idx] = -1 + (w+1)*deltaWv; texCoords[idx++]  =  (w+1)*deltaWt;
+            vertexCoords[idx] =  1 - h*deltaHv    ; texCoords[idx++]  =  h*deltaHt    ;
+        }
+    }
+    */
 
 	glGenBuffers(1, &m_texCoordsVBO);
 	glBindBuffer(GL_ARRAY_BUFFER, m_texCoordsVBO);
+	//glBufferData(GL_ARRAY_BUFFER, 8*m_texMap->size()*sizeof(float), texCoords, GL_STATIC_DRAW);
 	glBufferData(GL_ARRAY_BUFFER, 8*sizeof(float), texCoords, GL_STATIC_DRAW);
 
 	glGenBuffers(1, &m_vertexCoordsVBO);
 	glBindBuffer(GL_ARRAY_BUFFER, m_vertexCoordsVBO);
+	//glBufferData(GL_ARRAY_BUFFER, 8*m_texMap->size()*sizeof(float), vertexCoords, GL_STATIC_DRAW);
 	glBufferData(GL_ARRAY_BUFFER, 8*sizeof(float), vertexCoords, GL_STATIC_DRAW);
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
