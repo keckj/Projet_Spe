@@ -34,6 +34,10 @@ class MultiBufferedDomain {
 		
 		Grid<T>* toGrid(unsigned int buffer);
 
+		T* allocateSliceX();
+		T* allocateSliceY();
+		T* allocateSliceZ();
+
 	private:
 		unsigned int _domainWidth, _domainHeight, _domainLength;
 		unsigned int _extraBorderSize;
@@ -45,7 +49,6 @@ class MultiBufferedDomain {
 
 		void splitDomain(unsigned int minSplits, InitialCond<float> *initialCond);
 		void linkSubDomains();
-		
 };
 
 #include "domain.tpp"

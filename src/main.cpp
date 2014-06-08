@@ -8,6 +8,7 @@
 #include <iostream>
 
 #include "colormap.hpp"
+#include <Python.h>
 
 #if _N_MAIN == 0
 
@@ -23,6 +24,9 @@ int main(int argc, char** argv) {
 
 	log_console->infoStream() << "[Rand Init] ";
     srand(time(NULL));
+	
+	log_console->infoStream() << "[Python Init] ";
+	Py_Initialize();
 
     log_console->infoStream() << "[Glut Init] ";
     glutInit(&argc, argv);
@@ -32,10 +36,11 @@ int main(int argc, char** argv) {
     MainWindow win;
     win.show();
 	//FIN INIT (le reste de GL est fait dans QT)//
-	//
-    
-    return application.exec();
+	
+	application.exec();
+	Py_Finalize();
 
+	return EXIT_SUCCESS;
 }
 
 #endif /* _N_MAIN == 0 */

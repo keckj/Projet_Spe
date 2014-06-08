@@ -11,6 +11,8 @@
 namespace utils {
 
 	const std::string toStringMemory(unsigned long bytes);
+
+	bool isExtensionSupported(const char *extList, const char *extension);
 	
 	template <typename T>
 	const std::string toStringVec3(T vx, T vy, T vz, const std::string sep = ",") {
@@ -32,6 +34,7 @@ namespace utils {
 		T abs(T val) {
 			return (val < T(0) ? -val : val);
 		}
+
 
 	template <typename T>
 		bool areEqual(T val1, T val2) {

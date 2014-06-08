@@ -3,11 +3,11 @@
 #define COLORMAP_H
 
 #include <map>
-#define _COLOR_PER_COLORMAP 10
+#define _COLORS_PER_COLORMAP 10
 
 namespace ColorMap {
 
-	typedef float colormap[4*_COLOR_PER_COLORMAP];
+	typedef float colormap[4*_COLORS_PER_COLORMAP];
 	
 	std::map<std::string, std::pair<unsigned int, float*> > multiHueColorMaps();
 

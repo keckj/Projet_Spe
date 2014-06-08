@@ -73,6 +73,8 @@ static const char* CL_GL_SHARING_EXT ="cl_khr_gl_sharing";
 //GLX après QT (don't ask why)
 #include <CL/cl_gl.h>
 #include <GL/glx.h>
+#include <X11/Xlib.h>
+#include <X11/Xutil.h>
 
 #pragma GCC diagnostic pop
 //////////////////////////

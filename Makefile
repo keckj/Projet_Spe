@@ -33,9 +33,13 @@ CUDA_LIBPATH = -L/usr/lib/nvidia-331 -L/usr/local/cuda/lib64
 CUDA_LIBS = -lcuda -lcudart
 NVCC=nvcc
 
-OPENCL_INCLUDEPATH = -I/usr/include/boost
+OPENCL_INCLUDEPATH =
 OPENCL_LIBPATH =
 OPENCL_LIBS = -lOpenCL
+
+PYTHON_INCLUDEPATH = -I/usr/include/python2.7
+PrYTHON_LIBPATH =  -L/Python2.7/libs
+PYTHON_LIBS = -lpython2.7 
 
 DISTRIB=$(filter-out Distributor ID:, $(shell lsb_release -i))
 $(info et la distrib $(DISTRIB))
@@ -64,6 +68,10 @@ NVCC=/Developer/NVIDIA/CUDA-5.5/bin/nvcc -ccbin /usr/bin/clang
 OPENCL_INCLUDEPATH =
 OPENCL_LIBPATH =
 OPENCL_LIBS =
+
+PYTHON_INCLUDEPATH = 
+PYTHON_LIBPATH = 
+PYTHON_LIBS = 
 endif
 ##Fin Pomme ####################################################
 
@@ -100,9 +108,9 @@ CXX_STANDART = c++11
 
 LINK= g++
 LINKFLAGS= -W -Wall -Wextra -pedantic -std=$(CXX_STANDART)
-LDFLAGS= $(VIEWER_LIBS) $(CUDA_LIBS) $(OPENCL_LIBS) -llog4cpp -pthread
-INCLUDE = -I$(SRCDIR) $(foreach dir, $(SUBDIRS), -I$(dir)) $(VIEWER_INCLUDEPATH) $(CUDA_INCLUDEPATH) $(OPENCL_INCLUDEPATH)
-LIBS = $(VIEWER_LIBPATH) $(CUDA_LIBPATH) $(OPENCL_LIBPATH)
+LDFLAGS= $(VIEWER_LIBS) $(CUDA_LIBS) $(OPENCL_LIBS) $(PYTHON_LIBS) -llog4cpp -pthread
+INCLUDE = -I$(SRCDIR) $(foreach dir, $(SUBDIRS), -I$(dir)) $(VIEWER_INCLUDEPATH) $(CUDA_INCLUDEPATH) $(OPENCL_INCLUDEPATH) $(PYTHON_INCLUDEPATH)
+LIBS = $(VIEWER_LIBPATH) $(CUDA_LIBPATH) $(OPENCL_LIBPATH) $(PYTHON_LIBPATH)
 DEFINES= $(VIEWER_DEFINES) $(OPT) -D_N_MAIN=$(N_MAIN) 
 
 CC=gcc

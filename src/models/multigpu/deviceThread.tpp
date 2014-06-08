@@ -133,7 +133,6 @@ void DeviceThread<nCommandQueues>::operator()() {
 					CHK_ERRORS(err);
 				}
 				externalEdgeBuffers.emplace(pairs.first, externalEdgeBuffer);
-
 			}
 
 			//keep current domain informations
@@ -147,6 +146,11 @@ void DeviceThread<nCommandQueues>::operator()() {
 			//Compute first step for auto workload dispatch
 			_acquiredDomainsIsInitialDataSent.push_back(false);
 			computeSubDomainStep(_acquiredDomains.size()-1, 0u);
+			
+			//wait work end
+			for (unsigned int j = 0; j < nCommandQueues; j++) {
+				_commandQueues[j].finish();
+			}
 		}
 	}
 	
@@ -161,19 +165,19 @@ void DeviceThread<nCommandQueues>::operator()() {
 	//Compute loop
 	std::function<void(MultiGpu*)> g(&MultiGpu::stepDone);
 	bool display = true;
+	bool writeOnDisk = false;
 	for (unsigned int i = 1; i < 1000; i++) {
 		for (unsigned int j = 0; j < nCommandQueues; j++) {
 			_commandQueues[j].finish();
 		}
 
-		if(display) {
+		if(writeOnDisk || display) {
 			callOnce<void,MultiGpu*>(g, _fence, _simulation);
-			std::this_thread::sleep_for(std::chrono::milliseconds(100));
 		}
 		else {
 			(*_fence)();
 		}
-		
+
 		for (unsigned int j = 0; j < _acquiredDomains.size(); j++) {
 			computeSubDomainStep(j, i);
 		}
@@ -230,10 +234,12 @@ void DeviceThread<nCommandQueues>::computeSubDomainStep(unsigned int domainId, u
 	unsigned long edgeBytesY = currentDomain.begin()->second->edgeBytesY();
 	unsigned long edgeBytesZ = currentDomain.begin()->second->edgeBytesZ();
 	unsigned long edgeBytes[3] = {edgeBytesX, edgeBytesY, edgeBytesZ};
+
+	cl::CommandQueue currentCommandQueue = _commandQueues[domainId%nCommandQueues];
 			
 	//Send initial func data
 	for(auto pair : currentDomain) {
-		CHK_ERROR_RET(_commandQueues[0].enqueueWriteBuffer(varBuffers[pair.first][0], CL_TRUE, 0, bytes, *(pair.second->data())));
+		CHK_ERROR_RET(currentCommandQueue.enqueueWriteBuffer(varBuffers[pair.first][0], CL_TRUE, 0, bytes, *(pair.second->data())));
 	}
 
 	//send extra external borders
@@ -243,7 +249,7 @@ void DeviceThread<nCommandQueues>::computeSubDomainStep(unsigned int domainId, u
 
 			//whole domain borders are not needed (just internal subdomain borders)
 			if(edgeData != 0) {
-				CHK_ERROR_RET(_commandQueues[0].enqueueWriteBuffer(
+				CHK_ERROR_RET(currentCommandQueue.enqueueWriteBuffer(
 							externalEdgeBuffers[pair.first][j], CL_FALSE, 0, edgeBytes[j/2], *edgeData)
 						);
 			}
@@ -291,10 +297,10 @@ void DeviceThread<nCommandQueues>::computeSubDomainStep(unsigned int domainId, u
 	CHK_ERROR_RET(_kernel.setArg<float>(arg++, dt));
 
 	//compute kernel
-	_commandQueues[0].enqueueNDRangeKernel(_kernel, cl::NullRange, global, local);
+	currentCommandQueue.enqueueNDRangeKernel(_kernel, cl::NullRange, global, local);
 
 	//get data to display
-	_commandQueues[0].enqueueReadBuffer(varBuffers["e"][(stepId+1)%2], CL_FALSE, 0, bytes, *(currentDomain["e"]->data()));
+	currentCommandQueue.enqueueReadBuffer(varBuffers["e"][(stepId+1)%2], CL_FALSE, 0, bytes, *(currentDomain["e"]->data()));
 
 	//actualize internal host borders
 	for(auto pair : currentDomain) {
@@ -302,7 +308,7 @@ void DeviceThread<nCommandQueues>::computeSubDomainStep(unsigned int domainId, u
 			float* const* edgeData = internalEdgeHostData[pair.first][j];
 
 			if(edgeData) {
-				CHK_ERROR_RET(_commandQueues[0].enqueueReadBuffer(
+				CHK_ERROR_RET(currentCommandQueue.enqueueReadBuffer(
 							internalEdgeBuffers[pair.first][j], CL_TRUE, 0, 
 							edgeBytes[j/2], *edgeData));
 			}

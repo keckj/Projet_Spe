@@ -6,6 +6,9 @@
 #include "texture.hpp"
 #include "grid2D.hpp"
 
+#include <mutex>
+#include <condition_variable>
+
 class OpenGLScene : public QGraphicsScene {
     Q_OBJECT
 
@@ -13,7 +16,13 @@ class OpenGLScene : public QGraphicsScene {
         OpenGLScene();
 
         void drawBackground(QPainter *painter, const QRectF &);
+		
+		static std::mutex glMutex;
+		static std::condition_variable glConditionVariable;
 
+		static GLXContext glContext;
+		static Display *glDisplay;
+	
     //signals:
     //    void progressUpdate(int p);
 

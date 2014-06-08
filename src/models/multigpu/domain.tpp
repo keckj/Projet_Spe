@@ -200,3 +200,18 @@ Grid<T>* MultiBufferedDomain<T,N>::toGrid(unsigned int buffer) {
 
 	return grid;
 }
+		
+template <typename T, unsigned int N>
+T* MultiBufferedDomain<T,N>::allocateSliceX() {
+	return new T[_domainHeight*_domainLength];
+}
+
+template <typename T, unsigned int N>
+T* MultiBufferedDomain<T,N>::allocateSliceY() {
+	return new T[_domainWidth*_domainLength];
+}
+
+template <typename T, unsigned int N>
+T* MultiBufferedDomain<T,N>::allocateSliceZ() {
+	return new T[_domainWidth*_domainHeight];
+}
