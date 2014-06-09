@@ -1,4 +1,5 @@
 
+#include "pythonInitialCond.hpp"
 #include "headers.hpp"
 #include "simpleModel2D.hpp"
 #include "simpleModel2D.moc"
@@ -6,7 +7,6 @@
 #include "utils.hpp"
 #include "initialCond.hpp"
 #include "circleInitialCond.hpp"
-#include "pythonInitialCond.hpp"
 #include "functionInitialCond.hpp"
 
 #include <algorithm>

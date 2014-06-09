@@ -2,10 +2,10 @@
 #ifndef PYTHONINITIALCOND_H
 #define PYTHONINITIALCOND_H
 
+#include <Python.h>
 #include "initialCond.hpp"
 #include <functional>
 #include <sstream>
-#include <Python.h>
 
 using namespace log4cpp;
 
