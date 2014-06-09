@@ -1,4 +1,5 @@
 
+#include <Python.h>
 #include "headers.hpp"
 
 #include "mainWindow.hpp"
@@ -8,7 +9,6 @@
 #include <iostream>
 
 #include "colormap.hpp"
-#include <Python.h>
 
 #if _N_MAIN == 0
 
