@@ -25,6 +25,7 @@ MainWindow::MainWindow() {
     m_total_steps = SidePanel::defaultNumberOfSteps;
     m_auto_render = true;
 
+	qRegisterMetaType< QMap<QString, GLuint> >("QMap<QString, GLuint>");
 
     // QT GUI
     QDesktopWidget widget;

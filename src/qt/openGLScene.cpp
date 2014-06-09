@@ -14,6 +14,7 @@ Window OpenGLScene::solverWindow;
 Colormap OpenGLScene::solverColormap;
 
 using namespace log4cpp;
+using namespace utils;
 
 OpenGLScene::OpenGLScene() :
 	m_drawProgram(0),
@@ -107,40 +108,66 @@ void OpenGLScene::drawBackground(QPainter *painter, const QRectF &) {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	m_drawProgram->use();
-	
-	glUniform1i(m_drawProgramUniformLocationMap["colormapId"], m_colorId);
-	glUniform1f(m_drawProgramUniformLocationMap["minVal"], 0.0f);
-	glUniform1f(m_drawProgramUniformLocationMap["maxVal"], 1.0f);
-	
-    glEnable(GL_TEXTURE_2D);
 
+	//UBOs
 	glBindBufferBase(GL_UNIFORM_BUFFER, 0 , Globals::projectionViewUniformBlock);
 	glBindBufferBase(GL_UNIFORM_BUFFER, 1 , m_colormapsUBO);
-
-	glBindBuffer(GL_ARRAY_BUFFER, m_texCoordsVBO);
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, 0);
-	glEnableVertexAttribArray(1);
-		
+	
+	//VBOs
 	glBindBuffer(GL_ARRAY_BUFFER, m_vertexCoordsVBO);           
 	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, 0);
 	glEnableVertexAttribArray(0);
 
+	glBindBuffer(GL_ARRAY_BUFFER, m_texCoordsVBO);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, 0);
+	glEnableVertexAttribArray(1);
+
+	//Uniform variables
+	glUniform1i(m_drawProgramUniformLocationMap["colormapId"], m_colorId);
+	glUniform1i(m_drawProgramUniformLocationMap["matrix"], 0);
+	glUniform1f(m_drawProgramUniformLocationMap["minVal"], 0.0f);
+	glUniform1f(m_drawProgramUniformLocationMap["maxVal"], 1.0f);
+	
+	//Texture unit
+
+	float data[10000];
+	for (unsigned int i = 0; i < 10000;i++) {
+		data[i] = (float)(i)/10000;
+	}
+
+	unsigned int tex;
+	glGenTextures(1,&tex);
+	
+	glActiveTexture(GL_TEXTURE0 + 0);
+	glBindTexture(GL_TEXTURE_2D, tex);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, 
+			100,100,0,
+			GL_LUMINANCE, GL_FLOAT, (GLvoid*) data);
+	glBindTexture(GL_TEXTURE_2D,0);
+		
 	int i = 0;
 	for (QString key :  m_texMap.keys()) {
-		glBindTexture(GL_TEXTURE_2D, m_texMap[key]);
-		glActiveTexture(GL_TEXTURE0);
-
+		glBindTexture(GL_TEXTURE_2D, tex);
+		//glBindTexture(GL_TEXTURE_2D, m_texMap[key]);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		glDrawArrays(GL_QUADS, 4*i, 4);
 		++i;
 	}
+		
+	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	//glBindTexture(GL_TEXTURE_2D, m_texMap[key]);
+	//glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, 
+				//pair.second->domainWidth(), pair.second->domainHeight(), 0, 
+				//GL_LUMINANCE, GL_FLOAT, (GLvoid*) data);
 
 	glBindTexture(GL_TEXTURE_2D, 0); 
-	glDisable(GL_TEXTURE_2D);
-
-	QTimer::singleShot(0, this, SLOT(update()));
-
 	glFinish();
 	log_console->debugStream() << "Draw !";
+	
+	QTimer::singleShot(0, this, SLOT(update()));
 }
 
 void OpenGLScene::makeProgram() {
@@ -153,7 +180,7 @@ void OpenGLScene::makeProgram() {
 	m_drawProgram->attachShader(Shader("shaders/colormap/draw_fs.glsl", GL_FRAGMENT_SHADER));
 
 	m_drawProgram->link();
-	m_drawProgramUniformLocationMap = m_drawProgram->getUniformLocationsMap("colormapId minVal maxVal" ,true);
+	m_drawProgramUniformLocationMap = m_drawProgram->getUniformLocationsMap("colormapId minVal maxVal matrix" ,true);
 }
 
 void OpenGLScene::makeArrays() {
@@ -174,6 +201,8 @@ void OpenGLScene::makeArrays() {
 	float deltaHt = 1.0 / m_nTexturesHeight;
 
 	int idx = 0;
+	std::stringstream ss;
+	ss << "Make arrays : ";
 	for (int w = 0; w < m_nTexturesWidth; w++) {
 		for (int h = 0; h < m_nTexturesHeight; h++) {
 			//Do not draw a quad if there is no texture left
@@ -192,8 +221,14 @@ void OpenGLScene::makeArrays() {
 			//4th point (top right)
 			vertexCoords[idx++] = -1 + (w+1)*deltaWv;
 			vertexCoords[idx++] =  1 - h*deltaHv    ;
+	
+			ss << "\n\t(w,h) = (" << w << "," << h << ")\t";
+			for (int i = 0; i < 4; i++) {
+				ss << " " << toStringVec3<float>(vertexCoords[idx-8+2*i], vertexCoords[idx-8+2*i+1],0);
+			}
 		}
 	}
+	log_console->infoStream() << ss.str();
 
 	float texCoords[] = {0,0,  0,1,  1,1,  1,0};
 	for (int i = 0; i < 8*m_texMap.size(); i++) {

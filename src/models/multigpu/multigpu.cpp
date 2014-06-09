@@ -270,25 +270,21 @@ void MultiGpu::renderToTextures() {
 		
 	static float *data = new float[_gridWidth*_gridHeight];
 	for (unsigned int i = 0; i < _gridWidth*_gridHeight; i++) {
-		data[i] = 1.0f;
+		data[i] = (float)(i)/(_gridWidth*_gridHeight);
 	}
 
+	glActiveTexture(GL_TEXTURE0 + 0);
 	for (auto pair : _domains) {
 		//float *data = _sliceZ[pair.first];
 		unsigned int texture = _mapped_textures[QString(pair.first.c_str())];
 		glBindTexture(GL_TEXTURE_2D, texture);
-		glActiveTexture(GL_TEXTURE0);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, 
 				pair.second->domainWidth(), pair.second->domainHeight(), 0, 
 				GL_LUMINANCE, GL_FLOAT, (GLvoid*) data);
 	}
-	glBindTexture(GL_TEXTURE_2D, 0);
 	
+	glBindTexture(GL_TEXTURE_2D, 0);
 	glFinish();
 	glXMakeCurrent(OpenGLScene::solverDisplay, 0, 0);
 	
@@ -324,10 +320,9 @@ void MultiGpu::allocSlices() {
 	
 void MultiGpu::createTextures() {
 	
-		log_console->infoStream() << "Creating model textures...";
-
 		unsigned int *textures = new unsigned int[_nFunctions];
-
+	
+		log_console->infoStream() << "Creating " << _nFunctions << " model textures...";
 		glGenTextures(_nFunctions, textures);
 		glFinish();
 
