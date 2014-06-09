@@ -26,31 +26,5 @@ namespace utils {
 		return str;
 	 }
 	
-	bool isExtensionSupported(const char *extList, const char *extension)
-	{
-		const char *start;
-		const char *where, *terminator;
-
-		where = strchr(extension, ' ');
-		if (where || *extension == '\0')
-			return false;
-
-		for (start=extList;;) {
-			where = strstr(start, extension);
-
-			if (!where)
-				break;
-
-			terminator = where + strlen(extension);
-
-			if ( where == start || *(where - 1) == ' ' )
-				if ( *terminator == ' ' || *terminator == '\0' )
-					return true;
-
-			start = terminator;
-		}
-
-		return false;
-	}
 }
 

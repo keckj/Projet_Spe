@@ -17,14 +17,18 @@ class OpenGLScene : public QGraphicsScene {
 
         void drawBackground(QPainter *painter, const QRectF &);
 		
-		static std::mutex glMutex;
-		static std::condition_variable glConditionVariable;
+		static Display *qtDisplay;
+		static GLXContext qtContext;
+		
+		static Display *solverDisplay;
+		static GLXContext solverContext;
+		static Window solverWindow;
+		static Colormap solverColormap;
 
     signals:
         void stepRendered();
 
     public slots:
-        void textureUpdate(const Grid2D<float> *grid);
         void updateTextures(const QMap<QString, GLuint> &texMap);
 		void changeColormap(const QString &colormapName);
 
@@ -35,7 +39,7 @@ class OpenGLScene : public QGraphicsScene {
 		unsigned int m_texCoordsVBO;
 		unsigned int m_vertexCoordsVBO;
 		unsigned int m_texture;
-        QMap<QString, GLuint> *m_texMap;
+        QMap<QString, GLuint> m_texMap;
         int m_nTexturesWidth;
         int m_nTexturesHeight;
 		unsigned int m_colormapsUBO;

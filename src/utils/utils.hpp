@@ -12,8 +12,6 @@ namespace utils {
 
 	const std::string toStringMemory(unsigned long bytes);
 
-	bool isExtensionSupported(const char *extList, const char *extension);
-	
 	template <typename T>
 	const std::string toStringVec3(T vx, T vy, T vz, const std::string sep = ",") {
 		std::stringstream ss;

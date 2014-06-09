@@ -20,17 +20,18 @@ class DeviceThread {
 				const cl::Program &program,
 				const cl::Device &device,
 				Fence *fence);
-
+		
 		~DeviceThread();
 		
 		void operator()();
-
+	
 	private:
 		void initSubDomain(std::map<std::string, MultiBufferedSubDomain<float, 1u>*> subDomain);
 		void computeSubDomainStep(unsigned int domainId, unsigned int stepId);
 		void finishCommandQueues();
 
 		MultiGpu *_simulation;
+		
 
 		const cl::Platform _platform;
 		const cl::Context _context;
@@ -39,6 +40,9 @@ class DeviceThread {
 		cl::Kernel _kernel;
 
 		Fence *_fence;
+		
+		bool _display;
+		bool _writeOnDisk;
 
 		cl::CommandQueue _commandQueues[nCommandQueues];
 

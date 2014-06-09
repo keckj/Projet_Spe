@@ -3,9 +3,15 @@
 #include "openGLScene.moc" 
 #include "globals.hpp"
 #include "colormap.hpp"
+#include "glUtils.hpp"
 		
-std::mutex OpenGLScene::glMutex;
-std::condition_variable OpenGLScene::glConditionVariable;
+Display *OpenGLScene::qtDisplay;
+GLXContext OpenGLScene::qtContext;
+
+Display *OpenGLScene::solverDisplay;
+GLXContext OpenGLScene::solverContext;
+Window OpenGLScene::solverWindow;
+Colormap OpenGLScene::solverColormap;
 
 using namespace log4cpp;
 
@@ -19,41 +25,41 @@ OpenGLScene::OpenGLScene() :
 	m_colormapsUBO(),
 	m_colorId(0)
 {
-        m_texMap = new QMap<QString, GLuint>;
+		//Get and print info about qt context
+		qtDisplay = glXGetCurrentDisplay();
+		qtContext = glXGetCurrentContext();
+	
+		int qtGlxConfigXid=0, qtGlxSupportedRenderType=0, qtGlxScreenNumber=0;
+		glXQueryContext(qtDisplay, qtContext,  GLX_FBCONFIG_ID, &qtGlxConfigXid);
+		glXQueryContext(qtDisplay, qtContext, GLX_RENDER_TYPE, &qtGlxSupportedRenderType);
+		glXQueryContext(qtDisplay, qtContext, GLX_SCREEN, &qtGlxScreenNumber);
+	
+		log_console->infoStream() << "Current QT openGL context : "
+			<< " XID=" << qtGlxConfigXid
+			<< " RenderType=" << qtGlxSupportedRenderType
+			<< " ScreenNumber=" << qtGlxScreenNumber;
+
+		//Create openGL context for the solver, try to get shared context with QT
+		log_console->infoStream() << "Creating openGL context for the solver...";
+		utils::createOpenGLContext(&solverDisplay, &solverContext, &solverWindow, &solverColormap, qtContext);
+		
 		makeArrays();
 		makeProgram();
 		makeColorMaps();
 }
 
-void OpenGLScene::textureUpdate(const Grid2D<float> *grid) {
-	std::unique_lock<std::mutex> lock(glMutex);
-
-	glGenTextures(1, &m_texture);
-	glBindTexture(GL_TEXTURE_2D, m_texture);
-	glActiveTexture(GL_TEXTURE0);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, grid->width(), grid->height(), 0, GL_LUMINANCE, GL_FLOAT, (GLvoid*) grid->data());
-	
-	glConditionVariable.notify_one();
-}
 
 void OpenGLScene::updateTextures(const QMap<QString, GLuint> &texMap) {
-    //TODO new QGraphicsTextItem for each texture
    
     // Check if we need to change layout
-    if (texMap.size() == m_texMap->size()) {
-        // Notify the GUI that we have made progress
-        emit stepRendered();
-        return;
-    }
+	if (texMap.size() == m_texMap.size()) {
+		//Notify the GUI that we have made progress
+		emit stepRendered();
+		return;
+	}
 
     // Free the old map and copy the new map
-    delete m_texMap;
-    m_texMap = new QMap<QString, GLuint>(texMap);
+    m_texMap = texMap;
 
     // Find best layout
     switch(texMap.size()) {
@@ -97,9 +103,7 @@ void OpenGLScene::updateTextures(const QMap<QString, GLuint> &texMap) {
 }
 
 void OpenGLScene::drawBackground(QPainter *painter, const QRectF &) {
-	std::unique_lock<std::mutex> lock(glMutex);
-
-	glClearColor(0.0,0.0,0.0,1.0);
+	glClearColor(1.0,0.0,0.0,1.0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	m_drawProgram->use();
@@ -109,33 +113,37 @@ void OpenGLScene::drawBackground(QPainter *painter, const QRectF &) {
 	glUniform1f(m_drawProgramUniformLocationMap["maxVal"], 1.0f);
 	
     glEnable(GL_TEXTURE_2D);
-	glBindTexture(GL_TEXTURE_2D, m_texture);
-	glActiveTexture(GL_TEXTURE0);
 
 	glBindBufferBase(GL_UNIFORM_BUFFER, 0 , Globals::projectionViewUniformBlock);
 	glBindBufferBase(GL_UNIFORM_BUFFER, 1 , m_colormapsUBO);
 
+	glBindBuffer(GL_ARRAY_BUFFER, m_texCoordsVBO);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, 0);
+	glEnableVertexAttribArray(1);
+		
 	glBindBuffer(GL_ARRAY_BUFFER, m_vertexCoordsVBO);           
 	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, 0);
 	glEnableVertexAttribArray(0);
 
-	glBindBuffer(GL_ARRAY_BUFFER, m_texCoordsVBO);
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, 0);
-	glEnableVertexAttribArray(1);
+	int i = 0;
+	for (QString key :  m_texMap.keys()) {
+		glBindTexture(GL_TEXTURE_2D, m_texMap[key]);
+		glActiveTexture(GL_TEXTURE0);
 
-	//glDrawArrays(GL_QUADS, 0, 4*m_texMap->size());
-	glDrawArrays(GL_QUADS, 0, 4);
+		glDrawArrays(GL_QUADS, 4*i, 4);
+		++i;
+	}
 
 	glBindTexture(GL_TEXTURE_2D, 0); 
 	glDisable(GL_TEXTURE_2D);
 
 	QTimer::singleShot(0, this, SLOT(update()));
-	
-	glConditionVariable.notify_one();
+
+	glFinish();
+	log_console->debugStream() << "Draw !";
 }
 
 void OpenGLScene::makeProgram() {
-	std::unique_lock<std::mutex> lock(glMutex);
 	m_drawProgram = new Program("Draw texture");
 	m_drawProgram->bindAttribLocations("0 1", "vertexPos texCoord");
 	m_drawProgram->bindFragDataLocation(0, "out_colour");
@@ -146,74 +154,65 @@ void OpenGLScene::makeProgram() {
 
 	m_drawProgram->link();
 	m_drawProgramUniformLocationMap = m_drawProgram->getUniformLocationsMap("colormapId minVal maxVal" ,true);
-	
-	glConditionVariable.notify_one();
 }
 
 void OpenGLScene::makeArrays() {
-	std::unique_lock<std::mutex> lock(glMutex);
-
-    float texCoords[] = {0,0,  0,1,  1,1,  1,0};
-	float vertexCoords[] = {-1,1,  -1,-1,  1,-1,  1,1};
+	//Delete unused VBOs
+	if (m_texCoordsVBO)
+		glDeleteBuffers(1, &m_texCoordsVBO);
+	if (m_vertexCoordsVBO)
+		glDeleteBuffers(1, &m_vertexCoordsVBO);
     
-	// Delete unused VBOs
-    //if (m_texCoordsVBO)
-        //glDeleteBuffers(1, &m_texCoordsVBO);
-    //if (m_vertexCoordsVBO)
-        //glDeleteBuffers(1, &m_vertexCoordsVBO);
-    
-    // TODO dynamic gen buffers according to m_nTexturesWidth & m_nTexturesHeight 
-    /*
-    float vertexCoords[8*m_texMap->size()];
-    float texCoords[8*m_texMap->size()];
-    float margin = 0.01; //TODO
-    float deltaWv = 2.0 / m_nTexturesWidth; 
-    float deltaHv = 2.0 / m_nTexturesHeight;
-    float deltaWt = 1.0 / m_nTexturesWidth;
-    float deltaHt = 1.0 / m_nTexturesHeight;
+	//TODO dynamic gen buffers according to m_nTexturesWidth & m_nTexturesHeight 
+	
+	float *vertexCoords = new float[8*m_texMap.size()];
+	float *textureCoords = new float[8*m_texMap.size()];
+	float margin = 0.01; //TODO
+	float deltaWv = 2.0 / m_nTexturesWidth; 
+	float deltaHv = 2.0 / m_nTexturesHeight;
+	float deltaWt = 1.0 / m_nTexturesWidth;
+	float deltaHt = 1.0 / m_nTexturesHeight;
 
-    int idx = 0;
-    for (int w = 0; w < m_nTexturesWidth; w++) {
-        for (int h = 0; h < m_nTexturesHeight; h++) {
-            // Do not draw a quad if there is no texture left
-            if (idx == 8*m_texMap->size()) {
-                break;
-            }
-            // 1st point (top left)
-            vertexCoords[idx] = -1 + w*deltaWv    ; texCoords[idx++]  =  w*deltaWt    ;
-            vertexCoords[idx] =  1 - h*deltaHv    ; texCoords[idx++]  =  h*deltaHt    ;
-            // 2nd point (bottom left)
-            vertexCoords[idx] = -1 + w*deltaWv    ; texCoords[idx++]  =  w*deltaWt    ;
-            vertexCoords[idx] =  1 - (h+1)*deltaHv; texCoords[idx++]  =  (h+1)*deltaHt;
-            // 3rd point (bottom right)
-            vertexCoords[idx] = -1 + (w+1)*deltaWv; texCoords[idx++]  =  (w+1)*deltaWt;
-            vertexCoords[idx] =  1 - (h+1)*deltaHv; texCoords[idx++]  =  (h+1)*deltaHt;
-            // 4th point (top right)
-            vertexCoords[idx] = -1 + (w+1)*deltaWv; texCoords[idx++]  =  (w+1)*deltaWt;
-            vertexCoords[idx] =  1 - h*deltaHv    ; texCoords[idx++]  =  h*deltaHt    ;
-        }
-    }
-    */
+	int idx = 0;
+	for (int w = 0; w < m_nTexturesWidth; w++) {
+		for (int h = 0; h < m_nTexturesHeight; h++) {
+			//Do not draw a quad if there is no texture left
+			if (idx == 8*m_texMap.size()) {
+				break;
+			}
+			//1st point (top left)
+			vertexCoords[idx++] = -1 + w*deltaWv    ;
+			vertexCoords[idx++] =  1 - h*deltaHv    ;
+			//2nd point (bottom left)
+			vertexCoords[idx++] = -1 + w*deltaWv    ;
+			vertexCoords[idx++] =  1 - (h+1)*deltaHv;
+			//3rd point (bottom right)
+			vertexCoords[idx++] = -1 + (w+1)*deltaWv;
+			vertexCoords[idx++] =  1 - (h+1)*deltaHv;
+			//4th point (top right)
+			vertexCoords[idx++] = -1 + (w+1)*deltaWv;
+			vertexCoords[idx++] =  1 - h*deltaHv    ;
+		}
+	}
+
+	float texCoords[] = {0,0,  0,1,  1,1,  1,0};
+	for (int i = 0; i < 8*m_texMap.size(); i++) {
+		textureCoords[i] = texCoords[i%8];
+	}
 
 	glGenBuffers(1, &m_texCoordsVBO);
 	glBindBuffer(GL_ARRAY_BUFFER, m_texCoordsVBO);
-	//glBufferData(GL_ARRAY_BUFFER, 8*m_texMap->size()*sizeof(float), texCoords, GL_STATIC_DRAW);
-	glBufferData(GL_ARRAY_BUFFER, 8*sizeof(float), texCoords, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, 8*m_texMap.size()*sizeof(float), textureCoords, GL_STATIC_DRAW);
 
 	glGenBuffers(1, &m_vertexCoordsVBO);
 	glBindBuffer(GL_ARRAY_BUFFER, m_vertexCoordsVBO);
-	//glBufferData(GL_ARRAY_BUFFER, 8*m_texMap->size()*sizeof(float), vertexCoords, GL_STATIC_DRAW);
-	glBufferData(GL_ARRAY_BUFFER, 8*sizeof(float), vertexCoords, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, 8*m_texMap.size()*sizeof(float), vertexCoords, GL_STATIC_DRAW);
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	
-	glConditionVariable.notify_one();
 }
 
 
 void OpenGLScene::makeColorMaps() {
-	std::unique_lock<std::mutex> lock(glMutex);
-
 	std::map<std::string, std::pair<unsigned int, float*> > maps = ColorMap::multiHueColorMaps();
 
     glGenBuffers(1, &m_colormapsUBO);
@@ -226,8 +225,6 @@ void OpenGLScene::makeColorMaps() {
 				colorMap.second.second);
 	}
 	glBindBuffer(GL_UNIFORM_BUFFER, 0);
-	
-	glConditionVariable.notify_one();
 }
 		
 void OpenGLScene::changeColormap(const QString &colormapName) {
