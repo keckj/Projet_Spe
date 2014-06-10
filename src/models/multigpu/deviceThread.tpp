@@ -166,16 +166,16 @@ void DeviceThread<nCommandQueues>::operator()() {
 	
 	//Compute loop
 	std::function<void(MultiGpu*)> g(&MultiGpu::stepDone);
-	for (unsigned int i = 1; i < 1000; i++) {
-		for (unsigned int j = 0; j < nCommandQueues; j++) {
-			_commandQueues[j].finish();
-		}
-
-		if(_writeOnDisk || _display) {
+	for (unsigned int i = 1; i < 5000; i++) {
+		if(_display) {
 			callOnce<void,MultiGpu*>(g, _fence, _simulation);
 		}
 		else {
 			(*_fence)();
+		}
+		
+		for (unsigned int j = 0; j < nCommandQueues; j++) {
+			_commandQueues[j].finish();
 		}
 
 		for (unsigned int j = 0; j < _acquiredDomains.size(); j++) {
@@ -238,8 +238,13 @@ void DeviceThread<nCommandQueues>::computeSubDomainStep(unsigned int domainId, u
 	cl::CommandQueue currentCommandQueue = _commandQueues[domainId%nCommandQueues];
 			
 	//Send initial func data
+	int localDomainId = 0;
 	for(auto pair : currentDomain) {
-		CHK_ERROR_RET(currentCommandQueue.enqueueWriteBuffer(varBuffers[pair.first][0], CL_TRUE, 0, bytes, *(pair.second->data())));
+		if(!_acquiredDomainsIsInitialDataSent[localDomainId]) {
+			CHK_ERROR_RET(currentCommandQueue.enqueueWriteBuffer(varBuffers[pair.first][0], CL_TRUE, 0, bytes, *(pair.second->data())));
+			_acquiredDomainsIsInitialDataSent[localDomainId] = true;
+		}
+		localDomainId++;
 	}
 
 	//send extra external borders
@@ -300,10 +305,10 @@ void DeviceThread<nCommandQueues>::computeSubDomainStep(unsigned int domainId, u
 	currentCommandQueue.enqueueNDRangeKernel(_kernel, cl::NullRange, global, local);
 
 	//get data to display
-	currentCommandQueue.enqueueReadBuffer(varBuffers["e"][(stepId+1)%2], CL_FALSE, 0, bytes, *(currentDomain["e"]->data()));
+	//currentCommandQueue.enqueueReadBuffer(varBuffers["e"][(stepId+1)%2], CL_FALSE, 0, bytes, *(currentDomain["e"]->data()));
 
 	//get slices to generate texture
-	if(_display) {
+	if(_display && stepId % 10 == 0) {
 		float *sliceX = _simulation->sliceX()["e"];
 		float *sliceY = _simulation->sliceY()["e"];
 		float *sliceZ = _simulation->sliceZ()["e"];

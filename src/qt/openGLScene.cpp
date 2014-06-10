@@ -3,7 +3,6 @@
 #include "openGLScene.moc" 
 #include "globals.hpp"
 #include "colormap.hpp"
-#include "glUtils.hpp"
 		
 Display *OpenGLScene::qtDisplay;
 GLXContext OpenGLScene::qtContext;
@@ -142,8 +141,10 @@ void OpenGLScene::drawBackground(QPainter *painter, const QRectF &) {
 	}
 
 	glBindTexture(GL_TEXTURE_2D, 0); 
-	glFinish();
+	glUseProgram(0);
 	CHK_GL_ERRORS();
+
+	renderString(0.0f,0.0f,GLUT_BITMAP_TIMES_ROMAN_24, "GOGO FAP");
 	
 	QTimer::singleShot(0, this, SLOT(update()));
 }
@@ -243,4 +244,13 @@ void OpenGLScene::makeColorMaps() {
 void OpenGLScene::changeColormap(const QString &colormapName) {
 	std::map<std::string, std::pair<unsigned int, float*> > maps = ColorMap::multiHueColorMaps();
 	m_colorId = maps[colormapName.toStdString()].first;
+}
+
+
+void OpenGLScene::renderString(float x, float y, void *font_, const char* string,
+		float r, float g, float b, float a)
+{  
+  glColor4f(r,g,b,a); 
+  glRasterPos2f(x, y);
+  glutBitmapString(font_, (const unsigned char*)string);
 }

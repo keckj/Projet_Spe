@@ -9,6 +9,7 @@
 #include "openGLScene.hpp"
 
 #include <sstream>
+#include <algorithm>
 
 using namespace log4cpp;
 using namespace utils;
@@ -178,14 +179,20 @@ void MultiGpu::initOpenClContext(){
 	cl::Program program(_context, sources, &err); CHK_ERRORS(err);
 	utils::buildProgram(program, _devices, "", "MultiGpu Kernel");
 
-	log_console->infoStream() << "Created " << _nDevices << " device threads !";
-	
-	Fence *fence = new Fence(_devices.size());
+	unsigned int devicesNeeded = std::min<unsigned int>(_domains.begin()->second->nSplits(), _devices.size());
+	Fence *fence = new Fence(devicesNeeded);
+
+	unsigned int i = 0;
 	for(auto dev : _devices) {
+		if(i >= devicesNeeded)
+			break;
 		DeviceThread<1u> *dt = new DeviceThread<1u>(this, _platform, _context, program, dev, fence);
 		std::thread t(*dt);
 		t.detach();
+		i++;
 	}
+	
+	log_console->infoStream() << "Created " << devicesNeeded << " device threads, " << _devices.size()-devicesNeeded <<" devices will be idle !";
 }
 		
 void MultiGpu::initGrids(const std::map<std::string, InitialCond<float>*> &initialConditions) {
@@ -197,7 +204,7 @@ void MultiGpu::initGrids(const std::map<std::string, InitialCond<float>*> &initi
 	
 		for(auto &initialConds : initialConditions) {
 			MultiBufferedDomain<float,1u> *dom = 
-				new MultiBufferedDomain<float,1u>(_gridWidth, _gridHeight, _gridLength, 1u, 4, initialConds.second);
+				new MultiBufferedDomain<float,1u>(_gridWidth, _gridHeight, _gridLength, 1u, 2, initialConds.second);
 			_domains.emplace(initialConds.first, dom);
 		}
 			
@@ -275,9 +282,8 @@ void MultiGpu::renderToTextures() {
 	}
 	
 	glBindTexture(GL_TEXTURE_2D, 0);
-	glFinish();
-	
 	CHK_GL_ERRORS();
+
 	glXMakeCurrent(OpenGLScene::solverDisplay, 0, 0);
 }
 		

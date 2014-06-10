@@ -23,6 +23,7 @@ static const char* CL_GL_SHARING_EXT ="cl_khr_gl_sharing";
 #include <GLUT/glut.h>
 #else
 #include <GL/glut.h>
+#include <GL/freeglut_ext.h>
 #endif
 
 //wrapper C++ pour opencl 1.1 (nvidia supporte pas mieux !) 

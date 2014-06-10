@@ -48,6 +48,9 @@ class OpenGLScene : public QGraphicsScene {
 		void makeProgram();
 		void makeColorMaps();
 		void makeArrays();
+	
+		void renderString(float x, float y, void *font, const char* string,
+				float r=0.0f, float g=0.0f, float b=1.0f, float a=1.0f);
 
 };
 #endif
