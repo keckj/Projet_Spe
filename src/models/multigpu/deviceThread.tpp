@@ -25,7 +25,9 @@ DeviceThread<nCommandQueues>::DeviceThread(MultiGpu *simulation,
 	_simulation(simulation), 
 	_platform(platform), _context(context),
 	_program(program), _device(device),
-	_fence(fence)
+	_fence(fence),
+	_display(true),
+	_writeOnDisk(false)
 {
 }
 
@@ -164,18 +166,16 @@ void DeviceThread<nCommandQueues>::operator()() {
 	
 	//Compute loop
 	std::function<void(MultiGpu*)> g(&MultiGpu::stepDone);
-	bool display = true;
-	bool writeOnDisk = false;
-	for (unsigned int i = 1; i < 1000; i++) {
-		for (unsigned int j = 0; j < nCommandQueues; j++) {
-			_commandQueues[j].finish();
-		}
-
-		if(writeOnDisk || display) {
+	for (unsigned int i = 1; i < 5000; i++) {
+		if(_display) {
 			callOnce<void,MultiGpu*>(g, _fence, _simulation);
 		}
 		else {
 			(*_fence)();
+		}
+		
+		for (unsigned int j = 0; j < nCommandQueues; j++) {
+			_commandQueues[j].finish();
 		}
 
 		for (unsigned int j = 0; j < _acquiredDomains.size(); j++) {
@@ -238,8 +238,13 @@ void DeviceThread<nCommandQueues>::computeSubDomainStep(unsigned int domainId, u
 	cl::CommandQueue currentCommandQueue = _commandQueues[domainId%nCommandQueues];
 			
 	//Send initial func data
+	int localDomainId = 0;
 	for(auto pair : currentDomain) {
-		CHK_ERROR_RET(currentCommandQueue.enqueueWriteBuffer(varBuffers[pair.first][0], CL_TRUE, 0, bytes, *(pair.second->data())));
+		if(!_acquiredDomainsIsInitialDataSent[localDomainId]) {
+			CHK_ERROR_RET(currentCommandQueue.enqueueWriteBuffer(varBuffers[pair.first][0], CL_TRUE, 0, bytes, *(pair.second->data())));
+			_acquiredDomainsIsInitialDataSent[localDomainId] = true;
+		}
+		localDomainId++;
 	}
 
 	//send extra external borders
@@ -300,7 +305,104 @@ void DeviceThread<nCommandQueues>::computeSubDomainStep(unsigned int domainId, u
 	currentCommandQueue.enqueueNDRangeKernel(_kernel, cl::NullRange, global, local);
 
 	//get data to display
-	currentCommandQueue.enqueueReadBuffer(varBuffers["e"][(stepId+1)%2], CL_FALSE, 0, bytes, *(currentDomain["e"]->data()));
+	//currentCommandQueue.enqueueReadBuffer(varBuffers["e"][(stepId+1)%2], CL_FALSE, 0, bytes, *(currentDomain["e"]->data()));
+
+	//get slices to generate texture
+	if(_display && stepId % 10 == 0) {
+		float *sliceX = _simulation->sliceX()["e"];
+		float *sliceY = _simulation->sliceY()["e"];
+		float *sliceZ = _simulation->sliceZ()["e"];
+		unsigned int sliceIdx = _simulation->sliceIdX();
+		unsigned int sliceIdy = _simulation->sliceIdY();
+		unsigned int sliceIdz = _simulation->sliceIdZ();
+		unsigned int offsetX = currentDomain.begin()->second->offsetX();
+		unsigned int offsetY = currentDomain.begin()->second->offsetY();
+		unsigned int offsetZ = currentDomain.begin()->second->offsetZ();
+		unsigned int domainWidth = currentDomain.begin()->second->domainWidth();
+		unsigned int domainHeight = currentDomain.begin()->second->domainHeight();
+		unsigned int domainLength = currentDomain.begin()->second->domainLength();
+		unsigned int subDomainBaseWidth = currentDomain.begin()->second->subDomainBaseWidth();
+		unsigned int subDomainBaseHeight = currentDomain.begin()->second->subDomainBaseHeight();
+		unsigned int subDomainBaseLength = currentDomain.begin()->second->subDomainBaseLength();
+
+		const size_t bufferPitch[2] = {subDomainWidth,subDomainWidth*subDomainHeight};
+		cl::size_t<3> bufferOrigin;
+		cl::size_t<3> hostOrigin;
+		cl::size_t<3> region;
+
+		//if(sliceIdx >= offsetX && sliceIdx < offsetX+subDomainWidth) {
+			//bufferOrigin.clear(); hostOrigin.clear(); region.clear();
+
+			//bufferOrigin.push_back(sliceIdx%subDomainBaseWidth);
+			//bufferOrigin.push_back(0u);
+			//bufferOrigin.push_back(0u);
+
+			//hostOrigin.push_back(idy*subDomainBaseHeight);
+			//hostOrigin.push_back(idz*subDomainBaseLength);
+			//hostOrigin.push_back(0);
+
+			//region.push_back(1);
+			//region.push_back(subDomainHeight);
+			//region.push_back(subDomainLength);
+
+			//const size_t hostPitch[2] = {domainHeight, 0};
+			
+			//currentCommandQueue.enqueueReadBufferRect(
+					//varBuffers["e"][(stepId+1)%2], CL_FALSE, 
+					//bufferOrigin, hostOrigin, region,
+					//bufferPitch[0], bufferPitch[1],
+					//hostPitch[0], hostPitch[1],
+					//sliceX);
+		//}
+		//if(sliceIdy >= offsetY && sliceIdy < offsetY+subDomainHeight) {
+			//bufferOrigin.clear(); hostOrigin.clear(); region.clear();
+
+			//bufferOrigin.push_back(0u);
+			//bufferOrigin.push_back(sliceIdy%subDomainBaseHeight);
+			//bufferOrigin.push_back(0u);
+
+			//hostOrigin.push_back(idx*subDomainBaseWidth);
+			//hostOrigin.push_back(idz*subDomainBaseLength);
+			//hostOrigin.push_back(0);
+
+			//region.push_back(subDomainWidth);
+			//region.push_back(1);
+			//region.push_back(subDomainLength);
+
+			//const size_t hostPitch[2] = {domainWidth, 0};
+			
+			//currentCommandQueue.enqueueReadBufferRect(
+					//varBuffers["e"][(stepId+1)%2], CL_FALSE, 
+					//bufferOrigin, hostOrigin, region,
+					//bufferPitch[0], bufferPitch[1],
+					//hostPitch[0], hostPitch[1],
+					//sliceY);
+		//}
+		if(sliceIdz >= offsetZ && sliceIdz < offsetZ+subDomainLength) {
+			bufferOrigin.clear(); hostOrigin.clear(); region.clear();
+
+			bufferOrigin.push_back(0u);
+			bufferOrigin.push_back(0u);
+			bufferOrigin.push_back(sliceIdz%subDomainBaseLength);
+
+			hostOrigin.push_back(idx*subDomainBaseWidth);
+			hostOrigin.push_back(idy*subDomainBaseHeight);
+			hostOrigin.push_back(0);
+
+			region.push_back(subDomainWidth);
+			region.push_back(subDomainHeight);
+			region.push_back(1);
+
+			const size_t hostPitch[2] = {domainWidth, 0};
+			
+			currentCommandQueue.enqueueReadBufferRect(
+					varBuffers["e"][(stepId+1)%2], CL_FALSE, 
+					bufferOrigin, hostOrigin, region,
+					bufferPitch[0], bufferPitch[1],
+					hostPitch[0], hostPitch[1],
+					sliceZ);
+		}
+	}
 
 	//actualize internal host borders
 	for(auto pair : currentDomain) {

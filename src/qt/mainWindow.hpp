@@ -15,7 +15,6 @@ class MainWindow : public QMainWindow {
 		~MainWindow();
 
     signals:
-        void textureUpdate(const Grid2D<float> *grid);
         void progressUpdate(int p);
         void addTextureRequest(const QString &texName);
         void removeTextureRequest(const QString &texName);
@@ -24,7 +23,6 @@ class MainWindow : public QMainWindow {
         void stopThread();
 
     public slots:
-        void updateGrid(const Grid2D<float> *grid);
         void changeModel(int model);
         void changeNbIter(int nb);
         void startComputing();

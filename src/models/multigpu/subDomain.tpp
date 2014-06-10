@@ -112,6 +112,18 @@ unsigned int MultiBufferedSubDomain<T,N>::nSubDomainZ() const {
 	return _nSubDomainZ;
 }
 template <typename T, unsigned int N>
+unsigned int MultiBufferedSubDomain<T,N>::domainWidth() const {
+	return _domainWidth;
+}
+template <typename T, unsigned int N>
+unsigned int MultiBufferedSubDomain<T,N>::domainHeight() const {
+	return _domainHeight;
+}
+template <typename T, unsigned int N>
+unsigned int MultiBufferedSubDomain<T,N>::domainLength() const {
+	return _domainLength;
+}
+template <typename T, unsigned int N>
 unsigned int MultiBufferedSubDomain<T,N>::subDomainWidth() const {
 	return _subDomainWidth;
 }		

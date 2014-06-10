@@ -25,6 +25,7 @@ MainWindow::MainWindow() {
     m_total_steps = SidePanel::defaultNumberOfSteps;
     m_auto_render = true;
 
+	qRegisterMetaType< QMap<QString, GLuint> >("QMap<QString, GLuint>");
 
     // QT GUI
     QDesktopWidget widget;
@@ -58,7 +59,6 @@ MainWindow::MainWindow() {
 
     connect(panel, SIGNAL(childKeyEvent(QKeyEvent *)), this, SLOT(childKeyEvent(QKeyEvent *)));
     
-    connect(this, SIGNAL(textureUpdate(const Grid2D<float> *)), scene, SLOT(textureUpdate(const Grid2D<float> *)));
     connect(this, SIGNAL(progressUpdate(int)), status, SLOT(progressUpdate(int)));
 	connect(this, SIGNAL(colormapUpdate(const QString &)), scene, SLOT(changeColormap(const QString &)));
 
@@ -74,32 +74,6 @@ MainWindow::MainWindow() {
 MainWindow::~MainWindow() {
 }
 
-void MainWindow::updateGrid(const Grid2D<float> *grid) {
-    // Add grid to the list of stored grids
-    //m_stored_grids->push_back(*grid); 
-
-    // Create 2D texture
-    //GLuint texture;
-    //glGenTextures(1, &texture);
-    //glBindTexture(GL_TEXTURE_2D, texture);
-    //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-    //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
-    
-	//float *gridData = grid->data();
-    //glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, grid->width(), grid->height(), 0, GL_LUMINANCE, GL_FLOAT, (GLvoid*) gridData);
-
-    // Update displayed grid if auto rendering
-    //if (m_auto_render)
-        //m_displayed_grid = texture;
-
-    // Tell the scene to change the texture it's using
-    emit textureUpdate(grid);
-
-    // Update progress bar TODO: * nb_it to render
-    //emit progressUpdate((float) m_stored_grids->size() / m_total_steps * 100);
-}
 
 void MainWindow::changeModel(int model) {
     m_selected_model = model;
@@ -142,10 +116,9 @@ void MainWindow::startComputing() {
     //connect(mod, SIGNAL(finished()), mod, SLOT(deleteLater()));               // TODO decomment switch archi
     connect(m_thread, SIGNAL(finished()), m_thread, SLOT(deleteLater()));
    
-    connect(mod, SIGNAL(stepComputed(const Grid2D<float> *)), this, SLOT(updateGrid(const Grid2D<float> *)));
     //connect(this, SIGNAL(addTextureRequest(QString)), mod, SLOT(addTexture(QString)));
     //connect(this, SIGNAL(removeTextureRequest(QString)), mod, SLOT(removeTexture(QString)));
-    //connect(mod, SIGNAL(stepComputed(const QMap<QString, GLuint> &)), scene, SLOT(updateTextures(const QMap<QString, GLuint> &)));
+	connect(mod, SIGNAL(stepComputed(const QMap<QString, GLuint> &)), scene, SLOT(updateTextures(const QMap<QString, GLuint> &)));
 
     m_thread->start();
 
