@@ -129,43 +129,21 @@ void OpenGLScene::drawBackground(QPainter *painter, const QRectF &) {
 	glUniform1f(m_drawProgramUniformLocationMap["maxVal"], 1.0f);
 	
 	//Texture unit
-
-	float data[10000];
-	for (unsigned int i = 0; i < 10000;i++) {
-		data[i] = (float)(i)/10000;
-	}
-
-	unsigned int tex;
-	glGenTextures(1,&tex);
-	
 	glActiveTexture(GL_TEXTURE0 + 0);
-	glBindTexture(GL_TEXTURE_2D, tex);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, 
-			100,100,0,
-			GL_LUMINANCE, GL_FLOAT, (GLvoid*) data);
-	glBindTexture(GL_TEXTURE_2D,0);
-		
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	
 	int i = 0;
 	for (QString key :  m_texMap.keys()) {
-		glBindTexture(GL_TEXTURE_2D, tex);
-		//glBindTexture(GL_TEXTURE_2D, m_texMap[key]);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glBindTexture(GL_TEXTURE_2D, m_texMap[key]);
 		glDrawArrays(GL_QUADS, 4*i, 4);
 		++i;
 	}
-		
-	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	//glBindTexture(GL_TEXTURE_2D, m_texMap[key]);
-	//glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, 
-				//pair.second->domainWidth(), pair.second->domainHeight(), 0, 
-				//GL_LUMINANCE, GL_FLOAT, (GLvoid*) data);
 
 	glBindTexture(GL_TEXTURE_2D, 0); 
 	glFinish();
-	log_console->debugStream() << "Draw !";
+	CHK_GL_ERRORS();
 	
 	QTimer::singleShot(0, this, SLOT(update()));
 }

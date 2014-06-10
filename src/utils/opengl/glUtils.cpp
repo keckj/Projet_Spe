@@ -5,8 +5,58 @@
 using namespace log4cpp;
 
 namespace utils {
-	
+
 	bool contextError = false;
+
+	void glAssert(const std::string &file, int line, bool abort) {
+
+		GLenum error = glGetError();
+
+		switch(error) {
+			case GL_NO_ERROR:
+				break; 
+			case GL_INVALID_ENUM:
+				log_console->errorStream() << "OpenGL error : " << file << ":" << line << ":" << "GL_INVALID_ENUM\n\t\t"
+				"An unacceptable value is specified for an enumerated argument. "
+				"The offending command is ignored and has no other side effect than to set the error flag.";
+				break;
+
+			case GL_INVALID_VALUE:
+				log_console->errorStream() << "OpenGL error : " << file << ":" << line << ":" << "GL_INVALID_VALUE\n\t\t"
+					"A numeric argument is out of range."
+					"The offending command is ignored and has no other side effect than to set the error flag.";
+				break;
+			case GL_INVALID_OPERATION:
+				log_console->errorStream() << "OpenGL error : " << file << ":" << line << ":" << "GL_INVALID_OPERATION\n\t\t"
+					"The specified operation is not allowed in the current state."
+					"The offending command is ignored and has no other side effect than to set the error flag.";
+				break;
+			case GL_INVALID_FRAMEBUFFER_OPERATION:
+				log_console->errorStream() << "OpenGL error : " << file << ":" << line << ":" << "GL_INVALID_FRAMEBUFFER_OPERATION\n\t\t"
+					"The framebuffer object is not complete. "
+					"The offending command is ignored and has no other side effect than to set the error flag.";
+				break;
+			case GL_OUT_OF_MEMORY:
+				log_console->errorStream() << "OpenGL error : " << file << ":" << line << ":" << "GL_OUT_OF_MEMORY\n\t\t"
+					"There is not enough memory left to execute the command. The state of the case GL";
+					break;
+			case GL_STACK_UNDERFLOW:
+				log_console->errorStream() << "OpenGL error : " << file << ":" << line << ":" << "GL_STACK_UNDERFLOW\n\t\t"
+					"An attempt has been made to perform an operation that would cause an internal stack to underflow.";
+				break;
+			case GL_STACK_OVERFLOW:
+				log_console->errorStream() << "OpenGL error : " << file << ":" << line << ":" << "GL_STACK_OVERFLOW\n\t\t"
+					"An attempt has been made to perform an operation that would cause an internal stack to overflow.";
+				break;
+
+			default:
+				log_console->errorStream() << "OpenGL error : " << file << ":" << line << "\n\t\t"
+					"Unknown error !";
+		}
+
+		if(error != GL_NO_ERROR && abort)
+			exit(EXIT_FAILURE);
+	}
 
 	bool isExtensionSupported(const char *extList, const char *extension)
 	{
@@ -156,7 +206,7 @@ namespace utils {
 			int context_attribs[] =
 			{
 				GLX_CONTEXT_MAJOR_VERSION_ARB, 3,
-				GLX_CONTEXT_MINOR_VERSION_ARB, 3,
+				GLX_CONTEXT_MINOR_VERSION_ARB, 1,
 				None
 			};
 
@@ -167,7 +217,7 @@ namespace utils {
 			//sync errors
 			XSync((*display), False);
 			if (!contextError && (*ctx))
-				log_console->infoStream() <<  "Created GL 3.3 context !";
+				log_console->infoStream() <<  "Created GL 3.1 context !";
 			else
 			{
 				context_attribs[1] = 1;
@@ -194,13 +244,9 @@ namespace utils {
 
 		// Verifying that context is a direct context
 		if ( ! glXIsDirect ( (*display), (*ctx) ) )
-		{
 			log_console->infoStream() <<  "Indirect GLX rendering context obtained !";
-		}
 		else
-		{
 			log_console->infoStream() <<  "Direct GLX rendering context obtained !";
-		}
 
 		//EXAMPLE :
 		//glXMakeCurrent( (*display), (*win), (*ctx) );

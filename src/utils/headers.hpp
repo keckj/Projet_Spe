@@ -81,23 +81,24 @@ static const char* CL_GL_SHARING_EXT ="cl_khr_gl_sharing";
 
 
 //Headers utilitaires
-#include "errorCodes.hpp"
 #include "log.hpp"
+#include "errorCodes.hpp"
 #include "utils.hpp"
 #include "clUtils.hpp"
+#include "glUtils.hpp"
 
 
 //MACROS ERREURS OPENCL//
 //A utiliser pour check les erreurs de retour de fonctions
 #ifdef __DEBUG
-#define CHK_ERROR_RET(ans) { clAssert((ans), __FILE__, __LINE__); }
+#define CHK_ERROR_RET(ans) { utils::clAssert((ans), __FILE__, __LINE__); }
 #else
 #define CHK_ERROR_RET(ans) {ans}
 #endif
 
 //A utiliser pour check les erreurs sur une variable de type cl_int err;
 #ifdef __DEBUG
-#define CHK_ERRORS(ans) { clAssert((ans), __FILE__, __LINE__); }
+#define CHK_ERRORS(ans) { utils::clAssert((ans), __FILE__, __LINE__); }
 #else
 #define CHK_ERRORS(ans) {;}
 #endif
@@ -109,21 +110,14 @@ static const char* CL_GL_SHARING_EXT ="cl_khr_gl_sharing";
 #define TRY(ans) {ans}
 #endif
 
-//print en multithread
-#define PRINT_ONCE(mess) {std::once_flag flag; std::call_once(flag, [](){std::cout << mess << std::endl;});}
+//MACROS ERREURS OPENGL//
+#ifdef __DEBUG
+#define CHK_GL_ERRORS() { utils::glAssert(__FILE__, __LINE__); }
+#else
+#define CHK_GL_ERRORS() {;}
+#endif
 		
 	
-
-inline void clAssert(cl_int err, const std::string &file, int line, bool abort = true) {
-	if (err != CL_SUCCESS)
-	{
-		log4cpp::log_console->errorStream() << "OpenCL assert false :\n\t\t" 
-			<< openCLGetErrorString(err) << " in file " <<  file << ":" << line << ".";
-
-		if (abort) 
-			exit(EXIT_FAILURE);
-	}
-}
 ////////////////////////
 
 #endif /* end of include guard: _CUSTOM_HEADERS_H */

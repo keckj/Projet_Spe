@@ -5,6 +5,17 @@
 using namespace log4cpp;
 
 namespace utils {
+	
+	void clAssert(cl_int err, const std::string &file, int line, bool abort) {
+		if (err != CL_SUCCESS)
+		{
+			log4cpp::log_console->errorStream() << "OpenCL assert false :\n\t\t" 
+				<< openCLGetErrorString(err) << " in file " <<  file << ":" << line << ".";
+
+			if (abort) 
+				exit(EXIT_FAILURE);
+		}
+	}
 
 	void loadDevicesAndCreateContexts(
 			std::vector<cl::Platform> &platforms,

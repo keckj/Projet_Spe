@@ -47,6 +47,8 @@ namespace utils {
 	
 	const std::string toStringDeviceType(cl_device_type deviceType);
 	const std::string toStringBuildStatus(cl_build_status buildStatus);
+
+	void clAssert(cl_int err, const std::string &file, int line, bool abort = true);
 }
 
 

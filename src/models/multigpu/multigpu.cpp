@@ -131,7 +131,7 @@ void MultiGpu::initOpenClContext(){
 	//get solver openGL context created by qt
 	log_console->infoStream() << "Making solver openGL context current !";
 
-	glXMakeCurrent(OpenGLScene::solverDisplay, OpenGLScene::solverWindow, OpenGLScene::solverContext);
+	assert(glXMakeCurrent(OpenGLScene::solverDisplay, OpenGLScene::solverWindow, OpenGLScene::solverContext));
 	{
 		//print infos about current openGL context
 		int glxConfigXid=0, glxSupportedRenderType=0, glxScreenNumber=0;
@@ -164,6 +164,7 @@ void MultiGpu::initOpenClContext(){
 		CHK_ERRORS(err);
 
 		createTextures();
+		CHK_GL_ERRORS();
 	}
 	glXMakeCurrent(OpenGLScene::solverDisplay, 0, 0);
 
@@ -247,48 +248,37 @@ void MultiGpu::initDone() {
 	_init = true;
 	resetSubDomains();
 	renderToTextures();
-	glFinish();
 	emit stepComputed(_mapped_textures);
 }
 		
 void MultiGpu::stepDone() {
 	static unsigned int step = 0;
 	renderToTextures();
-	glFinish();
-	log_console->infoStream() << "Step " << step++;
 	emit stepComputed(_mapped_textures);
-	std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-	//delete _grid;
-	//_grid = _domains.begin()->second->toGrid(0);
-    //stepComputed(dynamic_cast<Grid2D<float>*>(_grid));
 }
 		
 
 
 void MultiGpu::renderToTextures() {
-	glXMakeCurrent(OpenGLScene::solverDisplay, OpenGLScene::solverWindow, OpenGLScene::solverContext);
-		
-	static float *data = new float[_gridWidth*_gridHeight];
-	for (unsigned int i = 0; i < _gridWidth*_gridHeight; i++) {
-		data[i] = (float)(i)/(_gridWidth*_gridHeight);
-	}
-
+	assert(glXMakeCurrent(OpenGLScene::solverDisplay, OpenGLScene::solverWindow, OpenGLScene::solverContext));
+	
 	glActiveTexture(GL_TEXTURE0 + 0);
 	for (auto pair : _domains) {
-		//float *data = _sliceZ[pair.first];
+		float *data = _sliceZ[pair.first];
 		unsigned int texture = _mapped_textures[QString(pair.first.c_str())];
 		glBindTexture(GL_TEXTURE_2D, texture);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, 
 				pair.second->domainWidth(), pair.second->domainHeight(), 0, 
 				GL_LUMINANCE, GL_FLOAT, (GLvoid*) data);
+		assert(glIsTexture(texture));
 	}
 	
 	glBindTexture(GL_TEXTURE_2D, 0);
 	glFinish();
-	glXMakeCurrent(OpenGLScene::solverDisplay, 0, 0);
 	
-	log_console->debugStream() << "Textures written !";
+	CHK_GL_ERRORS();
+	glXMakeCurrent(OpenGLScene::solverDisplay, 0, 0);
 }
 		
 unsigned int MultiGpu::sliceIdX() {
@@ -325,9 +315,11 @@ void MultiGpu::createTextures() {
 		log_console->infoStream() << "Creating " << _nFunctions << " model textures...";
 		glGenTextures(_nFunctions, textures);
 		glFinish();
+		CHK_GL_ERRORS();
 
 		unsigned int i = 0;
 		for (auto pair : _domains) {
+			log_console->infoStream() << "Created texture " << textures[i];
 			_mapped_textures.insert(QString(pair.first.c_str()), textures[i++]);
 		}
 }
