@@ -2,18 +2,19 @@
 #define OPENGL_SCENE_HPP
 
 #include "headers.hpp"
-#include "program.hpp"
-#include "texture.hpp"
-#include "grid2D.hpp"
-
 #include <mutex>
 #include <condition_variable>
+#include "program.hpp"
+#include "texture.hpp"
+#include "graphicsViewer.hpp"
+#include "grid2D.hpp"
+
 
 class OpenGLScene : public QGraphicsScene {
     Q_OBJECT
 
     public:
-        OpenGLScene();
+        OpenGLScene(GraphicsViewer *viewer);
 
         void drawBackground(QPainter *painter, const QRectF &);
 		
@@ -33,6 +34,7 @@ class OpenGLScene : public QGraphicsScene {
 		void changeColormap(const QString &colormapName);
 
     private:
+        GraphicsViewer *m_viewer;
 		Program *m_drawProgram;
 		std::map<std::string, int> m_drawProgramUniformLocationMap;
 		Texture *m_currentTexture;

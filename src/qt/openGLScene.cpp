@@ -15,17 +15,20 @@ Colormap OpenGLScene::solverColormap;
 using namespace log4cpp;
 using namespace utils;
 
-OpenGLScene::OpenGLScene() :
-	m_drawProgram(0),
+OpenGLScene::OpenGLScene(GraphicsViewer *viewer) :
+	QGraphicsScene(),
+    m_viewer(viewer),
+    m_drawProgram(0),
 	m_drawProgramUniformLocationMap(),
 	m_currentTexture(0),
 	m_texCoordsVBO(0),
 	m_vertexCoordsVBO(0),
 	m_texture(0),
+    m_texMap(),
 	m_colormapsUBO(),
-	m_colorId(0)
+	m_colorId(0) 
 {
-		//Get and print info about qt context
+        //Get and print info about qt context
 		qtDisplay = glXGetCurrentDisplay();
 		qtContext = glXGetCurrentContext();
 	
@@ -48,9 +51,7 @@ OpenGLScene::OpenGLScene() :
 		makeColorMaps();
 }
 
-
 void OpenGLScene::updateTextures(const QMap<QString, GLuint> &texMap) {
-   
     // Check if we need to change layout
 	if (texMap.size() == m_texMap.size()) {
 		//Notify the GUI that we have made progress
@@ -97,16 +98,23 @@ void OpenGLScene::updateTextures(const QMap<QString, GLuint> &texMap) {
 
     // Buffer new arrays
     makeArrays();
-
-    // Notify the GUI that we have made progress
+    
+    // Notify the status bar that we have made progress
     emit stepRendered();
 }
 
 void OpenGLScene::drawBackground(QPainter *painter, const QRectF &) {
-	glClearColor(1.0,0.0,0.0,1.0);
+	glClearColor(0.0,0.0,0.0,1.0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	m_drawProgram->use();
+	
+	glUniform1i(m_drawProgramUniformLocationMap["colormapId"], m_colorId);
+	glUniform1f(m_drawProgramUniformLocationMap["minVal"], 0.0f);
+	glUniform1f(m_drawProgramUniformLocationMap["maxVal"], 1.0f);
+	
+    glEnable(GL_TEXTURE_2D);
+	glActiveTexture(GL_TEXTURE0);
 
 	//UBOs
 	glBindBufferBase(GL_UNIFORM_BUFFER, 0 , Globals::projectionViewUniformBlock);
@@ -161,16 +169,14 @@ void OpenGLScene::makeProgram() {
 	m_drawProgram->link();
 	m_drawProgramUniformLocationMap = m_drawProgram->getUniformLocationsMap("colormapId minVal maxVal matrix" ,true);
 }
-
+        
 void OpenGLScene::makeArrays() {
 	//Delete unused VBOs
 	if (m_texCoordsVBO)
 		glDeleteBuffers(1, &m_texCoordsVBO);
 	if (m_vertexCoordsVBO)
 		glDeleteBuffers(1, &m_vertexCoordsVBO);
-    
-	//TODO dynamic gen buffers according to m_nTexturesWidth & m_nTexturesHeight 
-	
+   
 	float *vertexCoords = new float[8*m_texMap.size()];
 	float *textureCoords = new float[8*m_texMap.size()];
 	float margin = 0.01; //TODO
