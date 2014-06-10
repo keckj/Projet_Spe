@@ -49,7 +49,7 @@ MainWindow::MainWindow() {
     GraphicsViewer *viewer = new GraphicsViewer();
     viewer->setViewport(qglwidget);
     viewer->setViewportUpdateMode(QGraphicsView::FullViewportUpdate);
-    scene = new OpenGLScene();
+    scene = new OpenGLScene(viewer);
     viewer->setScene(scene);
     
     connect(scene, SIGNAL(stepRendered()), this, SLOT(onStepRender()));

@@ -59,6 +59,7 @@ static const char* CL_GL_SHARING_EXT ="cl_khr_gl_sharing";
 #include <QGLFormat>
 #include <QGLContext>
 #include <QGraphicsScene>
+#include <QGraphicsTextItem>
 #include <QPainter>
 #include <QPaintEngine>
 #include <QRect>

@@ -9,17 +9,20 @@ std::condition_variable OpenGLScene::glConditionVariable;
 
 using namespace log4cpp;
 
-OpenGLScene::OpenGLScene() :
-	m_drawProgram(0),
+OpenGLScene::OpenGLScene(GraphicsViewer *viewer) :
+	QGraphicsScene(),
+    m_viewer(viewer),
+    m_drawProgram(0),
 	m_drawProgramUniformLocationMap(),
 	m_currentTexture(0),
 	m_texCoordsVBO(0),
 	m_vertexCoordsVBO(0),
 	m_texture(0),
 	m_colormapsUBO(),
-	m_colorId(0)
+	m_colorId(0) 
 {
         m_texMap = new QMap<QString, GLuint>;
+        m_textItemsVec = new QVector<QGraphicsTextItem *>;
 		makeArrays();
 		makeProgram();
 		makeColorMaps();
@@ -37,13 +40,38 @@ void OpenGLScene::textureUpdate(const Grid2D<float> *grid) {
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, grid->width(), grid->height(), 0, GL_LUMINANCE, GL_FLOAT, (GLvoid*) grid->data());
-	
+
+    //test DOESN'T WORK :(
+    if (m_textItemsVec->size() == 0) {
+        float deltaW = 2.0; 
+        float deltaH = 2.0;
+        float x, y;
+        //QGraphicsTextItem *textItem = this->addText("");
+        addWidget(new QLabel("TEST"))->setZValue(2);
+        QGraphicsTextItem *textItem = new QGraphicsTextItem("TEST");
+        //textItem->setDefaultTextColor(Qt::red);
+        //textItem->setHtml("<div style='background-color:rgb(0,0,0);'>" + QString("TEST") + "</div>");
+        // Map GL coordinates to scene coordinates
+        //QPointF p = m_viewer->mapToScene(-1 + (0+0.5)*deltaW, 1 - 0*deltaH - 0.1);
+        //x = p.x(); y = p.y();
+        x = -1+0.5+deltaW; y = 1 - 0.1;
+        // Map coordinates to top corner coordinates
+        //x = x - textItem->boundingRect().width()  / 2;
+        //y = y - textItem->boundingRect().height() / 2;
+        //this->addWidget(new QLabel("TESTTTT"))->setPos(100,100);
+        textItem->setPos(x, y);
+        this->addItem(textItem);
+        setSceneRect(-1,-1,2,2);
+        std::cout << x << " " << y << std::endl;
+        m_textItemsVec->push_back(textItem);
+        std::cout << itemsBoundingRect().width() << " " << itemsBoundingRect().height() << std::endl;
+        std::cout << sceneRect().width() <<  " " << sceneRect().height() << std::endl;
+    }
+
 	glConditionVariable.notify_one();
 }
 
 void OpenGLScene::updateTextures(const QMap<QString, GLuint> &texMap) {
-    //TODO new QGraphicsTextItem for each texture
-   
     // Check if we need to change layout
     if (texMap.size() == m_texMap->size()) {
         // Notify the GUI that we have made progress
@@ -91,13 +119,39 @@ void OpenGLScene::updateTextures(const QMap<QString, GLuint> &texMap) {
 
     // Buffer new arrays
     makeArrays();
+    
+    // Delete all previous text items
+    this->clear();
 
-    // Notify the GUI that we have made progress
+    //Add a QGraphicsTextItem for each texture
+    QGraphicsTextItem *textItem;
+    int w = 0;
+    int h = 0;
+    float deltaW = 2.0 / m_nTexturesWidth; 
+    float deltaH = 2.0 / m_nTexturesHeight;
+    int x, y;
+    for (auto it = m_texMap->constBegin(); it != m_texMap->constEnd(); ++it) {
+        textItem = this->addText("");
+        textItem->setDefaultTextColor(Qt::white);
+        textItem->setHtml("<div style='background-color:rgb(0,0,0);'>" + it.key() + "</div>");
+        // Map GL coordinates to scene coordinates
+        QPointF p = m_viewer->mapToScene(-1 + (w+0.5)*deltaW, 1 - h*deltaH - 0.1);
+        x = p.x(); y = p.y();
+        // Map coordinates to top corner coordinates
+        x = x - textItem->boundingRect().width()  / 2;
+        y = y - textItem->boundingRect().height() / 2;
+        textItem->setPos(x, y);
+        w++;
+        h++;
+    }
+
+    // Notify the status bar that we have made progress
     emit stepRendered();
 }
 
 void OpenGLScene::drawBackground(QPainter *painter, const QRectF &) {
-	std::unique_lock<std::mutex> lock(glMutex);
+	// Un lock dans la main loop de draw ???
+    std::unique_lock<std::mutex> lock(glMutex);
 
 	glClearColor(0.0,0.0,0.0,1.0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -109,7 +163,6 @@ void OpenGLScene::drawBackground(QPainter *painter, const QRectF &) {
 	glUniform1f(m_drawProgramUniformLocationMap["maxVal"], 1.0f);
 	
     glEnable(GL_TEXTURE_2D);
-	glBindTexture(GL_TEXTURE_2D, m_texture);
 	glActiveTexture(GL_TEXTURE0);
 
 	glBindBufferBase(GL_UNIFORM_BUFFER, 0 , Globals::projectionViewUniformBlock);
@@ -123,8 +176,15 @@ void OpenGLScene::drawBackground(QPainter *painter, const QRectF &) {
 	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, 0);
 	glEnableVertexAttribArray(1);
 
-	//glDrawArrays(GL_QUADS, 0, 4*m_texMap->size());
-	glDrawArrays(GL_QUADS, 0, 4);
+    /*int idx = 0; // starting index in the VBOs
+    for (auto it = m_texMap->constBegin(); it < m_texMap->constEnd(); ++it) {
+	    glBindTexture(GL_TEXTURE_2D, it.value());
+	    glDrawArrays(GL_QUADS, idx, 4);
+        idx += 4;
+    }*/
+
+	glBindTexture(GL_TEXTURE_2D, m_texture);
+    glDrawArrays(GL_QUADS, 0, 4);
 
 	glBindTexture(GL_TEXTURE_2D, 0); 
 	glDisable(GL_TEXTURE_2D);
@@ -149,7 +209,7 @@ void OpenGLScene::makeProgram() {
 	
 	glConditionVariable.notify_one();
 }
-
+        
 void OpenGLScene::makeArrays() {
 	std::unique_lock<std::mutex> lock(glMutex);
 
@@ -167,30 +227,29 @@ void OpenGLScene::makeArrays() {
     float vertexCoords[8*m_texMap->size()];
     float texCoords[8*m_texMap->size()];
     float margin = 0.01; //TODO
-    float deltaWv = 2.0 / m_nTexturesWidth; 
-    float deltaHv = 2.0 / m_nTexturesHeight;
-    float deltaWt = 1.0 / m_nTexturesWidth;
-    float deltaHt = 1.0 / m_nTexturesHeight;
+    float deltaW = 2.0 / m_nTexturesWidth; 
+    float deltaH = 2.0 / m_nTexturesHeight;
 
     int idx = 0;
-    for (int w = 0; w < m_nTexturesWidth; w++) {
-        for (int h = 0; h < m_nTexturesHeight; h++) {
+    // Fill the grid by lines first
+    for (int h = 0; h < m_nTexturesHeight; h++) {
+        for (int w = 0; w < m_nTexturesWidth; w++) {
             // Do not draw a quad if there is no texture left
             if (idx == 8*m_texMap->size()) {
                 break;
             }
             // 1st point (top left)
-            vertexCoords[idx] = -1 + w*deltaWv    ; texCoords[idx++]  =  w*deltaWt    ;
-            vertexCoords[idx] =  1 - h*deltaHv    ; texCoords[idx++]  =  h*deltaHt    ;
+            vertexCoords[idx] = -1 + w*deltaW    ; texCoords[idx++] = 0;
+            vertexCoords[idx] =  1 - h*deltaH    ; texCoords[idx++] = 0;
             // 2nd point (bottom left)
-            vertexCoords[idx] = -1 + w*deltaWv    ; texCoords[idx++]  =  w*deltaWt    ;
-            vertexCoords[idx] =  1 - (h+1)*deltaHv; texCoords[idx++]  =  (h+1)*deltaHt;
+            vertexCoords[idx] = -1 + w*deltaW    ; texCoords[idx++] = 0;
+            vertexCoords[idx] =  1 - (h+1)*deltaH; texCoords[idx++] = 1;
             // 3rd point (bottom right)
-            vertexCoords[idx] = -1 + (w+1)*deltaWv; texCoords[idx++]  =  (w+1)*deltaWt;
-            vertexCoords[idx] =  1 - (h+1)*deltaHv; texCoords[idx++]  =  (h+1)*deltaHt;
+            vertexCoords[idx] = -1 + (w+1)*deltaW; texCoords[idx++] = 1;
+            vertexCoords[idx] =  1 - (h+1)*deltaH; texCoords[idx++] = 1;
             // 4th point (top right)
-            vertexCoords[idx] = -1 + (w+1)*deltaWv; texCoords[idx++]  =  (w+1)*deltaWt;
-            vertexCoords[idx] =  1 - h*deltaHv    ; texCoords[idx++]  =  h*deltaHt    ;
+            vertexCoords[idx] = -1 + (w+1)*deltaW; texCoords[idx++] = 1;
+            vertexCoords[idx] =  1 - h*deltaH    ; texCoords[idx++] = 0;
         }
     }
     */

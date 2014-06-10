@@ -32,6 +32,7 @@ int main(int argc, char** argv) {
     glutInit(&argc, argv);
 
 	log_console->infoStream() << "[Qt Init] ";
+    QGL::setPreferredPaintEngine(QPaintEngine::OpenGL);
 	QApplication application(argc,argv);
     MainWindow win;
     win.show();
