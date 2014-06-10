@@ -142,9 +142,9 @@ void OpenGLScene::drawBackground(QPainter *painter, const QRectF &) {
 
 	glBindTexture(GL_TEXTURE_2D, 0); 
 	glUseProgram(0);
-	CHK_GL_ERRORS();
 
 	renderString(0.0f,0.0f,GLUT_BITMAP_TIMES_ROMAN_24, "GOGO FAP");
+	CHK_GL_ERRORS();
 	
 	QTimer::singleShot(0, this, SLOT(update()));
 }

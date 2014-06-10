@@ -17,8 +17,8 @@ namespace utils {
 				break; 
 			case GL_INVALID_ENUM:
 				log_console->errorStream() << "OpenGL error : " << file << ":" << line << ":" << "GL_INVALID_ENUM\n\t\t"
-				"An unacceptable value is specified for an enumerated argument. "
-				"The offending command is ignored and has no other side effect than to set the error flag.";
+					"An unacceptable value is specified for an enumerated argument. "
+					"The offending command is ignored and has no other side effect than to set the error flag.";
 				break;
 
 			case GL_INVALID_VALUE:
@@ -38,7 +38,8 @@ namespace utils {
 				break;
 			case GL_OUT_OF_MEMORY:
 				log_console->errorStream() << "OpenGL error : " << file << ":" << line << ":" << "GL_OUT_OF_MEMORY\n\t\t"
-					"There is not enough memory left to execute the command. The state of the case GL";
+					"There is not enough memory left to execute the command. The state of the case GL"
+					"The state of the GL is undefined, except for the state of the error flags, after this error is recorded.";
 					break;
 			case GL_STACK_UNDERFLOW:
 				log_console->errorStream() << "OpenGL error : " << file << ":" << line << ":" << "GL_STACK_UNDERFLOW\n\t\t"
@@ -48,7 +49,6 @@ namespace utils {
 				log_console->errorStream() << "OpenGL error : " << file << ":" << line << ":" << "GL_STACK_OVERFLOW\n\t\t"
 					"An attempt has been made to perform an operation that would cause an internal stack to overflow.";
 				break;
-
 			default:
 				log_console->errorStream() << "OpenGL error : " << file << ":" << line << "\n\t\t"
 					"Unknown error !";

@@ -20,7 +20,8 @@ MultiGpu::MultiGpu(int nbIter) :
 	_nFunctions(0),
 	_gridWidth(0), _gridHeight(0), _gridLength(0),
 	_init(false),
-	_grid(0)
+	_grid(0),
+	_sliceIdX(0), _sliceIdY(0), _sliceIdZ(0)
 {
 }
 
@@ -204,7 +205,7 @@ void MultiGpu::initGrids(const std::map<std::string, InitialCond<float>*> &initi
 	
 		for(auto &initialConds : initialConditions) {
 			MultiBufferedDomain<float,1u> *dom = 
-				new MultiBufferedDomain<float,1u>(_gridWidth, _gridHeight, _gridLength, 1u, 2, initialConds.second);
+				new MultiBufferedDomain<float,1u>(_gridWidth, _gridHeight, _gridLength, 1u, 4, initialConds.second);
 			_domains.emplace(initialConds.first, dom);
 		}
 			

@@ -325,11 +325,64 @@ void DeviceThread<nCommandQueues>::computeSubDomainStep(unsigned int domainId, u
 		unsigned int subDomainBaseHeight = currentDomain.begin()->second->subDomainBaseHeight();
 		unsigned int subDomainBaseLength = currentDomain.begin()->second->subDomainBaseLength();
 
-		const size_t bufferPitch[2] = {subDomainWidth,subDomainWidth*subDomainHeight};
 		cl::size_t<3> bufferOrigin;
 		cl::size_t<3> hostOrigin;
 		cl::size_t<3> region;
 
+		if(sliceIdz >= offsetZ && sliceIdz < offsetZ+subDomainLength) {
+			bufferOrigin.clear(); hostOrigin.clear(); region.clear();
+		
+			const size_t bufferPitch[2] = {subDomainWidth*sizeof(float),subDomainWidth*subDomainHeight*sizeof(float)};
+			bufferOrigin.push_back(0u);
+			bufferOrigin.push_back(0u);
+			bufferOrigin.push_back(sliceIdz%subDomainBaseLength);
+
+			const size_t hostPitch[2] = {domainWidth*sizeof(float), domainWidth*domainHeight*sizeof(float)};
+			hostOrigin.push_back(offsetX*sizeof(float));
+			hostOrigin.push_back(offsetY);
+			hostOrigin.push_back(0);
+
+			region.push_back(subDomainWidth*sizeof(float));
+			region.push_back(subDomainHeight);
+			region.push_back(1);
+			
+			//const size_t bufferPitch[2] = {256*4,256*256*4};
+			//bufferOrigin.push_back(0u);
+			//bufferOrigin.push_back(0u);
+			//bufferOrigin.push_back(0u);
+
+			//const size_t hostPitch[2] = {256*4, 256*256*4};
+			//hostOrigin.push_back(0);
+			//hostOrigin.push_back(0);
+			//hostOrigin.push_back(0);
+
+			//region.push_back(256*4);
+			//region.push_back(256);
+			//region.push_back(1);
+			
+			
+			
+			log_console->infoStream() 
+				<< "Subdomain " << domainId 
+				<< "\n sliceIds " << toStringVec3<unsigned int>(sliceIdx,sliceIdy,sliceIdz)
+				<< "\n blockIds " << toStringVec3<unsigned int>(idx,idy,idz) 
+				<< "\n blockSize " << toStringDimension<unsigned int>(subDomainWidth, subDomainHeight, subDomainLength) 
+				<< "\n baseBlockSize " << toStringDimension<unsigned int>(subDomainBaseWidth, subDomainBaseHeight, subDomainBaseLength) 
+				<< "\n offsets " << toStringVec3<unsigned int>(offsetX, offsetY, offsetZ)
+				<< "\n buffer origin " << toStringVec3<unsigned int>(bufferOrigin[0],bufferOrigin[1],bufferOrigin[2])
+				<< "\n buffer pitch " << toStringVec3<unsigned int>(bufferPitch[0],bufferPitch[1],0)
+				<< "\n host origin " << toStringVec3<unsigned int>(hostOrigin[0],hostOrigin[1],hostOrigin[2])
+				<< "\n host pitch " << toStringVec3<unsigned int>(hostPitch[0],hostPitch[1],0)
+				<< "\n region " << toStringVec3<unsigned int>(region[0],region[1],region[2])
+				<< "\n";
+
+			CHK_ERROR_RET(currentCommandQueue.enqueueReadBufferRect(
+					varBuffers["e"][(stepId+1)%2], CL_FALSE, 
+					bufferOrigin, hostOrigin, region,
+					bufferPitch[0], bufferPitch[1],
+					hostPitch[0], hostPitch[1],
+					sliceZ));
+		}
 		//if(sliceIdx >= offsetX && sliceIdx < offsetX+subDomainWidth) {
 			//bufferOrigin.clear(); hostOrigin.clear(); region.clear();
 
@@ -378,30 +431,6 @@ void DeviceThread<nCommandQueues>::computeSubDomainStep(unsigned int domainId, u
 					//hostPitch[0], hostPitch[1],
 					//sliceY);
 		//}
-		if(sliceIdz >= offsetZ && sliceIdz < offsetZ+subDomainLength) {
-			bufferOrigin.clear(); hostOrigin.clear(); region.clear();
-
-			bufferOrigin.push_back(0u);
-			bufferOrigin.push_back(0u);
-			bufferOrigin.push_back(sliceIdz%subDomainBaseLength);
-
-			hostOrigin.push_back(idx*subDomainBaseWidth);
-			hostOrigin.push_back(idy*subDomainBaseHeight);
-			hostOrigin.push_back(0);
-
-			region.push_back(subDomainWidth);
-			region.push_back(subDomainHeight);
-			region.push_back(1);
-
-			const size_t hostPitch[2] = {domainWidth, 0};
-			
-			currentCommandQueue.enqueueReadBufferRect(
-					varBuffers["e"][(stepId+1)%2], CL_FALSE, 
-					bufferOrigin, hostOrigin, region,
-					bufferPitch[0], bufferPitch[1],
-					hostPitch[0], hostPitch[1],
-					sliceZ);
-		}
 	}
 
 	//actualize internal host borders
