@@ -275,15 +275,15 @@ void SidePanel::refreshParameters(int modelId) {
             m_varsMap = SimpleModel2D::getVariables();
             break;
         default:
-            m_argsMap = new std::map<std::string, Argument>;
-            m_varsMap = new std::map<std::string, bool>;
+            m_argsMap = new std::map<QString, Argument>;
+            m_varsMap = new std::map<QString, bool>;
     }
 
     // Variables: GUI update
     this->variablesRenderedList->clear();    
     QListWidgetItem *item;
     for (auto it = m_varsMap->begin(); it !=m_varsMap->end(); ++it) {
-        item = new QListWidgetItem(QString(it->first.c_str()), variablesRenderedList);
+        item = new QListWidgetItem(it->first, variablesRenderedList);
         item->setFlags(item->flags() | Qt::ItemIsUserCheckable);
         item->setCheckState(Qt::Unchecked);
         this->variablesRenderedList->addItem(item);
@@ -291,7 +291,7 @@ void SidePanel::refreshParameters(int modelId) {
 }
 
 void SidePanel::updateRenderedVars(QListWidgetItem *item) {
-    m_varsMap->at(item->text().toStdString()) = (item->checkState() != Qt::Unchecked);
+    m_varsMap->at(item->text()) = (item->checkState() != Qt::Unchecked);
 }
 
 unsigned int SidePanel::getGridWidth() {
@@ -306,11 +306,11 @@ unsigned int SidePanel::getGridLength() {
     return m_gridLength;
 }
 
-std::map<std::string, Argument> *SidePanel::getArguments() {
+std::map<QString, Argument> *SidePanel::getArguments() {
     return m_argsMap;
 }
 
-std::map<std::string, bool> *SidePanel::getVariables() {
+std::map<QString, bool> *SidePanel::getVariables() {
     return m_varsMap;
 }
 

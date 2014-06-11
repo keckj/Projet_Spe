@@ -3,7 +3,7 @@
 #include "exampleModel.moc"
 #include "grid2D.hpp"
 
-ExampleModel::ExampleModel(int nbIter) : Model(nbIter) {
+ExampleModel::ExampleModel(int nbIter, std::map<QString, bool> *renderedVars) : Model(nbIter, renderedVars) {
 }
 
 ExampleModel::~ExampleModel() {

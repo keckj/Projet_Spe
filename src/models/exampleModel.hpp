@@ -9,12 +9,12 @@ class ExampleModel : public Model {
     Q_OBJECT
 
     public:
-        ExampleModel(int nbIter);
+        ExampleModel(int nbIter, std::map<QString, bool> *renderedVars);
         ~ExampleModel();
 
-        void initComputation();
-        void computeStep(int i);
-        void finishComputation();
+        void initComputation() override;
+        void computeStep(int i) override;
+        void finishComputation() override;
     
     signals:
         void stepComputed(const Grid2D<float> *grid);

@@ -9,14 +9,15 @@ class SimpleModel2D : public Model {
     Q_OBJECT
 
     public:
-        SimpleModel2D(int nbIter,
+        /*SimpleModel2D(int nbIter,
 			unsigned int width = 200, unsigned int height = 200,
 			float epsilon_=0.01f, float k_=8.0f, float d_=5e-5,
 			float mu_1_=0.07, float mu_2_=0.3f,
 			float alpha_1_=0.2f, float alpha_2_=0.1f);
-
+        */
 		SimpleModel2D(unsigned int nbIter,
-				std::map<std::string, Argument> *args, 
+				std::map<QString, Argument> *args, 
+                std::map<QString, bool> *vars,
 				unsigned int width = 200, unsigned int height = 200);
 
         ~SimpleModel2D();
@@ -25,8 +26,8 @@ class SimpleModel2D : public Model {
         void computeStep(int i) override;
         void finishComputation() override;
 
-		static std::map<std::string, Argument> *getArguments();
-        static std::map<std::string, bool> *getVariables();
+		static std::map<QString, Argument> *getArguments();
+        static std::map<QString, bool> *getVariables();
 
 	private:
 		float computeOptimalTimestep();

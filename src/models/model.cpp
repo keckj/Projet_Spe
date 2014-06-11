@@ -4,9 +4,13 @@
 #include "log.hpp"
 
 
-Model::Model(int nbIter, unsigned int width, unsigned int height, unsigned int length) : 
-            m_width(width), m_height(height), m_length(length), m_nbIter(nbIter), m_pause(false), m_stop(false) {
-}
+Model::Model(int nbIter, std::map<QString, bool> *renderedVars, unsigned int width, unsigned int height, unsigned int length) : 
+            m_width(width), m_height(height), m_length(length), 
+            m_renderedVars(renderedVars), 
+            m_mappedTextures(),
+            m_nbIter(nbIter), 
+            m_pause(false), m_stop(false) 
+{}
 
 void Model::startComputing() {
 		
@@ -27,7 +31,7 @@ void Model::startComputing() {
         }
 
         computeStep(i);
-        //emit(computeStep(i)); TODO TODO TODO map<string variable, GLuint texture> *
+        emit stepComputed(m_mappedTextures);
     }
     finishComputation();
     emit finished();
@@ -47,3 +51,13 @@ void Model::stopComputing() {
     m_cond.wakeAll();
     m_mutex.unlock();
 }
+
+/*
+void Model::addTexture(QString texName) { 
+    m_renderedVars[texName] = true;
+}
+
+void Model::removeTexture(QString texName) {
+    m_renderedVars[texName] = false;
+}
+*/

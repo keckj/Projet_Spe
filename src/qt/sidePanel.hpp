@@ -16,8 +16,8 @@ class SidePanel : public QWidget {
         unsigned int getGridWidth();
         unsigned int getGridHeight();
         unsigned int getGridLength();
-        std::map<std::string, Argument> *getArguments();
-        std::map<std::string, bool> *getVariables();
+        std::map<QString, Argument> *getArguments();
+        std::map<QString, bool> *getVariables();
 
         static const QStringList modelsList;
         static const int defaultNumberOfSteps;
@@ -48,8 +48,8 @@ class SidePanel : public QWidget {
 
         bool m_paused;
         unsigned int m_gridWidth, m_gridHeight, m_gridLength;
-        std::map<std::string, Argument> *m_argsMap;
-        std::map<std::string, bool> *m_varsMap;
+        std::map<QString, Argument> *m_argsMap;
+        std::map<QString, bool> *m_varsMap;
         //TODO initCond
         QString m_saveDirectory;
 
