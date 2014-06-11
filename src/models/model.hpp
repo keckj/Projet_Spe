@@ -9,7 +9,7 @@ class Model : public QObject {
     Q_OBJECT
 
     public:
-        Model(int nbIter, std::map<QString, bool> *renderedVars, unsigned int width = 200, unsigned int height = 200, unsigned int length = 1); 
+        Model(int nbIter, std::map<QString, bool> *renderedVars, unsigned int width = 512, unsigned int height = 512, unsigned int length = 1); 
 		virtual ~Model() {};
 
     protected:

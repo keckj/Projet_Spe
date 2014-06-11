@@ -165,8 +165,9 @@ void OpenGLScene::drawBackground(QPainter *painter, const QRectF &) {
 	    renderString(x, y, GLUT_BITMAP_9_BY_15, key.toStdString().c_str(), 1.0, 1.0, 1.0);
         ++i;
     }
-	
-	QTimer::singleShot(0, this, SLOT(update()));
+
+    // Refresh the window once the event queue is empty 
+    QTimer::singleShot(0, this, SLOT(update()));
 }
 
 void OpenGLScene::makeProgram() {

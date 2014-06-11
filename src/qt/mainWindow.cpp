@@ -90,7 +90,8 @@ void MainWindow::startComputing() {
     unsigned int gridHeight = panel->getGridHeight();
     unsigned int gridLength = panel->getGridLength();
 
-    //TODO: panel->getVariables(), panel->getArguments()
+    //TODO: panel->getVariables(), panel->getArguments() for every model
+    //TODO: use panel->getSaveDirectory()
 
     m_thread = new QThread;
     Model *mod;
@@ -113,7 +114,7 @@ void MainWindow::startComputing() {
     connect(this, SIGNAL(pauseThread(bool)), mod, SLOT(pauseComputing(bool)));
     connect(mod, SIGNAL(finished()), m_thread, SLOT(quit()));                   // kill thread
     connect(mod, SIGNAL(finished()), panel, SLOT(stop()));                      // update GUI buttons
-    //connect(mod, SIGNAL(finished()), mod, SLOT(deleteLater()));               // TODO decomment switch archi
+    connect(mod, SIGNAL(finished()), mod, SLOT(deleteLater()));
     connect(m_thread, SIGNAL(finished()), m_thread, SLOT(deleteLater()));
    
     //connect(this, SIGNAL(addTextureRequest(QString)), mod, SLOT(addTexture(QString)));

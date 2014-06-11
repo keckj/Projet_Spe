@@ -18,6 +18,7 @@ class SidePanel : public QWidget {
         unsigned int getGridLength();
         std::map<QString, Argument> *getArguments();
         std::map<QString, bool> *getVariables();
+        QString getSaveDirectory();
 
         static const QStringList modelsList;
         static const int defaultNumberOfSteps;
@@ -57,6 +58,7 @@ class SidePanel : public QWidget {
         ParametersDialog *paramsDialog;
         QComboBox *modelComboBox;
         QSpinBox *iterSpinBox;
+        QCheckBox *saveDirCheckBox;
         QListWidget *variablesRenderedList;
         QPushButton *initButton, *paramsButton, *saveDirButton, *startButton, *stopButton;
         QSlider *gridSlider;
