@@ -276,10 +276,44 @@ void MultiBufferedSubDomain<T,N>::setExternalEdges(
 
 template <typename T, unsigned int N>
 void MultiBufferedSubDomain<T,N>::initSubDomain(unsigned int bufferId) {
+
+	//coeur de la grille
 	_initialCondition->initializeSubGrid(_data[bufferId], 
 			offsetX(), offsetY(), offsetZ(), 
 			_subDomainWidth, _subDomainHeight, _subDomainLength,
 			_domainWidth, _domainHeight, _domainLength);
+
+	//6 bords internes
+	_initialCondition->initializeSubGrid(_internalEdgesLeft[bufferId],
+			0, 0, 0, 
+			_borderSize, _subDomainHeight, _subDomainLength,
+			_domainWidth, _domainHeight, _domainLength);
+	
+	_initialCondition->initializeSubGrid(_internalEdgesRight[bufferId],
+			_subDomainWidth-_borderSize, 0, 0, 
+			_borderSize, _subDomainHeight, _subDomainLength,
+			_domainWidth, _domainHeight, _domainLength);
+	
+	_initialCondition->initializeSubGrid(_internalEdgesTop[bufferId],
+			0, 0, 0, 
+			_subDomainWidth, _borderSize, _subDomainLength,
+			_domainWidth, _domainHeight, _domainLength);
+	
+	_initialCondition->initializeSubGrid(_internalEdgesDown[bufferId],
+			0, _subDomainHeight-_borderSize, 0, 
+			_subDomainWidth, _borderSize, _subDomainLength,
+			_domainWidth, _domainHeight, _domainLength);
+	
+	_initialCondition->initializeSubGrid(_internalEdgesFront[bufferId],
+			0, 0, 0, 
+			_subDomainWidth, _subDomainHeight, _borderSize,
+			_domainWidth, _domainHeight, _domainLength);
+	
+	_initialCondition->initializeSubGrid(_internalEdgesBack[bufferId],
+			0, 0, _subDomainLength-_borderSize, 
+			_subDomainWidth, _subDomainHeight, _borderSize,
+			_domainWidth, _domainHeight, _domainLength);
+	
 }
 
 

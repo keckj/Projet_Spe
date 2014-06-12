@@ -13,7 +13,7 @@ namespace utils {
 	const std::string toStringMemory(unsigned long bytes);
 
 	template <typename T>
-	const std::string toStringVec3(T vx, T vy, T vz, const std::string sep = ",") {
+	const std::string toStringVec3(const T &vx, const T &vy, const T &vz, const std::string sep = ",") {
 		std::stringstream ss;
 		ss << "(" << vx << sep << vy << sep << vz << ")";
 		const std::string str(ss.str());
@@ -21,7 +21,7 @@ namespace utils {
 	}
 	
 	template <typename T>
-	const std::string toStringDimension(T width, T height, T length) {
+	const std::string toStringDimension(const T &width, const T &height, const T &length) {
 		std::stringstream ss;
 		ss << width << "x" << height << "x" << length;
 		const std::string str(ss.str());

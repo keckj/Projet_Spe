@@ -43,23 +43,42 @@ __kernel void computeStep(
 	unsigned int idy = get_global_id(1);
 	unsigned long long int id = idy*subGridWidth + idx;
 
-	if(idx >= subGridWidth || idy >= subGridHeight || id >= subGridWidth*subGridHeight)
+	if(idx >= subGridWidth || idy >= subGridHeight)
 		return;
 
 	float e = E_1[id];
 	float r = R_1[id];
 	
+	float Le;
+	if(idx==0 || idx==subGridWidth-1 || idy==0 || idy==subGridHeight-1) {
+		float left,right,top,down,front,back;
+		left = (idx == 0 ? (domainIdx == 0 ? e : E_externalEdgesLeft[idy]) : E_1[id-1]);	
+		right = (idx == subGridWidth-1 ? (domainIdx == nSplitsX-1 ? e : E_externalEdgesRight[idy]) : E_1[id+1]);	
+		
+		top = (idy == 0 ? (domainIdy == 0 ? e : E_externalEdgesTop[idx]) : E_1[id - subGridWidth]);	
+		down = (idy == subGridHeight-1 ? (domainIdy == nSplitsY-1 ? e : E_externalEdgesDown[idx]) : E_1[id+subGridWidth]);	
+		
+		Le = (left+right+top+down-4*e)/(dh*dh);
+	}
+	else {
+		Le =(+ E_1[id-1]
+			+ E_1[id+1]
+			+ E_1[id-subGridWidth ]
+			+ E_1[id+subGridWidth]
+			- 4*e) / (dh*dh);
+	}
+	
 	float F = -kk*e*(e - alpha1)*(e - 1.0f) - e*r;
 	float G = (epsilon + mu1*r/(e + mu2)) * (-r - kk*e*(e-alpha2-1.0f));
-	float L =  d/(dh*dh) * (
-			+ E_1[idx == 0 ? id : id-1]
-			+ E_1[idx == subGridWidth-1 ? id : id+1]
-			+ E_1[idy == 0 ? id : id-subGridWidth ]
-			+ E_1[idy == subGridHeight-1 ? id : id+subGridWidth]
-			- 4*e
-			);
+	float L =  d*Le;
 
-	E_2[id] = e + dt*(L+F);
+	float newE = e + dt*(L+F);
+	E_2[id] = newE;
 	R_2[id] = r + dt*G;
+
+	if(idx==0			    && domainIdx>0)			 E_internalEdgesLeft[idy]  = newE;
+	if(idx==subGridWidth-1  && domainIdx<nSplitsX-1) E_internalEdgesRight[idy] = newE;
+	if(idy==0               && domainIdy>0)		   	 E_internalEdgesTop[idx]   = newE;
+	if(idy==subGridHeight-1 && domainIdy<nSplitsY-1) E_internalEdgesDown[idx]  = newE;
 }
 

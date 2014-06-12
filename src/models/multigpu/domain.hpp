@@ -39,8 +39,8 @@ class MultiBufferedDomain {
 		T* allocateSliceZ();
 
 	private:
-		unsigned int _domainWidth, _domainHeight, _domainLength;
-		unsigned int _extraBorderSize;
+		const unsigned int _domainWidth, _domainHeight, _domainLength;
+		const unsigned int _extraBorderSize;
 
 		unsigned int _nSplits;
 		unsigned int _splitsX, _splitsY, _splitsZ;

@@ -38,14 +38,18 @@ void MultiGpu::initComputation() {
 	
 	FunctionInitialCond<float> *zero = new FunctionInitialCond<float>([] (float,float,float)->float {return 0;});
 	FunctionInitialCond<float> *one = new FunctionInitialCond<float>([] (float,float,float)->float {return 1;});
-	CircleInitialCond<float> *circle = new CircleInitialCond<float>(0.1,0.5,0.5,0.5);
+	CircleInitialCond<float> *circle = new CircleInitialCond<float>(0.45,0.5,0.5,0.5);
 	FunctionInitialCond<float> *sine = new FunctionInitialCond<float>([] (float x,float y,float)->float {return abs(cos(2*3.14*2*x)*cos(2*3.14*2*y));});
 	FunctionInitialCond<float> *halfPlane = new FunctionInitialCond<float>([] (float x,float y,float)->float 
-			{return (x<=0.5 && y<=0.5)||(x>0.5 && y>0.5);});
+			{return (x<=0.5 && y<=0.5)||(x>=0.5 && y>=0.5);});
+	FunctionInitialCond<float> *halfPlaneX = new FunctionInitialCond<float>([] (float x,float y,float)->float 
+			{return (x<=0.5);});
+	FunctionInitialCond<float> *halfPlaneY = new FunctionInitialCond<float>([] (float x,float y,float)->float 
+			{return (y<=0.5);});
 
 	std::map<std::string, InitialCond<float>*> initialConds;
-	initialConds.emplace("e", circle);
-	initialConds.emplace("r", zero);
+	initialConds.emplace("e", halfPlaneX);
+	initialConds.emplace("r", halfPlaneY);
 
 	initGrids(initialConds);
 
@@ -205,7 +209,7 @@ void MultiGpu::initGrids(const std::map<std::string, InitialCond<float>*> &initi
 	
 		for(auto &initialConds : initialConditions) {
 			MultiBufferedDomain<float,1u> *dom = 
-				new MultiBufferedDomain<float,1u>(_gridWidth, _gridHeight, _gridLength, 1u, 4, initialConds.second);
+				new MultiBufferedDomain<float,1u>(_gridWidth, _gridHeight, _gridLength, 1u, 16, initialConds.second);
 			_domains.emplace(initialConds.first, dom);
 		}
 			
@@ -254,25 +258,44 @@ void MultiGpu::releaseSubDomain(std::map<std::string, MultiBufferedSubDomain<flo
 
 void MultiGpu::initDone() {
 	_init = true;
-	resetSubDomains();
 	renderToTextures();
+	resetSubDomains();
 	emit stepComputed(_mapped_textures);
 }
-		
+
 void MultiGpu::stepDone() {
 	static unsigned int step = 0;
+	step++;
 	renderToTextures();
 	emit stepComputed(_mapped_textures);
 }
-		
+
 
 
 void MultiGpu::renderToTextures() {
 	assert(glXMakeCurrent(OpenGLScene::solverDisplay, OpenGLScene::solverWindow, OpenGLScene::solverContext));
-	
-	glActiveTexture(GL_TEXTURE0 + 0);
+
+	glActiveTexture(GL_TEXTURE0);
+	int k = 0;
 	for (auto pair : _domains) {
 		float *data = _sliceZ[pair.first];
+		//float *data = new float[pair.second->domainWidth()*pair.second->domainHeight()];
+
+		//unsigned int domainWidth = pair.second->domainHeight();
+		//unsigned int domainHeight = pair.second->domainHeight();
+		//for (unsigned int j = 0; j < domainHeight ; j++) {
+			//for (unsigned int i = 0; i < domainWidth; i++) {
+				//float ii = float(i)/domainWidth;
+				//float jj = float(j)/domainHeight;
+
+				//data[j*domainWidth+i] = (k%2==0 ? 
+						 //((ii<1/2.0f && jj <1/2.0f) || (ii>1/2.0f && jj>1/2.0f)) :
+						//!((ii<1/2.0f && jj <1/2.0f) || (ii>1/2.0f && jj>1/2.0f))
+							//);
+			//}
+		//}
+		k++;
+
 		unsigned int texture = _mapped_textures[QString(pair.first.c_str())];
 		glBindTexture(GL_TEXTURE_2D, texture);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
