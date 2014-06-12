@@ -25,8 +25,8 @@ class Model : public QObject {
         void startComputing();
         void pauseComputing(bool b);
         void stopComputing();
-        //void addTexture(QString texName);
-        //void removeTexture(QString texName);
+		void addTexture(QString texName);
+		void removeTexture(QString texName);
 
     /* Copy signals, inheritance does not work properly */
     signals:

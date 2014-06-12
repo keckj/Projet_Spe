@@ -4,6 +4,7 @@
 #include "clUtils.hpp"
 #include <thread>
 
+
 using namespace log4cpp;
 
 template <unsigned int nCommandQueues>
@@ -21,14 +22,28 @@ DeviceThread<nCommandQueues>::DeviceThread(MultiGpu *simulation,
 		const cl::Context &context,
 		const cl::Program &program,
 		const cl::Device &device,
-		Fence *fence) :
+		Fence *fence,
+		std::map<QString, Argument> *args,
+		float dh,
+		bool display,
+		bool writeOnDisk,
+		const std::string &rep) :
 	_simulation(simulation), 
 	_platform(platform), _context(context),
 	_program(program), _device(device),
 	_fence(fence),
-	_display(true),
-	_writeOnDisk(false)
-{
+	_dh(dh),
+	_display(display),
+	_writeOnDisk(writeOnDisk)
+{ 
+	_dt = computeOptimalTimestep();
+	_epsilon = args->at("epsilon")();
+	_dd = args->at("d")();
+	_kk = args->at("k")();
+	_mu1 = args->at("mu_1")();
+	_mu2 = args->at("mu_2")();
+	_alpha1 = args->at("alpha_1")();
+	_alpha2 = args->at("alpha_2")();
 }
 
 template <unsigned int nCommandQueues>
@@ -198,15 +213,6 @@ template <unsigned int nCommandQueues>
 void DeviceThread<nCommandQueues>::computeSubDomainStep(unsigned int domainId, unsigned int stepId) {
 		
 	//COMPUTE ONE SUBDOMAIN - no sync
-	float dt = float(0.138);
-	float dh = float(0.01);
-	float alpha1 = float(0.2);
-	float alpha2 = float(0.1);
-	float mu1 = float(0.07);
-	float mu2 = float(0.3);
-	float epsilon = float(0.01);
-	float dd = float(5e-5);
-	float kk = float(8);
 
 	//get subdomain allocated buffers and host data
 	std::map<std::string, MultiBufferedSubDomain<float,1u>*> currentDomain = _acquiredDomains[domainId]; 
@@ -233,8 +239,7 @@ void DeviceThread<nCommandQueues>::computeSubDomainStep(unsigned int domainId, u
 	unsigned long edgeBytesZ = currentDomain.begin()->second->edgeBytesZ();
 	unsigned long edgeBytes[3] = {edgeBytesX, edgeBytesY, edgeBytesZ};
 
-	//cl::CommandQueue currentCommandQueue = _commandQueues[domainId%nCommandQueues];
-	cl::CommandQueue currentCommandQueue = _commandQueues[0];
+	cl::CommandQueue currentCommandQueue = _commandQueues[domainId%nCommandQueues];
 			
 	//Send initial func data
 	if(!_acquiredDomainsIsInitialDataSent[domainId]) {
@@ -288,15 +293,15 @@ void DeviceThread<nCommandQueues>::computeSubDomainStep(unsigned int domainId, u
 	CHK_ERROR_RET(_kernel.setArg<unsigned int>(arg++, subDomainLength));
 
 	//model & simulation data
-	CHK_ERROR_RET(_kernel.setArg<float>(arg++, alpha1));
-	CHK_ERROR_RET(_kernel.setArg<float>(arg++, alpha2));
-	CHK_ERROR_RET(_kernel.setArg<float>(arg++, mu1));
-	CHK_ERROR_RET(_kernel.setArg<float>(arg++, mu2));
-	CHK_ERROR_RET(_kernel.setArg<float>(arg++, kk));
-	CHK_ERROR_RET(_kernel.setArg<float>(arg++, epsilon));
-	CHK_ERROR_RET(_kernel.setArg<float>(arg++, dd));
-	CHK_ERROR_RET(_kernel.setArg<float>(arg++, dh));
-	CHK_ERROR_RET(_kernel.setArg<float>(arg++, dt));
+	CHK_ERROR_RET(_kernel.setArg<float>(arg++, _alpha1));
+	CHK_ERROR_RET(_kernel.setArg<float>(arg++, _alpha2));
+	CHK_ERROR_RET(_kernel.setArg<float>(arg++, _mu1));
+	CHK_ERROR_RET(_kernel.setArg<float>(arg++, _mu2));
+	CHK_ERROR_RET(_kernel.setArg<float>(arg++, _kk));
+	CHK_ERROR_RET(_kernel.setArg<float>(arg++, _epsilon));
+	CHK_ERROR_RET(_kernel.setArg<float>(arg++, _dd));
+	CHK_ERROR_RET(_kernel.setArg<float>(arg++, _dh));
+	CHK_ERROR_RET(_kernel.setArg<float>(arg++, _dt));
 
 	//compute kernel
 	currentCommandQueue.enqueueNDRangeKernel(_kernel, cl::NullRange, global, local);
@@ -338,29 +343,11 @@ void DeviceThread<nCommandQueues>::computeSubDomainStep(unsigned int domainId, u
 			region.push_back(subDomainWidth*sizeof(float));
 			region.push_back(subDomainHeight);
 			region.push_back(1);
-		
-			//log_console->infoStream() 
-				//<< "Subdomain " << currentDomain.begin()->second->id() 
-				//<< "\n sliceIds " << toStringVec3<unsigned int>(sliceIdx,sliceIdy,sliceIdz)
-				//<< "\n blockIds " << toStringVec3<unsigned int>(idx,idy,idz) 
-				//<< "\n domainSize " << toStringDimension<unsigned int>(domainWidth, domainHeight, domainLength) 
-				//<< "\n subDomainSize " << toStringDimension<unsigned int>(subDomainWidth, subDomainHeight, subDomainLength) 
-				//<< "\n baseSubSomainSize " << toStringDimension<unsigned int>(subDomainBaseWidth, subDomainBaseHeight, subDomainBaseLength) 
-				//<< "\n BYTES " << bytes
-				//<< "\n id*base " << toStringVec3<unsigned int>(idx*subDomainBaseWidth, idy*subDomainBaseHeight, idz*subDomainBaseLength)
-				//<< "\n offsets " << toStringVec3<unsigned int>(offsetX, offsetY, offsetZ)
-				//<< "\n buffer origin " << toStringVec3<::size_t>(bufferOrigin[0],bufferOrigin[1],bufferOrigin[2])
-				//<< "\n buffer pitch " << toStringVec3<unsigned int>(bufferPitch[0],bufferPitch[1],0)
-				//<< "\n host origin " << toStringVec3<size_t>(hostOrigin[0],hostOrigin[1],hostOrigin[2])
-				//<< "\n host pitch " << toStringVec3<unsigned int>(hostPitch[0],hostPitch[1],0)
-				//<< "\n region " << toStringVec3<unsigned int>(region[0],region[1],region[2])
-				//<< "\n";
-
 			
 			for(auto pair : currentDomain) {
 				CHK_ERROR_RET(
 				currentCommandQueue.enqueueReadBufferRect( 
-							varBuffers[pair.first][(stepId+1)%2], CL_TRUE, 
+							varBuffers[pair.first][(stepId+1)%2], CL_FALSE, 
 							bufferOrigin, hostOrigin, region,
 							bufferPitch[0], bufferPitch[1],
 							hostPitch[0], hostPitch[1],
@@ -432,4 +419,15 @@ void DeviceThread<nCommandQueues>::computeSubDomainStep(unsigned int domainId, u
 			}
 		}
 	}
+}
+
+template <unsigned int nCommandQueues>
+float DeviceThread<nCommandQueues>::computeOptimalTimestep() {
+	float lhs = SQUARE(_dh) / 
+		(4*_dd + _kk*SQUARE(_dh)/4 *(SQUARE(_alpha1+1) + 1));
+
+	float rhs = 1 /
+		(_epsilon + _mu1/_mu2 * SQUARE(_dh)/4 * SQUARE(_alpha1 + 1));
+
+	return 0.95*std::min(lhs, rhs);
 }

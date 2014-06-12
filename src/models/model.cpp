@@ -52,12 +52,12 @@ void Model::stopComputing() {
     m_mutex.unlock();
 }
 
-/*
+
 void Model::addTexture(QString texName) { 
-    m_renderedVars[texName] = true;
+	(*m_renderedVars)[texName] = true;
 }
 
 void Model::removeTexture(QString texName) {
-    m_renderedVars[texName] = false;
+	(*m_renderedVars)[texName] = false;
 }
-*/
+

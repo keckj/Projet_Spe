@@ -17,13 +17,18 @@ class MultiGpu : public Model {
 	Q_OBJECT
     
 	public:
-        MultiGpu(int nbIter, std::map<QString, bool> *renderedVars);
+		MultiGpu(int nbIter, 
+				unsigned int width_, unsigned int height_, unsigned int length_,
+				std::map<QString, Argument> *args, 
+				std::map<QString, bool> *renderedVars);
         ~MultiGpu();
 
 		//Model overrides
         void initComputation() override;
         void computeStep(int i) override;
         void finishComputation() override;
+		bool _step;
+		bool _stepDone;
 	
 		//acessors for slicesIds and generated textures
 		unsigned int sliceIdX();
@@ -42,6 +47,11 @@ class MultiGpu : public Model {
 		//signals from worker threads
 		void initDone();
 		void stepDone();
+		void abort();
+	
+		//access for gui
+		static std::map<QString, Argument> *getArguments();
+        static std::map<QString, bool> *getVariables();
 
 	private:
 		//openCL context
@@ -73,6 +83,9 @@ class MultiGpu : public Model {
 		void allocSlices();
 		void createTextures();
 		void renderToTextures();
+	
+		//model
+		std::map<QString, Argument> *_args;
 
 		
     signals:

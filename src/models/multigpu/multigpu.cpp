@@ -14,14 +14,21 @@
 using namespace log4cpp;
 using namespace utils;
 		
-MultiGpu::MultiGpu(int nbIter, std::map<QString, bool> *renderedVars) : 
-	Model(10, renderedVars),
+MultiGpu::MultiGpu(int nbIter, 
+		unsigned int width_, unsigned int height_, unsigned int length_,
+		std::map<QString, Argument> *args, 
+		std::map<QString, bool> *renderedVars) : 
+
+	Model(nbIter, renderedVars, width_, height_, length_),
+	_step(false),
+	_stepDone(false),
 	_nDevices(0),
 	_nFunctions(0),
 	_gridWidth(0), _gridHeight(0), _gridLength(0),
 	_init(false),
 	_grid(0),
-	_sliceIdX(0), _sliceIdY(0), _sliceIdZ(0)
+	_sliceIdX(0), _sliceIdY(0), _sliceIdZ(0),
+	_args(args)
 {
 }
 
@@ -60,10 +67,9 @@ void MultiGpu::computeStep(int i) {
 	while(!_init)
 		std::this_thread::sleep_for(std::chrono::milliseconds(10));
 
-	log_console->infoStream() << "LOCKED IN COMPUTE STEP !";
-
-	while(true)
-		std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+	_step = true;
+	while(!_stepDone)
+		std::this_thread::sleep_for(std::chrono::milliseconds(10));
 }
 
 void MultiGpu::finishComputation() {;}
@@ -191,7 +197,7 @@ void MultiGpu::initOpenClContext(){
 	for(auto dev : _devices) {
 		if(i >= devicesNeeded)
 			break;
-		DeviceThread<1u> *dt = new DeviceThread<1u>(this, _platform, _context, program, dev, fence);
+		DeviceThread<1u> *dt = new DeviceThread<1u>(this, _platform, _context, program, dev, fence, _args, 1.0f/this->m_width);
 		std::thread t(*dt);
 		t.detach();
 		i++;
@@ -202,8 +208,8 @@ void MultiGpu::initOpenClContext(){
 		
 void MultiGpu::initGrids(const std::map<std::string, InitialCond<float>*> &initialConditions) {
 		
-		_gridWidth = 256u;
-		_gridHeight = 256u;
+		_gridWidth = 512u;
+		_gridHeight = 512u;
 		_gridLength = 1u;
 		_nFunctions = initialConditions.size();
 	
@@ -267,6 +273,8 @@ void MultiGpu::stepDone() {
 	static unsigned int step = 0;
 	step++;
 	renderToTextures();
+	_stepDone = true;
+	_step = false;
 	emit stepComputed(_mapped_textures);
 }
 
@@ -352,4 +360,31 @@ void MultiGpu::createTextures() {
 			log_console->infoStream() << "Created texture " << textures[i];
 			_mapped_textures.insert(QString(pair.first.c_str()), textures[i++]);
 		}
+}
+
+std::map<QString, Argument> *MultiGpu::getArguments() {
+	
+	std::map<QString,Argument> *args = new std::map<QString,Argument>;
+
+	args->emplace("epsilon", Argument(0.01f, 0.001f, 0.1f, WidgetType::SPINBOX));
+	args->emplace("d",Argument(5e-5f, 1e-5f, 1e-4f, WidgetType::SPINBOX));
+	args->emplace("k",Argument(8.0f, 0.0f, 20.0f, WidgetType::SPINBOX));
+	args->emplace("mu_1",Argument(0.07f, 0.01f, 0.5f, WidgetType::SPINBOX));
+	args->emplace("mu_2",Argument(0.3f, 0.1f, 0.5f, WidgetType::SPINBOX));
+	args->emplace("alpha_1",Argument(0.2f, 0.1f, 0.5f, WidgetType::SPINBOX));
+	args->emplace("alpha_2",Argument(0.1f, 0.1f, 0.5f, WidgetType::SPINBOX));
+			
+	return args;
+}
+       
+std::map<QString, bool> *MultiGpu::getVariables() {
+    std::map<QString, bool> *vars = new std::map<QString, bool>;
+    vars->emplace("e", true);
+    vars->emplace("r", false);
+
+    return vars;
+}
+		
+void MultiGpu::abort() {
+	emit finished();
 }

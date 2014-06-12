@@ -101,7 +101,7 @@ void MainWindow::startComputing() {
 			log_console->infoStream() << "Started a simple model 2D simulation !";
 			break;
 		case 1:
-            mod = (Model *) new MultiGpu(m_total_steps, panel->getVariables());
+            mod = (Model *) new MultiGpu(m_total_steps, gridWidth, gridHeight, gridLength, panel->getArguments(), panel->getVariables());
 			log_console->infoStream() << "Started a yolo-swaggy bug multi-gpu model simulation !";
 			break;
         default:
