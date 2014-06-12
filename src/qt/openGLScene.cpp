@@ -26,7 +26,8 @@ OpenGLScene::OpenGLScene(GraphicsViewer *viewer) :
 	m_texture(0),
     m_texMap(),
 	m_colormapsUBO(),
-	m_colorId(0) 
+	m_colorId(0),
+    m_vertexCoords()
 {
         //Get and print info about qt context
 		qtDisplay = glXGetCurrentDisplay();
@@ -59,7 +60,7 @@ void OpenGLScene::updateTextures(const QMap<QString, GLuint> &texMap) {
 		return;
 	}
 
-    // Free the old map and copy the new map
+    // Copy the new map
     m_texMap = texMap;
 
     // Find best layout
@@ -104,7 +105,7 @@ void OpenGLScene::updateTextures(const QMap<QString, GLuint> &texMap) {
 }
 
 void OpenGLScene::drawBackground(QPainter *painter, const QRectF &) {
-	glClearColor(0.0,0.0,0.0,1.0);
+	glClearColor(0.2,0.2,0.2,1.0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	m_drawProgram->use();
@@ -141,22 +142,34 @@ void OpenGLScene::drawBackground(QPainter *painter, const QRectF &) {
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	
+    // Draw textured quads
 	int i = 0;
-	for (QString key :  m_texMap.keys()) {
+	for (QString key : m_texMap.keys()) {
 		glBindTexture(GL_TEXTURE_2D, m_texMap[key]);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		glDrawArrays(GL_QUADS, 4*i, 4);
-		++i;
+        ++i;
 	}
 
 	glBindTexture(GL_TEXTURE_2D, 0); 
 	glUseProgram(0);
 
-	renderString(0.0f,0.0f,GLUT_BITMAP_TIMES_ROMAN_24, "GOGO FAP");
 	CHK_GL_ERRORS();
-	
-	QTimer::singleShot(0, this, SLOT(update()));
+
+    // Draw text (variables names)
+    i = 0;
+    for (QString key : m_texMap.keys()) {
+        // Render text on top and in the middle of the texture
+        float x = (m_vertexCoords[8*i] + m_vertexCoords[8*i+6]) / 2.0;
+        float semiYMargin = 0.5 * ((m_texMap.size() < 2) ? 0.1 : 0.1/(m_nTexturesWidth-1));
+        float y = m_vertexCoords[8*i+1] + semiYMargin;
+	    renderString(x, y, GLUT_BITMAP_9_BY_15, key.toStdString().c_str(), 1.0, 1.0, 1.0);
+        ++i;
+    }
+
+    // Refresh the window once the event queue is empty 
+    QTimer::singleShot(0, this, SLOT(update()));
 }
 
 void OpenGLScene::makeProgram() {
@@ -178,18 +191,25 @@ void OpenGLScene::makeArrays() {
 		glDeleteBuffers(1, &m_texCoordsVBO);
 	if (m_vertexCoordsVBO)
 		glDeleteBuffers(1, &m_vertexCoordsVBO);
-   
-	float *vertexCoords = new float[8*m_texMap.size()];
+  
+    if (m_vertexCoords)
+       delete[] m_vertexCoords; 
+	m_vertexCoords = new float[8*m_texMap.size()];
 	float *textureCoords = new float[8*m_texMap.size()];
-	float margin = 0.01; //TODO
-	float deltaWv = 2.0 / m_nTexturesWidth; 
-	float deltaHv = 2.0 / m_nTexturesHeight;
-	float deltaWt = 1.0 / m_nTexturesWidth;
-	float deltaHt = 1.0 / m_nTexturesHeight;
+    float xMargin, yMargin;
+    if (m_texMap.size() < 2) {
+        xMargin = 0.0;
+        yMargin = 0.1;
+    } else {
+        xMargin = 0.1 / (m_nTexturesWidth - 1);
+        yMargin = xMargin;
+    }
+	float deltaW = (2.0 - xMargin*(m_nTexturesWidth-1)) / m_nTexturesWidth; 
+	float deltaH = (2.0 - yMargin*m_nTexturesHeight) / m_nTexturesHeight; // one more margin for the variable names
 
 	int idx = 0;
-	std::stringstream ss;
-	ss << "Make arrays : ";
+	//std::stringstream ss;
+	//ss << "Make arrays : ";
 	for (int w = 0; w < m_nTexturesWidth; w++) {
 		for (int h = 0; h < m_nTexturesHeight; h++) {
 			//Do not draw a quad if there is no texture left
@@ -197,25 +217,25 @@ void OpenGLScene::makeArrays() {
 				break;
 			}
 			//1st point (top left)
-			vertexCoords[idx++] = -1 + w*deltaWv    ;
-			vertexCoords[idx++] =  1 - h*deltaHv    ;
+			m_vertexCoords[idx++] = -1 + w*(deltaW + xMargin)    ;
+			m_vertexCoords[idx++] =  1 - h*deltaH - (h+1)*yMargin;
 			//2nd point (bottom left)
-			vertexCoords[idx++] = -1 + w*deltaWv    ;
-			vertexCoords[idx++] =  1 - (h+1)*deltaHv;
+			m_vertexCoords[idx++] = -1 + w*(deltaW + xMargin)    ;
+			m_vertexCoords[idx++] =  1 - (h+1)*(deltaH + yMargin);
 			//3rd point (bottom right)
-			vertexCoords[idx++] = -1 + (w+1)*deltaWv;
-			vertexCoords[idx++] =  1 - (h+1)*deltaHv;
+			m_vertexCoords[idx++] = -1 + (w+1)*deltaW + w*xMargin;
+			m_vertexCoords[idx++] =  1 - (h+1)*(deltaH + yMargin);
 			//4th point (top right)
-			vertexCoords[idx++] = -1 + (w+1)*deltaWv;
-			vertexCoords[idx++] =  1 - h*deltaHv    ;
+			m_vertexCoords[idx++] = -1 + (w+1)*deltaW + w*xMargin;
+			m_vertexCoords[idx++] =  1 - h*deltaH - (h+1)*yMargin;
 	
-			ss << "\n\t(w,h) = (" << w << "," << h << ")\t";
+			/*ss << "\n\t(w,h) = (" << w << "," << h << ")\t";
 			for (int i = 0; i < 4; i++) {
-				ss << " " << toStringVec3<float>(vertexCoords[idx-8+2*i], vertexCoords[idx-8+2*i+1],0);
-			}
+				ss << " " << toStringVec3<float>(m_vertexCoords[idx-8+2*i], m_vertexCoords[idx-8+2*i+1],0);
+			}*/
 		}
 	}
-	log_console->infoStream() << ss.str();
+	//log_console->infoStream() << ss.str();
 
 	float texCoords[] = {0,0,  0,1,  1,1,  1,0};
 	for (int i = 0; i < 8*m_texMap.size(); i++) {
@@ -228,7 +248,7 @@ void OpenGLScene::makeArrays() {
 
 	glGenBuffers(1, &m_vertexCoordsVBO);
 	glBindBuffer(GL_ARRAY_BUFFER, m_vertexCoordsVBO);
-	glBufferData(GL_ARRAY_BUFFER, 8*m_texMap.size()*sizeof(float), vertexCoords, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, 8*m_texMap.size()*sizeof(float), m_vertexCoords, GL_STATIC_DRAW);
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 }

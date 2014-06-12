@@ -46,6 +46,7 @@ class OpenGLScene : public QGraphicsScene {
         int m_nTexturesHeight;
 		unsigned int m_colormapsUBO;
 		unsigned int m_colorId;
+        float *m_vertexCoords;
 		
 		void makeProgram();
 		void makeColorMaps();

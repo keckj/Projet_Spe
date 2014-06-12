@@ -17,7 +17,7 @@ class MultiGpu : public Model {
 	Q_OBJECT
     
 	public:
-        MultiGpu(int nbIter);
+        MultiGpu(int nbIter, std::map<QString, bool> *renderedVars);
         ~MultiGpu();
 
 		//Model overrides

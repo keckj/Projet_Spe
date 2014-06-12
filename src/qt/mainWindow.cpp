@@ -90,21 +90,22 @@ void MainWindow::startComputing() {
     unsigned int gridHeight = panel->getGridHeight();
     unsigned int gridLength = panel->getGridLength();
 
-    //TODO: panel->getVariables(), panel->getArguments()
+    //TODO: panel->getVariables(), panel->getArguments() for every model
+    //TODO: use panel->getSaveDirectory()
 
     m_thread = new QThread;
     Model *mod;
     switch (m_selected_model) {
 		case 0:
-            mod = (Model *) new SimpleModel2D(m_total_steps, panel->getArguments(), gridWidth, gridHeight);
+            mod = (Model *) new SimpleModel2D(m_total_steps, panel->getArguments(), panel->getVariables(), gridWidth, gridHeight);
 			log_console->infoStream() << "Started a simple model 2D simulation !";
 			break;
 		case 1:
-            mod = (Model *) new MultiGpu(m_total_steps);
+            mod = (Model *) new MultiGpu(m_total_steps, panel->getVariables());
 			log_console->infoStream() << "Started a yolo-swaggy bug multi-gpu model simulation !";
 			break;
         default:
-            mod = (Model *) new ExampleModel(m_total_steps);
+            mod = (Model *) new ExampleModel(m_total_steps, panel->getVariables());
 			log_console->infoStream() << "Started an example model simulation !";
     }
     mod->moveToThread(m_thread);
@@ -113,7 +114,7 @@ void MainWindow::startComputing() {
     connect(this, SIGNAL(pauseThread(bool)), mod, SLOT(pauseComputing(bool)));
     connect(mod, SIGNAL(finished()), m_thread, SLOT(quit()));                   // kill thread
     connect(mod, SIGNAL(finished()), panel, SLOT(stop()));                      // update GUI buttons
-    //connect(mod, SIGNAL(finished()), mod, SLOT(deleteLater()));               // TODO decomment switch archi
+    connect(mod, SIGNAL(finished()), mod, SLOT(deleteLater()));
     connect(m_thread, SIGNAL(finished()), m_thread, SLOT(deleteLater()));
    
     //connect(this, SIGNAL(addTextureRequest(QString)), mod, SLOT(addTexture(QString)));

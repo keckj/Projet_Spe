@@ -32,6 +32,7 @@ SidePanel::SidePanel(QWidget *parent_) : QWidget(parent_) {
     m_gridLength = defaultGridSize[2];
     initDialog = NULL;
     paramsDialog = NULL;
+    m_saveDirectory = "";
 
     this->setStyleSheet("QWidget {background-color: white;}");
     this->setAutoFillBackground(true);
@@ -81,7 +82,7 @@ SidePanel::SidePanel(QWidget *parent_) : QWidget(parent_) {
     // Layouts
     QBoxLayout *globalLayout = new QBoxLayout(QBoxLayout::TopToBottom, this);
     QGridLayout *modelLayout = new QGridLayout(modelGroupBox);
-    QBoxLayout *runLayout = new QBoxLayout(QBoxLayout::TopToBottom, runGroupBox);
+    QGridLayout *runLayout = new QGridLayout(runGroupBox);
     QGridLayout *renderOptionsLayout = new QGridLayout(renderOptionsGroupBox);
 
     this->setLayout(globalLayout);
@@ -104,7 +105,7 @@ SidePanel::SidePanel(QWidget *parent_) : QWidget(parent_) {
     // Iterations spinBox
     iterSpinBox = new QSpinBox();
     iterSpinBox->setRange(1, 1000000);
-    iterSpinBox->setSingleStep(10);
+    iterSpinBox->setSingleStep(defaultNumberOfSteps/10);
     iterSpinBox->setValue(defaultNumberOfSteps);
     connect(iterSpinBox, SIGNAL(valueChanged(int)), mainWin, SLOT(changeNbIter(int)));
     connect(iterSpinBox, SIGNAL(valueChanged(int)), this, SLOT(changeNbIterSlider(int)));
@@ -114,10 +115,8 @@ SidePanel::SidePanel(QWidget *parent_) : QWidget(parent_) {
     connect(initButton, SIGNAL(clicked()), this, SLOT(openInitDialog()));
     paramsButton = new QPushButton("Parameters");
     connect(paramsButton, SIGNAL(clicked()), this, SLOT(openParametersDialog()));
-
-    // Button for QFileDialog
-    saveDirButton = new QPushButton("Choose saving directory");
-    connect(saveDirButton, SIGNAL(clicked()), this, SLOT(changeDirectory()));
+    
+    //---
 
     // Buttons
     startButton = new QPushButton("Start");
@@ -128,6 +127,16 @@ SidePanel::SidePanel(QWidget *parent_) : QWidget(parent_) {
     stopButton->setEnabled(false);
     connect(stopButton, SIGNAL(clicked()), mainWin, SLOT(stopComputing()));
     connect(stopButton, SIGNAL(clicked()), this, SLOT(stop()));
+
+    // Checkbox for saving option
+    saveDirCheckBox = new QCheckBox("Save data");
+    saveDirCheckBox->setChecked(false);
+
+    // Button for QFileDialog
+    saveDirButton = new QPushButton("Choose saving directory");
+    connect(saveDirButton, SIGNAL(clicked()), this, SLOT(changeDirectory()));
+
+    //---
 
     // Labels and lists for variables to display
     QLabel *variablesRenderedLabel = new QLabel("Variables rendered :");
@@ -180,9 +189,10 @@ SidePanel::SidePanel(QWidget *parent_) : QWidget(parent_) {
     modelLayout->addWidget(paramsButton, 2, 1);
 
     runLayout->setSpacing(10);
-    runLayout->addWidget(startButton);
-    runLayout->addWidget(stopButton);
-    runLayout->addWidget(saveDirButton);
+    runLayout->addWidget(startButton, 0, 0, 1, 2);
+    runLayout->addWidget(stopButton, 1, 0, 1, 2);
+    runLayout->addWidget(saveDirCheckBox, 2, 0);
+    runLayout->addWidget(saveDirButton, 2, 1);
 
     renderOptionsLayout->setSpacing(10);
     renderOptionsLayout->addWidget(variablesRenderedLabel, 0, 0);
@@ -200,6 +210,18 @@ SidePanel::~SidePanel() {
 }
 
 void SidePanel::start_pause_resume() {
+    // Check that the saving directory was set if asked to save data
+    if (saveDirCheckBox->isChecked() && m_saveDirectory == "") {
+        const QString message = "Please choose a saving directory before starting the simulation.";
+        QMessageBox msgBox(QMessageBox::Warning, "No saving directory chosen !", message, 0, this);
+        msgBox.addButton("Choose saving directory", QMessageBox::AcceptRole);
+        msgBox.addButton("Cancel", QMessageBox::RejectRole);
+        if (msgBox.exec() == QMessageBox::AcceptRole) {
+            changeDirectory();
+        }
+        return;
+    }
+
     setModelOptionsStatus(false);
     stopButton->setEnabled(true);
     m_paused = !m_paused;
@@ -207,10 +229,11 @@ void SidePanel::start_pause_resume() {
         emit pauseOrResumePushed(true);
         startButton->setText("Resume");
     } else {
-        if (startButton->text() != "Start")
+        if (startButton->text() != "Start") {
             emit pauseOrResumePushed(false);
-        else 
+        } else {
             emit startPushed();
+        }
         startButton->setText("Pause");
     }
 }
@@ -227,6 +250,7 @@ void SidePanel::setModelOptionsStatus(bool status) {
     this->iterSpinBox->setEnabled(status);
     this->initButton->setEnabled(status);
     this->paramsButton->setEnabled(status);
+    this->saveDirCheckBox->setEnabled(status);
     this->saveDirButton->setEnabled(status);
 }
 
@@ -246,9 +270,9 @@ void SidePanel::openParametersDialog() {
     paramsDialog->setModal(true);
     paramsDialog->show();
 }
-        
+
 void SidePanel::changeDirectory() {
-    QFileDialog dialog;
+    QFileDialog dialog(this, "Choose simulation data saving directory");
     dialog.setDirectory(QDir::currentPath());
     dialog.setFileMode(QFileDialog::Directory);
     dialog.setOption(QFileDialog::ShowDirsOnly, true);
@@ -275,15 +299,15 @@ void SidePanel::refreshParameters(int modelId) {
             m_varsMap = SimpleModel2D::getVariables();
             break;
         default:
-            m_argsMap = new std::map<std::string, Argument>;
-            m_varsMap = new std::map<std::string, bool>;
+            m_argsMap = new std::map<QString, Argument>;
+            m_varsMap = new std::map<QString, bool>;
     }
 
     // Variables: GUI update
     this->variablesRenderedList->clear();    
     QListWidgetItem *item;
     for (auto it = m_varsMap->begin(); it !=m_varsMap->end(); ++it) {
-        item = new QListWidgetItem(QString(it->first.c_str()), variablesRenderedList);
+        item = new QListWidgetItem(it->first, variablesRenderedList);
         item->setFlags(item->flags() | Qt::ItemIsUserCheckable);
         item->setCheckState(Qt::Unchecked);
         this->variablesRenderedList->addItem(item);
@@ -291,7 +315,7 @@ void SidePanel::refreshParameters(int modelId) {
 }
 
 void SidePanel::updateRenderedVars(QListWidgetItem *item) {
-    m_varsMap->at(item->text().toStdString()) = (item->checkState() != Qt::Unchecked);
+    m_varsMap->at(item->text()) = (item->checkState() != Qt::Unchecked);
 }
 
 unsigned int SidePanel::getGridWidth() {
@@ -306,12 +330,20 @@ unsigned int SidePanel::getGridLength() {
     return m_gridLength;
 }
 
-std::map<std::string, Argument> *SidePanel::getArguments() {
+std::map<QString, Argument> *SidePanel::getArguments() {
     return m_argsMap;
 }
 
-std::map<std::string, bool> *SidePanel::getVariables() {
+std::map<QString, bool> *SidePanel::getVariables() {
     return m_varsMap;
+}
+
+QString SidePanel::getSaveDirectory() {
+    if (saveDirCheckBox->isChecked()) {
+        return m_saveDirectory;
+    } else {
+        return "";
+    }
 }
 
 void SidePanel::keyPressEvent(QKeyEvent *k) {

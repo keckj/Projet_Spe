@@ -7,7 +7,7 @@
 #include "value.hpp"
 
 
-ParametersDialog::ParametersDialog(std::map<std::string, Argument> *argsMap, QWidget *parent_) : QDialog(parent_) {
+ParametersDialog::ParametersDialog(std::map<QString, Argument> *argsMap, QWidget *parent_) : QDialog(parent_) {
 
     // Get parent
     SidePanel *panel = qobject_cast<SidePanel *>(parent_);
@@ -40,13 +40,13 @@ ParametersDialog::ParametersDialog(std::map<std::string, Argument> *argsMap, QWi
 
     // Arguments
     m_argsMap = argsMap;
-    m_widgetsMap = new std::map<std::string, QWidget *>; 
+    m_widgetsMap = new std::map<QString, QWidget *>; 
     const int nbParamsPerColumn = 10;
     int cpt = 0;
     QWidget *widget;
 
     for (auto it = m_argsMap->begin(); it != m_argsMap->end(); ++it) {
-        argGridLayout->addWidget(new QLabel(QString(it->first.c_str())), cpt % nbParamsPerColumn, 2 * (cpt / nbParamsPerColumn));
+        argGridLayout->addWidget(new QLabel(it->first), cpt % nbParamsPerColumn, 2 * (cpt / nbParamsPerColumn));
         Argument arg = it->second;
         switch(arg.preferredWidgetType()) {
             case SLIDER:    // always int

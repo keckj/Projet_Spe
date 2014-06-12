@@ -13,7 +13,7 @@
 #include <thread>
 #include <vector>
 
-SimpleModel2D::SimpleModel2D(int nbIter,
+/*SimpleModel2D::SimpleModel2D(int nbIter,
 			unsigned int width_, unsigned int height_,
 			float epsilon_, float k_, float d_,
 			float mu_1_, float mu_2_,
@@ -47,12 +47,13 @@ SimpleModel2D::SimpleModel2D(int nbIter,
 	log_console->debugStream() << "dh " << _dh << " !";
 	log_console->debugStream() << "dt " << _dt << " !";
 	log_console->debugStream() << "Size " << _e1->size() << " !";
-}
+}*/
 	
 SimpleModel2D::SimpleModel2D(unsigned int nbIter,
-		std::map<std::string, Argument> *args, 
+		std::map<QString, Argument> *args, 
+        std::map<QString, bool> *vars,
 		unsigned int width_, unsigned int height_) :
-	Model(nbIter, width_, height_),
+	Model(nbIter, vars, width_, height_),
 	_width(width_), _height(height_)
 {
 	_epsilon = args->at("epsilon")();
@@ -195,9 +196,9 @@ float SimpleModel2D::L(unsigned int i, unsigned int j) {
 	return _d/(_dh*_dh) * (E_left + E_right + E_up + E_down - 4*E_ijk);
 }
 
-std::map<std::string, Argument> *SimpleModel2D::getArguments() {
+std::map<QString, Argument> *SimpleModel2D::getArguments() {
 	
-	std::map<std::string,Argument> *args = new std::map<std::string,Argument>;
+	std::map<QString,Argument> *args = new std::map<QString,Argument>;
 
 	args->emplace("epsilon", Argument(0.01f, 0.001f, 0.1f, WidgetType::SPINBOX));
 	args->emplace("d",Argument(5e-5f, 1e-5f, 1e-4f, WidgetType::SPINBOX));
@@ -210,8 +211,8 @@ std::map<std::string, Argument> *SimpleModel2D::getArguments() {
 	return args;
 }
        
-std::map<std::string, bool> *SimpleModel2D::getVariables() {
-    std::map<std::string, bool> *vars = new std::map<std::string, bool>;
+std::map<QString, bool> *SimpleModel2D::getVariables() {
+    std::map<QString, bool> *vars = new std::map<QString, bool>;
     vars->emplace("e", true);
     vars->emplace("r", false);
 

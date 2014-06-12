@@ -14,8 +14,8 @@
 using namespace log4cpp;
 using namespace utils;
 		
-MultiGpu::MultiGpu(int nbIter) : 
-	Model(10),
+MultiGpu::MultiGpu(int nbIter, std::map<QString, bool> *renderedVars) : 
+	Model(10, renderedVars),
 	_nDevices(0),
 	_nFunctions(0),
 	_gridWidth(0), _gridHeight(0), _gridLength(0),

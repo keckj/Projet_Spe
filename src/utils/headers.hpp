@@ -35,12 +35,14 @@ static const char* CL_GL_SHARING_EXT ="cl_khr_gl_sharing";
 #include <QThread>
 #include <QMutex>
 #include <QWaitCondition>
+#include <QTimer>
 #include <QMainWindow>
 #include <QObject>
 #include <QWidget>
+#include <QKeyEvent>
+#include <QMessageBox>
 #include <QDialog>
 #include <QFileDialog>
-#include <QKeyEvent>
 #include <QMenuBar>
 #include <QStatusBar>
 #include <QProgressBar>
