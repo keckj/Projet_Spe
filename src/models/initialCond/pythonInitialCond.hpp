@@ -42,7 +42,7 @@ PythonInitialCond<T>::PythonInitialCond(const std::string &expr) :
 	<< "\treturn " << expr << std::endl;
 	PyRun_SimpleString(pgm.str().c_str());
 
-	log_console->infoStream() << "PYTHON pgrm : " << pgm.str();
+	log_console->infoStream() << "PYTHON pgm : " << pgm.str();
     
 	PyObject*    main_module, * global_dict;
     main_module = PyImport_AddModule("__main__");

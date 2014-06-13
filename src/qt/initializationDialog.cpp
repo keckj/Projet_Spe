@@ -22,25 +22,12 @@ InitializationDialog::InitializationDialog(unsigned int *gridWidth, unsigned int
     // Layouts
     QGridLayout *mainGridLayout = new QGridLayout;
     QGridLayout *sizeGridLayout = new QGridLayout;
-    //TODO initGridLayout
+    QGridLayout *initGridLayout = new QGridLayout;
     QHBoxLayout *buttonsLayout = new QHBoxLayout;
 
     this->setLayout(mainGridLayout);
     mainGridLayout->addLayout(sizeGridLayout, 0, 0);
     mainGridLayout->addLayout(buttonsLayout, 1, 0);
-
-    // OK / Reset / Cancel buttons
-    QPushButton *okButton = new QPushButton("OK");
-    buttonsLayout->addWidget(okButton);
-    connect(okButton, SIGNAL(clicked()), this, SLOT(okClicked()));
-
-    QPushButton *resetButton = new QPushButton("Reset");
-    buttonsLayout->addWidget(resetButton);
-    connect(resetButton, SIGNAL(clicked()), this, SLOT(resetClicked()));
-
-    QPushButton *cancelButton = new QPushButton("Cancel");
-    buttonsLayout->addWidget(cancelButton);
-    connect(cancelButton, SIGNAL(clicked()), this, SLOT(reject()));
 
     // 3D grid checkbox
     grid3DCheckbox = new QCheckBox("Use 3D grid");
@@ -72,6 +59,22 @@ InitializationDialog::InitializationDialog(unsigned int *gridWidth, unsigned int
     sizeGridLayout->addWidget(lengthSpinBox, 1, 3);
 
     // Grid init TODO
+    
+
+    // OK / Reset / Cancel buttons
+    QPushButton *okButton = new QPushButton("OK");
+    buttonsLayout->addWidget(okButton);
+    connect(okButton, SIGNAL(clicked()), this, SLOT(okClicked()));
+
+    QPushButton *resetButton = new QPushButton("Reset");
+    buttonsLayout->addWidget(resetButton);
+    connect(resetButton, SIGNAL(clicked()), this, SLOT(resetClicked()));
+
+    QPushButton *cancelButton = new QPushButton("Cancel");
+    buttonsLayout->addWidget(cancelButton);
+    connect(cancelButton, SIGNAL(clicked()), this, SLOT(reject()));
+
+
 } 
       
 InitializationDialog::~InitializationDialog() {
