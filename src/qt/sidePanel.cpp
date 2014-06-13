@@ -7,8 +7,10 @@
 #include "argument.hpp"
 #include "initialCondFactory.hpp"
 #include "colormap.hpp"
+
 // Models
 #include "simpleModel2D.hpp"
+#include "multigpu.hpp"
 
 
 
@@ -306,6 +308,10 @@ void SidePanel::refreshParameters(int modelId) {
         case 0:
             m_argsMap = SimpleModel2D::getArguments();
             m_varsMap = SimpleModel2D::getVariables();
+            break;
+        case 1:
+            m_argsMap = MultiGpu::getArguments();
+            m_varsMap = MultiGpu::getVariables();
             break;
         default:
             m_argsMap = new std::map<QString, Argument>;

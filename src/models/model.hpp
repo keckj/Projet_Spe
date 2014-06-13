@@ -17,7 +17,7 @@ class Model : public QObject {
         void pauseComputing(bool b);
         void stopComputing();
 
-     /* Copy signals, inheritance does not work properly */
+    /* Copy signals, inheritance does not work properly */
     signals:
         void stepComputed(const QMap<QString, GLuint> &texMap);
         void finished();

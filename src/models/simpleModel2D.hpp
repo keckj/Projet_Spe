@@ -46,8 +46,8 @@ class SimpleModel2D : public Model {
 		float _alpha_1, _alpha_2;
     
     signals:
-        void stepComputed(const Grid2D<float> *grid);
-        void stepComputed(const Grid3D<float> *grid);
+		void stepComputed(const Grid2D<float> *grid);
+		void stepComputed(const Grid3D<float> *grid);
 };
 
 

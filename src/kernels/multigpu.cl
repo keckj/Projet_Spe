@@ -52,20 +52,19 @@ __kernel void computeStep(
 	float Le;
 	if(idx==0 || idx==subGridWidth-1 || idy==0 || idy==subGridHeight-1) {
 		float left,right,top,down,front,back;
-		left = (idx == 0 ? (domainIdx == 0 ? e : E_externalEdgesLeft[idy]) : E_1[id-1]);	
-		right = (idx == subGridWidth-1 ? (domainIdx == nSplitsX-1 ? e : E_externalEdgesRight[idy]) : E_1[id+1]);	
-		
-		top = (idy == 0 ? (domainIdy == 0 ? e : E_externalEdgesTop[idx]) : E_1[id - subGridWidth]);	
-		down = (idy == subGridHeight-1 ? (domainIdy == nSplitsY-1 ? e : E_externalEdgesDown[idx]) : E_1[id+subGridWidth]);	
+		left =  (idx == 0               ? (domainIdx == 0          ? e : E_externalEdgesLeft[idy])  : E_1[id-1]);	
+		right = (idx == subGridWidth-1  ? (domainIdx == nSplitsX-1 ? e : E_externalEdgesRight[idy]) : E_1[id+1]);	
+		top =   (idy == 0               ? (domainIdy == 0          ? e : E_externalEdgesTop[idx] )  : E_1[id-subGridWidth]);	
+		down =  (idy == subGridHeight-1 ? (domainIdy == nSplitsY-1 ? e : E_externalEdgesDown[idx])  : E_1[id+subGridWidth]);	
 		
 		Le = (left+right+top+down-4*e)/(dh*dh);
 	}
 	else {
 		Le =(+ E_1[id-1]
-			+ E_1[id+1]
-			+ E_1[id-subGridWidth ]
-			+ E_1[id+subGridWidth]
-			- 4*e) / (dh*dh);
+			 + E_1[id+1]
+			 + E_1[id-subGridWidth]
+			 + E_1[id+subGridWidth]
+			 - 4*e) / (dh*dh);
 	}
 	
 	float F = -kk*e*(e - alpha1)*(e - 1.0f) - e*r;

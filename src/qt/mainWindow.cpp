@@ -102,8 +102,8 @@ void MainWindow::startComputing() {
 			log_console->infoStream() << "Started a simple model 2D simulation !";
 			break;
 		case 1:
-            mod = (Model *) new MultiGpu(m_total_steps, panel->getVariables());
-			log_console->infoStream() << "Started a yolo-swaggy bug multi-gpu model simulation !";
+            mod = (Model *) new MultiGpu(m_total_steps, gridWidth, gridHeight, gridLength, panel->getArguments(), panel->getVariables());
+			log_console->infoStream() << "Started a multi-gpu model simulation !";
 			break;
         default:
             mod = (Model *) new ExampleModel(m_total_steps, panel->getVariables());
@@ -117,7 +117,6 @@ void MainWindow::startComputing() {
     connect(mod, SIGNAL(finished()), panel, SLOT(stop()));                      // update GUI buttons
     connect(mod, SIGNAL(finished()), mod, SLOT(deleteLater()));
     connect(m_thread, SIGNAL(finished()), m_thread, SLOT(deleteLater()));
-   
 	connect(mod, SIGNAL(stepComputed(const QMap<QString, GLuint> &)), scene, SLOT(updateTextures(const QMap<QString, GLuint> &)));
 
     m_thread->start();

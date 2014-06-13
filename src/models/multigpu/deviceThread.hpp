@@ -5,6 +5,7 @@
 #include "headers.hpp"
 #include "subDomain.hpp"
 #include "fence.hpp"
+#include "argument.hpp"
 
 #include <functional>
 
@@ -19,19 +20,25 @@ class DeviceThread {
 				const cl::Context &context,
 				const cl::Program &program,
 				const cl::Device &device,
-				Fence *fence);
-		
-		~DeviceThread();
-		
+				Fence *fence,
+				std::map<QString, Argument> *args,
+				float dh,
+				bool display=true,
+				bool writeOnDisk=false,
+				const std::string &rep="");
+
+			~DeviceThread();
+
 		void operator()();
-	
+
 	private:
 		void initSubDomain(std::map<std::string, MultiBufferedSubDomain<float, 1u>*> subDomain);
 		void computeSubDomainStep(unsigned int domainId, unsigned int stepId);
 		void finishCommandQueues();
+		
+		float computeOptimalTimestep();
 
 		MultiGpu *_simulation;
-		
 
 		const cl::Platform _platform;
 		const cl::Context _context;
@@ -40,14 +47,19 @@ class DeviceThread {
 		cl::Kernel _kernel;
 
 		Fence *_fence;
-		
+
+		float _dh, _dt;
+		float _epsilon, _kk, _dd;
+		float _mu1, _mu2;
+		float _alpha1, _alpha2;
+
 		bool _display;
 		bool _writeOnDisk;
 
 		cl::CommandQueue _commandQueues[nCommandQueues];
 
 		std::vector<std::map<std::string, MultiBufferedSubDomain<float,1u>*>> _acquiredDomains; 
-	
+
 		std::vector<std::map<std::string, std::vector<cl::Buffer>>> _acquiredDomainsVarBuffers;
 		std::vector<std::map<std::string, std::vector<cl::Buffer>>> _acquiredDomainsInternalEdgeBuffers;
 		std::vector<std::map<std::string, std::vector<cl::Buffer>>> _acquiredDomainsExternalEdgeBuffers;
