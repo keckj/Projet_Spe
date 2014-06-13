@@ -15,7 +15,11 @@ MultiBufferedDomain<T,N>::MultiBufferedDomain(
 	_domainWidth(domainWidth_), 
 	_domainHeight(domainHeight_),
 	_domainLength(domainLength_),
-	_extraBorderSize(extraBorderSize_)
+	_extraBorderSize(extraBorderSize_),
+	_nSplits(0),
+	_splitsX(0),
+	_splitsY(0),
+	_splitsZ(0)
 {
 	splitDomain(minSplits_, initialCondition_);
 
