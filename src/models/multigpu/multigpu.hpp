@@ -69,17 +69,14 @@ class MultiGpu : public Model {
 
 		//domain
 		unsigned int _nFunctions;
-		unsigned int _gridWidth, _gridHeight, _gridLength;
 		std::map<std::string, MultiBufferedDomain<float,1u>*> _domains;
 		unsigned int _splits;
 		bool _init;
 		void initGrids(const std::map<std::string, InitialCond<float>*> &initialConditions);
 
 		//draw & save on disk
-		Grid<float> *_grid;
 		unsigned int _sliceIdX, _sliceIdY, _sliceIdZ;
 		std::map<std::string, float*> _sliceX, _sliceY, _sliceZ;
-		QMap<QString, GLuint> _mapped_textures;
 		void allocSlices();
 		void createTextures();
 		void renderToTextures();
@@ -87,9 +84,7 @@ class MultiGpu : public Model {
 		//model
 		std::map<QString, Argument> *_args;
 
-		
     signals:
-        void stepComputed(const QMap<QString, GLuint> &texMap);
         void finished();
 };
 

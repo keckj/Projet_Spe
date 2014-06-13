@@ -31,7 +31,7 @@ void Model::startComputing() {
         }
 
         computeStep(i);
-        emit stepComputed(m_mappedTextures);
+		emit stepComputed(m_mappedTextures);
     }
     finishComputation();
     emit finished();

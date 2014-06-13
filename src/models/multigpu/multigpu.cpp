@@ -24,12 +24,11 @@ MultiGpu::MultiGpu(int nbIter,
 	_stepDone(false),
 	_nDevices(0),
 	_nFunctions(0),
-	_gridWidth(0), _gridHeight(0), _gridLength(0),
 	_init(false),
-	_grid(0),
 	_sliceIdX(0), _sliceIdY(0), _sliceIdZ(0),
 	_args(args)
 {
+	log_console->infoStream() << "MULTIGPU " << toStringDimension<unsigned int>(width_, height_, length_);
 }
 
 MultiGpu::~MultiGpu() 
@@ -61,15 +60,23 @@ void MultiGpu::initComputation() {
 	initGrids(initialConds);
 
 	initOpenClContext();
+	
+	log_console->infoStream() << "Waiting init";
+	while(!_init)
+		std::this_thread::sleep_for(std::chrono::milliseconds(10));
+	log_console->infoStream() << "Init passed";
 }
 
 void MultiGpu::computeStep(int i) {
-	while(!_init)
-		std::this_thread::sleep_for(std::chrono::milliseconds(10));
-
-	_step = true;
-	while(!_stepDone)
-		std::this_thread::sleep_for(std::chrono::milliseconds(10));
+	{
+		std::unique_lock<std::mutex> lock(_mutex);
+		_step = true;
+		_stepDone = false;
+		log_console->infoStream() << "Waiting compute";
+		_cond.wait(lock, [this]{return _stepDone;});
+		_cond.notify_one();
+		log_console->infoStream() << "Compute done";
+	}
 }
 
 void MultiGpu::finishComputation() {;}
@@ -197,7 +204,7 @@ void MultiGpu::initOpenClContext(){
 	for(auto dev : _devices) {
 		if(i >= devicesNeeded)
 			break;
-		DeviceThread<1u> *dt = new DeviceThread<1u>(this, _platform, _context, program, dev, fence, _args, 1.0f/this->m_width);
+		DeviceThread<1u> *dt = new DeviceThread<1u>(this, _platform, _context, program, dev, fence, _args, 1.0f/this->m_width, true);
 		std::thread t(*dt);
 		t.detach();
 		i++;
@@ -208,14 +215,14 @@ void MultiGpu::initOpenClContext(){
 		
 void MultiGpu::initGrids(const std::map<std::string, InitialCond<float>*> &initialConditions) {
 		
-		_gridWidth = 512u;
-		_gridHeight = 512u;
-		_gridLength = 1u;
+		unsigned int gridWidth = this->m_width;
+		unsigned int gridHeight = this->m_height;
+		unsigned int gridLength = this->m_length;
 		_nFunctions = initialConditions.size();
 	
 		for(auto &initialConds : initialConditions) {
 			MultiBufferedDomain<float,1u> *dom = 
-				new MultiBufferedDomain<float,1u>(_gridWidth, _gridHeight, _gridLength, 1u, 16, initialConds.second);
+				new MultiBufferedDomain<float,1u>(gridWidth, gridHeight, gridLength, 1u, 1, initialConds.second);
 			_domains.emplace(initialConds.first, dom);
 		}
 			
@@ -263,19 +270,23 @@ void MultiGpu::releaseSubDomain(std::map<std::string, MultiBufferedSubDomain<flo
 }
 
 void MultiGpu::initDone() {
-	_init = true;
-	renderToTextures();
 	resetSubDomains();
-	emit stepComputed(_mapped_textures);
+	_init = true;
+	log_console->infoStream() << "Init done";
+	//emit stepComputed(this->m_mappedTextures);
 }
 
 void MultiGpu::stepDone() {
-	static unsigned int step = 0;
-	step++;
-	renderToTextures();
-	_stepDone = true;
-	_step = false;
-	emit stepComputed(_mapped_textures);
+	{
+		std::unique_lock<std::mutex> lock(_mutex);
+		renderToTextures();
+		_step = false;
+		_stepDone = true;
+		_cond.notify_one();
+		log_console->infoStream() << "Notify finish";
+	}
+	log_console->infoStream() << "Step done";
+	//emit stepComputed(this->m_mappedTextures);
 }
 
 
@@ -284,39 +295,42 @@ void MultiGpu::renderToTextures() {
 	assert(glXMakeCurrent(OpenGLScene::solverDisplay, OpenGLScene::solverWindow, OpenGLScene::solverContext));
 
 	glActiveTexture(GL_TEXTURE0);
-	int k = 0;
+	//static unsigned int k = 0;
+	//k++;
 	for (auto pair : _domains) {
 		float *data = _sliceZ[pair.first];
-		//float *data = new float[pair.second->domainWidth()*pair.second->domainHeight()];
 
-		//unsigned int domainWidth = pair.second->domainHeight();
-		//unsigned int domainHeight = pair.second->domainHeight();
-		//for (unsigned int j = 0; j < domainHeight ; j++) {
-			//for (unsigned int i = 0; i < domainWidth; i++) {
-				//float ii = float(i)/domainWidth;
-				//float jj = float(j)/domainHeight;
+		//for (unsigned int j = 0; j < this->m_height ; j++) {
+			//for (unsigned int i = 0; i < this->m_width; i++) {
+				//float ii = float(i)/this->m_width;
+				//float jj = float(j)/this->m_height;
 
-				//data[j*domainWidth+i] = (k%2==0 ? 
-						 //((ii<1/2.0f && jj <1/2.0f) || (ii>1/2.0f && jj>1/2.0f)) :
+				//data[j*this->m_width+i] = (k%2==0 ? 
+						//((ii<1/2.0f && jj <1/2.0f) || (ii>1/2.0f && jj>1/2.0f)) :
 						//!((ii<1/2.0f && jj <1/2.0f) || (ii>1/2.0f && jj>1/2.0f))
-							//);
+						//);
 			//}
 		//}
-		k++;
-
-		unsigned int texture = _mapped_textures[QString(pair.first.c_str())];
+		//k++;
+		unsigned int texture = this->m_mappedTextures[QString(pair.first.c_str())];
 		glBindTexture(GL_TEXTURE_2D, texture);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, 
-				pair.second->domainWidth(), pair.second->domainHeight(), 0, 
+				this->m_width, this->m_height, 0, 
 				GL_LUMINANCE, GL_FLOAT, (GLvoid*) data);
 		assert(glIsTexture(texture));
 	}
 	
 	glBindTexture(GL_TEXTURE_2D, 0);
 	CHK_GL_ERRORS();
+	glFinish();
+		
+	for(auto key : this->m_mappedTextures.keys()) {
+		log_console->infoStream() << "YOLOSWAG LE RERETOUR " << (unsigned char*)key.data() << "  " << this->m_mappedTextures[key];
+	}
 
 	glXMakeCurrent(OpenGLScene::solverDisplay, 0, 0);
+	log_console->infoStream() << "Rendered texture";
 }
 		
 unsigned int MultiGpu::sliceIdX() {
@@ -358,7 +372,11 @@ void MultiGpu::createTextures() {
 		unsigned int i = 0;
 		for (auto pair : _domains) {
 			log_console->infoStream() << "Created texture " << textures[i];
-			_mapped_textures.insert(QString(pair.first.c_str()), textures[i++]);
+			this->m_mappedTextures.insert(QString(pair.first.c_str()), textures[i++]);
+		}
+	
+		for(auto key : this->m_mappedTextures.keys()) {
+			log_console->infoStream() << "YOLOSWAG LE RETOUR " << (unsigned char*)key.data() << "  " << this->m_mappedTextures[key];
 		}
 }
 

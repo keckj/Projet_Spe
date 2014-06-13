@@ -102,7 +102,7 @@ void MainWindow::startComputing() {
 			break;
 		case 1:
             mod = (Model *) new MultiGpu(m_total_steps, gridWidth, gridHeight, gridLength, panel->getArguments(), panel->getVariables());
-			log_console->infoStream() << "Started a yolo-swaggy bug multi-gpu model simulation !";
+			log_console->infoStream() << "Started a multi-gpu model simulation !";
 			break;
         default:
             mod = (Model *) new ExampleModel(m_total_steps, panel->getVariables());
@@ -117,8 +117,8 @@ void MainWindow::startComputing() {
     connect(mod, SIGNAL(finished()), mod, SLOT(deleteLater()));
     connect(m_thread, SIGNAL(finished()), m_thread, SLOT(deleteLater()));
    
-    //connect(this, SIGNAL(addTextureRequest(QString)), mod, SLOT(addTexture(QString)));
-    //connect(this, SIGNAL(removeTextureRequest(QString)), mod, SLOT(removeTexture(QString)));
+	connect(this, SIGNAL(addTextureRequest(QString)), mod, SLOT(addTexture(QString)));
+	connect(this, SIGNAL(removeTextureRequest(QString)), mod, SLOT(removeTexture(QString)));
 	connect(mod, SIGNAL(stepComputed(const QMap<QString, GLuint> &)), scene, SLOT(updateTextures(const QMap<QString, GLuint> &)));
 
     m_thread->start();
