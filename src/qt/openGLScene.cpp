@@ -146,8 +146,8 @@ void OpenGLScene::drawBackground(QPainter *painter, const QRectF &) {
 	int i = 0;
 	for (QString key : m_texMap.keys()) {
 		glBindTexture(GL_TEXTURE_2D, m_texMap[key]);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 		glDrawArrays(GL_QUADS, 4*i, 4);
         ++i;
 	}

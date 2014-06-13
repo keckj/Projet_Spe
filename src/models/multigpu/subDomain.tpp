@@ -5,6 +5,8 @@
 #include "grid2D.hpp"
 #include "grid1D.hpp"
 
+#include "functionInitialCond.hpp"
+
 using namespace log4cpp;
 using namespace utils;
 
@@ -40,14 +42,14 @@ MultiBufferedSubDomain<T,N>::MultiBufferedSubDomain(unsigned int id_, unsigned i
 	for (unsigned int i = 0; i < N; i++) {
 		_data[i] = new T[_size];
 
-		_internalEdgesLeft[i] = new T[_edgeSizeX];
-		_internalEdgesRight[i] = new T[_edgeSizeX];
+		_internalEdgesLeft[i]  =  (_idx==0              ? 0 : new T[_edgeSizeX]);
+		_internalEdgesRight[i] =  (_idx==_nSubDomainX-1 ? 0 : new T[_edgeSizeX]);
 
-		_internalEdgesTop[i] = new T[_edgeSizeY];
-		_internalEdgesDown[i] = new T[_edgeSizeY];
-
-		_internalEdgesFront[i] = new T[_edgeSizeZ];
-		_internalEdgesBack[i] = new T[_edgeSizeZ];
+		_internalEdgesTop[i]  =  (_idy==0              ? 0 : new T[_edgeSizeY]);
+		_internalEdgesDown[i] =  (_idy==_nSubDomainY-1 ? 0 : new T[_edgeSizeY]);
+		
+		_internalEdgesFront[i] =  (_idz==0              ? 0 : new T[_edgeSizeZ]);
+		_internalEdgesBack[i]  =  (_idz==_nSubDomainZ-1 ? 0 : new T[_edgeSizeZ]);
 	}
 
 
@@ -284,36 +286,48 @@ void MultiBufferedSubDomain<T,N>::initSubDomain(unsigned int bufferId) {
 			_domainWidth, _domainHeight, _domainLength);
 
 	//6 bords internes
+	if(_idx != 0) {
 	_initialCondition->initializeSubGrid(_internalEdgesLeft[bufferId],
 			0, 0, 0, 
 			_borderSize, _subDomainHeight, _subDomainLength,
 			_domainWidth, _domainHeight, _domainLength);
-	
-	_initialCondition->initializeSubGrid(_internalEdgesRight[bufferId],
-			_subDomainWidth-_borderSize, 0, 0, 
-			_borderSize, _subDomainHeight, _subDomainLength,
-			_domainWidth, _domainHeight, _domainLength);
-	
-	_initialCondition->initializeSubGrid(_internalEdgesTop[bufferId],
-			0, 0, 0, 
-			_subDomainWidth, _borderSize, _subDomainLength,
-			_domainWidth, _domainHeight, _domainLength);
-	
-	_initialCondition->initializeSubGrid(_internalEdgesDown[bufferId],
-			0, _subDomainHeight-_borderSize, 0, 
-			_subDomainWidth, _borderSize, _subDomainLength,
-			_domainWidth, _domainHeight, _domainLength);
-	
-	_initialCondition->initializeSubGrid(_internalEdgesFront[bufferId],
-			0, 0, 0, 
-			_subDomainWidth, _subDomainHeight, _borderSize,
-			_domainWidth, _domainHeight, _domainLength);
-	
-	_initialCondition->initializeSubGrid(_internalEdgesBack[bufferId],
-			0, 0, _subDomainLength-_borderSize, 
-			_subDomainWidth, _subDomainHeight, _borderSize,
-			_domainWidth, _domainHeight, _domainLength);
-	
+	}
+
+	if(_idx != _nSubDomainX-1) {
+		_initialCondition->initializeSubGrid(_internalEdgesRight[bufferId],
+				_subDomainWidth-_borderSize, 0, 0, 
+				_borderSize, _subDomainHeight, _subDomainLength,
+				_domainWidth, _domainHeight, _domainLength);
+	}
+
+	if(_idy != 0) {
+		_initialCondition->initializeSubGrid(_internalEdgesTop[bufferId],
+				0, 0, 0, 
+				_subDomainWidth, _borderSize, _subDomainLength,
+				_domainWidth, _domainHeight, _domainLength);
+	}
+
+	if(_idy != _nSubDomainY-1) {
+		_initialCondition->initializeSubGrid(_internalEdgesDown[bufferId],
+				0, _subDomainHeight-_borderSize, 0, 
+				_subDomainWidth, _borderSize, _subDomainLength,
+				_domainWidth, _domainHeight, _domainLength);
+	}
+
+	if(_idz != 0) {
+		_initialCondition->initializeSubGrid(_internalEdgesFront[bufferId],
+				0, 0, 0, 
+				_subDomainWidth, _subDomainHeight, _borderSize,
+				_domainWidth, _domainHeight, _domainLength);
+	}
+
+	if(_idz != _nSubDomainZ-1) {
+		_initialCondition->initializeSubGrid(_internalEdgesBack[bufferId],
+				0, 0, _subDomainLength-_borderSize, 
+				_subDomainWidth, _subDomainHeight, _borderSize,
+				_domainWidth, _domainHeight, _domainLength);
+	}
+
 }
 
 

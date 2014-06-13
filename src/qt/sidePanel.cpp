@@ -16,7 +16,7 @@
 // ************************
 const QStringList SidePanel::modelsList = QStringList() << "Simple Model 2D" << "->Multi-GPU<-" << "Default Model";
 const int SidePanel::defaultNumberOfSteps = 100;
-const std::vector<unsigned int> SidePanel::defaultGridSize { 512, 512, 1};
+const std::vector<unsigned int> SidePanel::defaultGridSize { 64, 64, 1};
 // ************************
 
 

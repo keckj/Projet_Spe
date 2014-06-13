@@ -44,6 +44,7 @@ DeviceThread<nCommandQueues>::DeviceThread(MultiGpu *simulation,
 	_alpha1 = args->at("alpha_1")();
 	_alpha2 = args->at("alpha_2")();
 	_dt = computeOptimalTimestep();
+
 	log_console->infoStream() << "DH = " << _dh << " DT = " << _dt;
 	log_console->infoStream() 
 		<< "epsilon=" << _epsilon 
@@ -53,6 +54,8 @@ DeviceThread<nCommandQueues>::DeviceThread(MultiGpu *simulation,
 		<< "\tmu_2=" << _mu2
 		<< "\talpha_1=" << _alpha1
 		<< "\talpha_2=" << _alpha2;
+
+	_kernel = cl::Kernel(_program, "computeStep");
 }
 
 template <unsigned int nCommandQueues>
@@ -62,9 +65,6 @@ DeviceThread<nCommandQueues>::~DeviceThread() {
 template <unsigned int nCommandQueues>
 void DeviceThread<nCommandQueues>::operator()() {
 
-
-	log_console->infoStream() << "THREAD RUN !";
-
 	cl_int err;
 	for (int i = 0; i < nCommandQueues; i++) {
 		_commandQueues[i] = cl::CommandQueue(_context, _device, CL_QUEUE_PROFILING_ENABLE, &err); 
@@ -72,7 +72,6 @@ void DeviceThread<nCommandQueues>::operator()() {
 	}
 
 	(*_fence)();
-	log_console->infoStream() << "THREAD commandQueues !";
 
 	std::map<std::string, MultiBufferedSubDomain<float,1u>*> currentDomain; 
 
@@ -82,17 +81,12 @@ void DeviceThread<nCommandQueues>::operator()() {
 			this->initSubDomain(currentDomain);
 	}
 
-	log_console->infoStream() << "THREAD initdone!";
 	std::function<void(MultiGpu*)> f(&MultiGpu::initDone);
 	callOnce<void,MultiGpu*>(f, _fence, _simulation);
-
-	//Make _kernel
-	_kernel = cl::Kernel(_program, "computeStep");
 
 	//Prepare
 	bool lockDomains = false;
 
-	log_console->infoStream() << "THREAD ACQUIRE SUBDOMAINS !";
 	//Get as much work as possible, automatic device compute load management
 	while(!lockDomains && _simulation->subDomainAvailable()) { 
 
@@ -195,25 +189,20 @@ void DeviceThread<nCommandQueues>::operator()() {
 		log_console->infoStream() << "Device " << _device() << " acquired " << _acquiredDomains.size() << " domains !";
 	}
 	
-	log_console->infoStream() << "THREAD ENTER INFINITE LOOP !";
 	//Compute loop
 	std::function<void(MultiGpu*)> g(&MultiGpu::stepDone);
 	unsigned int i = 1;
 	while(true) {
-		log_console->infoStream() << "THREAD WAIT !";
 		while(!_simulation->_step) {
 			std::this_thread::sleep_for(std::chrono::milliseconds(10));
 		}
-		log_console->infoStream() << "THREAD COMPUTE !";
 		for (unsigned int j = 0; j < _acquiredDomains.size(); j++) {
 			computeSubDomainStep(j, i);
 		}
-		log_console->infoStream() << "THREAD FINISH COMMAND QUEUE !";
 		for (unsigned int j = 0; j < nCommandQueues; j++) {
 			_commandQueues[j].finish();
 		}
 		if(_display) {
-			log_console->infoStream() << "THREAD CALL DISPLAY!";
 			callOnce<void,MultiGpu*>(g, _fence, _simulation);
 		}
 		else {
@@ -265,8 +254,7 @@ void DeviceThread<nCommandQueues>::computeSubDomainStep(unsigned int domainId, u
 	unsigned long edgeBytesZ = currentDomain.begin()->second->edgeBytesZ();
 	unsigned long edgeBytes[3] = {edgeBytesX, edgeBytesY, edgeBytesZ};
 
-	//cl::CommandQueue currentCommandQueue = _commandQueues[domainId%nCommandQueues];
-	cl::CommandQueue currentCommandQueue = _commandQueues[0];
+	cl::CommandQueue currentCommandQueue = _commandQueues[domainId%nCommandQueues];
 			
 	//Send initial func data
 	if(!_acquiredDomainsIsInitialDataSent[domainId]) {
@@ -336,7 +324,7 @@ void DeviceThread<nCommandQueues>::computeSubDomainStep(unsigned int domainId, u
 	//currentCommandQueue.enqueueReadBuffer(varBuffers["e"][(stepId+1)%2], CL_FALSE, 0, bytes, *(currentDomain["e"]->data()));
 
 	//get slices to generate texture
-	if(_display && stepId%1==0) {
+	if(_display && stepId==1) {
 		unsigned int sliceIdx = _simulation->sliceIdX();
 		unsigned int sliceIdy = _simulation->sliceIdY();
 		unsigned int sliceIdz = _simulation->sliceIdZ();
@@ -370,18 +358,16 @@ void DeviceThread<nCommandQueues>::computeSubDomainStep(unsigned int domainId, u
 			region.push_back(subDomainHeight);
 			region.push_back(1);
 			
-			log_console->infoStream() << "THREAD GET SUBDOMAIN DATA!";
-
-
 			for(auto pair : currentDomain) {
 				CHK_ERROR_RET(
 				currentCommandQueue.enqueueReadBufferRect( 
-							varBuffers[pair.first][(stepId+1)%2], CL_FALSE, 
+							varBuffers[pair.first][stepId%2], CL_FALSE, 
 							bufferOrigin, hostOrigin, region,
 							bufferPitch[0], bufferPitch[1],
 							hostPitch[0], hostPitch[1],
 							(void*)_simulation->sliceZ()[pair.first])
 				);
+				//DEBUG
 				//for (unsigned int j = 0; j < subDomainHeight; j++) {
 				//for (unsigned int i = 0; i < subDomainWidth; i++) {
 				//_simulation->sliceZ()[pair.first][j*subDomainWidth+i] = (j*subDomainWidth+i)/(float)(subDomainWidth*subDomainHeight);
@@ -390,7 +376,21 @@ void DeviceThread<nCommandQueues>::computeSubDomainStep(unsigned int domainId, u
 			}
 
 		}
-				
+	
+		//actualize internal host borders
+		for(auto pair : currentDomain) {
+			for (int j = 0; j < 6; j++) {
+				float* const* edgeData = internalEdgeHostData[pair.first][j];
+
+				if(*edgeData) {
+					CHK_ERROR_RET(currentCommandQueue.enqueueReadBuffer(
+								internalEdgeBuffers[pair.first][j], CL_FALSE, 0, 
+								edgeBytes[j/2], *edgeData));
+				}
+			}
+		}
+			
+		//DEBUG
 		//log_console->infoStream()
 							   //<< "Subdomain " << currentDomain.begin()->second->id()
 							   //<< "\n sliceIds " << toStringVec3<unsigned int>(sliceIdx,sliceIdy,sliceIdz)
@@ -460,18 +460,6 @@ void DeviceThread<nCommandQueues>::computeSubDomainStep(unsigned int domainId, u
 		//}
 	}
 
-	//actualize internal host borders
-	for(auto pair : currentDomain) {
-		for (int j = 0; j < 6; j++) {
-			float* const* edgeData = internalEdgeHostData[pair.first][j];
-
-			if(edgeData) {
-				CHK_ERROR_RET(currentCommandQueue.enqueueReadBuffer(
-							internalEdgeBuffers[pair.first][j], CL_FALSE, 0, 
-							edgeBytes[j/2], *edgeData));
-			}
-		}
-	}
 }
 
 template <unsigned int nCommandQueues>

@@ -28,7 +28,6 @@ MultiGpu::MultiGpu(int nbIter,
 	_sliceIdX(0), _sliceIdY(0), _sliceIdZ(0),
 	_args(args)
 {
-	log_console->infoStream() << "MULTIGPU " << toStringDimension<unsigned int>(width_, height_, length_);
 }
 
 MultiGpu::~MultiGpu() 
@@ -44,7 +43,7 @@ void MultiGpu::initComputation() {
 	
 	FunctionInitialCond<float> *zero = new FunctionInitialCond<float>([] (float,float,float)->float {return 0;});
 	FunctionInitialCond<float> *one = new FunctionInitialCond<float>([] (float,float,float)->float {return 1;});
-	CircleInitialCond<float> *circle = new CircleInitialCond<float>(0.45,0.5,0.5,0.5);
+	CircleInitialCond<float> *circle = new CircleInitialCond<float>(0.5,0.5,0.5,0.5);
 	FunctionInitialCond<float> *sine = new FunctionInitialCond<float>([] (float x,float y,float)->float {return abs(cos(2*3.14*2*x)*cos(2*3.14*2*y));});
 	FunctionInitialCond<float> *halfPlane = new FunctionInitialCond<float>([] (float x,float y,float)->float 
 			{return (x<=0.5 && y<=0.5)||(x>=0.5 && y>=0.5);});
@@ -54,17 +53,12 @@ void MultiGpu::initComputation() {
 			{return (y<=0.5);});
 
 	std::map<std::string, InitialCond<float>*> initialConds;
-	initialConds.emplace("e", halfPlaneX);
+	initialConds.emplace("e", circle);
 	initialConds.emplace("r", halfPlaneY);
 
 	initGrids(initialConds);
 
 	initOpenClContext();
-	
-	log_console->infoStream() << "Waiting init";
-	while(!_init)
-		std::this_thread::sleep_for(std::chrono::milliseconds(10));
-	log_console->infoStream() << "Init passed";
 }
 
 void MultiGpu::computeStep(int i) {
@@ -72,10 +66,8 @@ void MultiGpu::computeStep(int i) {
 		std::unique_lock<std::mutex> lock(_mutex);
 		_step = true;
 		_stepDone = false;
-		log_console->infoStream() << "Waiting compute";
 		_cond.wait(lock, [this]{return _stepDone;});
 		_cond.notify_one();
-		log_console->infoStream() << "Compute done";
 	}
 }
 
@@ -222,7 +214,7 @@ void MultiGpu::initGrids(const std::map<std::string, InitialCond<float>*> &initi
 	
 		for(auto &initialConds : initialConditions) {
 			MultiBufferedDomain<float,1u> *dom = 
-				new MultiBufferedDomain<float,1u>(gridWidth, gridHeight, gridLength, 1u, 1, initialConds.second);
+				new MultiBufferedDomain<float,1u>(gridWidth, gridHeight, gridLength, 1u, 16, initialConds.second);
 			_domains.emplace(initialConds.first, dom);
 		}
 			
@@ -273,7 +265,6 @@ void MultiGpu::initDone() {
 	resetSubDomains();
 	_init = true;
 	log_console->infoStream() << "Init done";
-	//emit stepComputed(this->m_mappedTextures);
 }
 
 void MultiGpu::stepDone() {
@@ -283,10 +274,7 @@ void MultiGpu::stepDone() {
 		_step = false;
 		_stepDone = true;
 		_cond.notify_one();
-		log_console->infoStream() << "Notify finish";
 	}
-	log_console->infoStream() << "Step done";
-	//emit stepComputed(this->m_mappedTextures);
 }
 
 
@@ -294,12 +282,15 @@ void MultiGpu::stepDone() {
 void MultiGpu::renderToTextures() {
 	assert(glXMakeCurrent(OpenGLScene::solverDisplay, OpenGLScene::solverWindow, OpenGLScene::solverContext));
 
-	glActiveTexture(GL_TEXTURE0);
+	//DEBUG
 	//static unsigned int k = 0;
 	//k++;
+	
+	glActiveTexture(GL_TEXTURE0);
 	for (auto pair : _domains) {
 		float *data = _sliceZ[pair.first];
 
+		//DEBUG
 		//for (unsigned int j = 0; j < this->m_height ; j++) {
 			//for (unsigned int i = 0; i < this->m_width; i++) {
 				//float ii = float(i)/this->m_width;
@@ -312,6 +303,7 @@ void MultiGpu::renderToTextures() {
 			//}
 		//}
 		//k++;
+		
 		unsigned int texture = this->m_mappedTextures[QString(pair.first.c_str())];
 		glBindTexture(GL_TEXTURE_2D, texture);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -323,14 +315,8 @@ void MultiGpu::renderToTextures() {
 	
 	glBindTexture(GL_TEXTURE_2D, 0);
 	CHK_GL_ERRORS();
-	glFinish();
 		
-	for(auto key : this->m_mappedTextures.keys()) {
-		log_console->infoStream() << "YOLOSWAG LE RERETOUR " << (unsigned char*)key.data() << "  " << this->m_mappedTextures[key];
-	}
-
 	glXMakeCurrent(OpenGLScene::solverDisplay, 0, 0);
-	log_console->infoStream() << "Rendered texture";
 }
 		
 unsigned int MultiGpu::sliceIdX() {
@@ -373,10 +359,6 @@ void MultiGpu::createTextures() {
 		for (auto pair : _domains) {
 			log_console->infoStream() << "Created texture " << textures[i];
 			this->m_mappedTextures.insert(QString(pair.first.c_str()), textures[i++]);
-		}
-	
-		for(auto key : this->m_mappedTextures.keys()) {
-			log_console->infoStream() << "YOLOSWAG LE RETOUR " << (unsigned char*)key.data() << "  " << this->m_mappedTextures[key];
 		}
 }
 
