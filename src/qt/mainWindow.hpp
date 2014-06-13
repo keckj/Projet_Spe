@@ -16,8 +16,6 @@ class MainWindow : public QMainWindow {
 
     signals:
         void progressUpdate(int p);
-        void addTextureRequest(const QString &texName);
-        void removeTextureRequest(const QString &texName);
 		void colormapUpdate(const QString &colormapName);
         void pauseThread(bool b);
         void stopThread();
@@ -28,7 +26,6 @@ class MainWindow : public QMainWindow {
         void startComputing();
         void pauseComputing(bool b);
         void stopComputing();
-        void updateRenderedVars(QListWidgetItem *item);
         void onStepRender();
 		void changeColormap(const QString &colormapName);
         void changeAutoRendering(int checkboxState);

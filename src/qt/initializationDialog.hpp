@@ -7,7 +7,12 @@ class InitializationDialog : public QDialog {
     Q_OBJECT
 
     public:
-        InitializationDialog(unsigned int *gridWidth, unsigned int *gridHeight, unsigned int *gridLength, QWidget *parent_ = 0);
+        InitializationDialog(std::map<QString, bool> *varsMap,
+                             std::map<QString, int> *condsMap,
+                             unsigned int *gridWidth,
+                             unsigned int *gridHeight, 
+                             unsigned int *gridLength, 
+                             QWidget *parent_ = 0);
         ~InitializationDialog();
 
     private slots:
@@ -18,7 +23,9 @@ class InitializationDialog : public QDialog {
     private:
         QCheckBox *grid3DCheckbox;
         QSpinBox *widthSpinBox, *heightSpinBox, *lengthSpinBox;
+        std::map<QString, QComboBox *> *m_widgetsMap;
 
+        std::map<QString, int> *m_condsMap;
         unsigned int *m_gridWidth, *m_gridHeight, *m_gridLength;
 };
 

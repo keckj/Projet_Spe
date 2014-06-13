@@ -144,7 +144,7 @@ void SimpleModel2D::computeStep(int i) {
 	//
 	subStep(0,workSize);
 	
-	emit stepComputed(_e1);
+	//emit stepComputed(_e1);
 
 	std::swap(_e1, _e2);
 	std::swap(_r1, _r2);

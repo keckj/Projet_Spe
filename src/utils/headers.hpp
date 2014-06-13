@@ -35,7 +35,7 @@ static const char* CL_GL_SHARING_EXT ="cl_khr_gl_sharing";
 #include <QThread>
 #include <QMutex>
 #include <QWaitCondition>
-#include <QTimer>
+#include <QElapsedTimer>
 #include <QMainWindow>
 #include <QObject>
 #include <QWidget>

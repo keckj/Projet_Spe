@@ -5,6 +5,7 @@
 #include "parametersDialog.hpp"
 #include "initializationDialog.hpp"
 #include "argument.hpp"
+#include "initialCondFactory.hpp"
 #include "colormap.hpp"
 // Models
 #include "simpleModel2D.hpp"
@@ -13,13 +14,19 @@
 
 // ************************
 const QStringList SidePanel::modelsList = QStringList() << "Simple Model 2D" << "->Multi-GPU<-" << "Default Model";
+const QStringList SidePanel::initialConditionsList = QStringList() << "TODO1" << "TODO2" << "TODO3" << "TODO4";
 const int SidePanel::defaultNumberOfSteps = 100;
 const std::vector<unsigned int> SidePanel::defaultGridSize { 512, 512, 1};
 // ************************
 
 
 
-SidePanel::SidePanel(QWidget *parent_) : QWidget(parent_) {
+SidePanel::SidePanel(QWidget *parent_) : 
+    QWidget(parent_),
+    m_argsMap(0),
+    m_varsMap(0),
+    m_initialCondsMap(0)
+{
 
     // Get parent
     MainWindow *mainWin = qobject_cast<MainWindow *>(parent_);
@@ -143,7 +150,6 @@ SidePanel::SidePanel(QWidget *parent_) : QWidget(parent_) {
     variablesRenderedList = new QListWidget;
     variablesRenderedList->setSizePolicy(QSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored));
     variablesRenderedList->setMinimumSize(QSize(30,100)); //modify if needed (height = nItems * cst?)
-    connect(variablesRenderedList, SIGNAL(itemChanged(QListWidgetItem *)), mainWin, SLOT(updateRenderedVars(QListWidgetItem *)));
     connect(variablesRenderedList, SIGNAL(itemChanged(QListWidgetItem *)), this, SLOT(updateRenderedVars(QListWidgetItem *)));
 
     // Rendering colormap label & dropdown list
@@ -257,8 +263,7 @@ void SidePanel::setModelOptionsStatus(bool status) {
 void SidePanel::openInitDialog() {
     if (initDialog) initDialog->deleteLater();
 
-    //initDialog = new InitializationDialog(m_initialCond, this);
-    initDialog = new InitializationDialog(&m_gridWidth, &m_gridHeight, &m_gridLength, this);
+    initDialog = new InitializationDialog(m_varsMap, m_initialCondsMap, &m_gridWidth, &m_gridHeight, &m_gridLength, this);
     initDialog->setModal(true);
     initDialog->show();
 }
@@ -293,6 +298,10 @@ void SidePanel::changeNbIterSlider(int nbIter) {
 }
 
 void SidePanel::refreshParameters(int modelId) {
+    if (m_argsMap)
+        m_argsMap->clear();
+    if (m_varsMap)
+        m_varsMap->clear();
     switch(modelId) {
         case 0:
             m_argsMap = SimpleModel2D::getArguments();
@@ -301,6 +310,14 @@ void SidePanel::refreshParameters(int modelId) {
         default:
             m_argsMap = new std::map<QString, Argument>;
             m_varsMap = new std::map<QString, bool>;
+    }
+    
+    if (m_initialCondsMap)
+        m_initialCondsMap->clear();
+    else
+        m_initialCondsMap = new std::map<QString, int>;
+    for (auto it = m_varsMap->begin(); it != m_varsMap->end(); ++it) {
+        m_initialCondsMap->emplace(it->first, 0);
     }
 
     // Variables: GUI update
@@ -336,6 +353,10 @@ std::map<QString, Argument> *SidePanel::getArguments() {
 
 std::map<QString, bool> *SidePanel::getVariables() {
     return m_varsMap;
+}
+
+std::map<QString, int> *SidePanel::getInitialConditions() {
+    return m_initialCondsMap;
 }
 
 QString SidePanel::getSaveDirectory() {

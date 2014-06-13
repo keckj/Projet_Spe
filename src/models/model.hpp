@@ -12,6 +12,16 @@ class Model : public QObject {
         Model(int nbIter, std::map<QString, bool> *renderedVars, unsigned int width = 512, unsigned int height = 512, unsigned int length = 1); 
 		virtual ~Model() {};
 
+    public slots:
+        void startComputing();
+        void pauseComputing(bool b);
+        void stopComputing();
+
+     /* Copy signals, inheritance does not work properly */
+    signals:
+        void stepComputed(const QMap<QString, GLuint> &texMap);
+        void finished();
+
     protected:
         unsigned int m_width, m_height, m_length;
         std::map<QString, bool> *m_renderedVars;
@@ -20,19 +30,7 @@ class Model : public QObject {
         virtual void initComputation() = 0;
         virtual void computeStep(int i) = 0;
         virtual void finishComputation() = 0;
-
-    public slots:
-        void startComputing();
-        void pauseComputing(bool b);
-        void stopComputing();
-        //void addTexture(QString texName);
-        //void removeTexture(QString texName);
-
-    /* Copy signals, inheritance does not work properly */
-    signals:
-        void stepComputed(const QMap<QString, GLuint> &texMap);
-        void finished();
-
+    
     private:
         QMutex m_mutex;
         QWaitCondition m_cond;
