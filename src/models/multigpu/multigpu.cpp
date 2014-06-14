@@ -43,7 +43,8 @@ void MultiGpu::initComputation() {
 	
 	FunctionInitialCond<float> *zero = new FunctionInitialCond<float>([] (float,float,float)->float {return 0;});
 	FunctionInitialCond<float> *one = new FunctionInitialCond<float>([] (float,float,float)->float {return 1;});
-	CircleInitialCond<float> *circle = new CircleInitialCond<float>(0.5,0.5,0.5,0.5);
+	FunctionInitialCond<float> *half = new FunctionInitialCond<float>([] (float,float,float)->float {return 1/2.0;});
+	CircleInitialCond<float> *circle = new CircleInitialCond<float>(0.1,0.5,0.5,0.5);
 	FunctionInitialCond<float> *sine = new FunctionInitialCond<float>([] (float x,float y,float)->float {return abs(cos(2*3.14*2*x)*cos(2*3.14*2*y));});
 	FunctionInitialCond<float> *halfPlane = new FunctionInitialCond<float>([] (float x,float y,float)->float 
 			{return (x<=0.5 && y<=0.5)||(x>=0.5 && y>=0.5);});
@@ -51,10 +52,16 @@ void MultiGpu::initComputation() {
 			{return (x<=0.5);});
 	FunctionInitialCond<float> *halfPlaneY = new FunctionInitialCond<float>([] (float x,float y,float)->float 
 			{return (y<=0.5);});
+	FunctionInitialCond<float> *gradient = new FunctionInitialCond<float>([](float x,float y, float)->float
+			{return x*y;});
+	FunctionInitialCond<float> *gradientX = new FunctionInitialCond<float>([](float x,float y, float)->float
+			{return x;});
+	FunctionInitialCond<float> *gradientY = new FunctionInitialCond<float>([](float x,float y, float)->float
+			{return y;});
 
 	std::map<std::string, InitialCond<float>*> initialConds;
-	initialConds.emplace("e", circle);
-	initialConds.emplace("r", halfPlaneY);
+	initialConds.emplace("e", gradientX);
+	initialConds.emplace("r", gradientY);
 
 	initGrids(initialConds);
 
@@ -214,7 +221,7 @@ void MultiGpu::initGrids(const std::map<std::string, InitialCond<float>*> &initi
 	
 		for(auto &initialConds : initialConditions) {
 			MultiBufferedDomain<float,1u> *dom = 
-				new MultiBufferedDomain<float,1u>(gridWidth, gridHeight, gridLength, 1u, 16, initialConds.second);
+				new MultiBufferedDomain<float,1u>(gridWidth, gridHeight, gridLength, 1u, 64, initialConds.second);
 			_domains.emplace(initialConds.first, dom);
 		}
 			

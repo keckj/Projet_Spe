@@ -288,46 +288,57 @@ void MultiBufferedSubDomain<T,N>::initSubDomain(unsigned int bufferId) {
 	//6 bords internes
 	if(_idx != 0) {
 	_initialCondition->initializeSubGrid(_internalEdgesLeft[bufferId],
-			0, 0, 0, 
+			_idx*_subDomainBaseWidth, _idy*_subDomainBaseHeight, _idz*_subDomainBaseLength, 
 			_borderSize, _subDomainHeight, _subDomainLength,
 			_domainWidth, _domainHeight, _domainLength);
 	}
 
 	if(_idx != _nSubDomainX-1) {
 		_initialCondition->initializeSubGrid(_internalEdgesRight[bufferId],
-				_subDomainWidth-_borderSize, 0, 0, 
+				_idx*_subDomainBaseWidth+_subDomainWidth-_borderSize,
+				_idy*_subDomainBaseHeight,
+				_idz*_subDomainBaseLength, 
 				_borderSize, _subDomainHeight, _subDomainLength,
 				_domainWidth, _domainHeight, _domainLength);
 	}
 
 	if(_idy != 0) {
 		_initialCondition->initializeSubGrid(_internalEdgesTop[bufferId],
-				0, 0, 0, 
+				_idx*_subDomainBaseWidth, _idy*_subDomainBaseHeight, _idz*_subDomainBaseLength, 
 				_subDomainWidth, _borderSize, _subDomainLength,
 				_domainWidth, _domainHeight, _domainLength);
 	}
 
 	if(_idy != _nSubDomainY-1) {
 		_initialCondition->initializeSubGrid(_internalEdgesDown[bufferId],
-				0, _subDomainHeight-_borderSize, 0, 
+				_idx*_subDomainBaseWidth,
+				_idy*_subDomainBaseHeight+_subDomainHeight-_borderSize,
+				_idz*_subDomainBaseLength, 
 				_subDomainWidth, _borderSize, _subDomainLength,
 				_domainWidth, _domainHeight, _domainLength);
 	}
 
 	if(_idz != 0) {
 		_initialCondition->initializeSubGrid(_internalEdgesFront[bufferId],
-				0, 0, 0, 
+				_idx*_subDomainBaseWidth, _idy*_subDomainBaseHeight, _idz*_subDomainBaseLength, 
 				_subDomainWidth, _subDomainHeight, _borderSize,
 				_domainWidth, _domainHeight, _domainLength);
 	}
 
 	if(_idz != _nSubDomainZ-1) {
 		_initialCondition->initializeSubGrid(_internalEdgesBack[bufferId],
-				0, 0, _subDomainLength-_borderSize, 
+				_idx*_subDomainBaseWidth, 
+				_idy*_subDomainBaseHeight, 
+				_idz*_subDomainBaseLength+_subDomainLength-_borderSize, 
 				_subDomainWidth, _subDomainHeight, _borderSize,
 				_domainWidth, _domainHeight, _domainLength);
 	}
 
+	//DEBUG
+	//FunctionInitialCond<float> *zero = new FunctionInitialCond<float>([] (float,float,float)->float {return 0;});
+	//FunctionInitialCond<float> *one = new FunctionInitialCond<float>([] (float,float,float)->float {return 1;});
+	//FunctionInitialCond<float> *half = new FunctionInitialCond<float>([] (float x,float y,float)->float {return x;});
+	//FunctionInitialCond<float> *quarter = new FunctionInitialCond<float>([] (float x,float y,float)->float {return y;});
 }
 
 

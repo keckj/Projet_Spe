@@ -201,7 +201,7 @@ Grid<T>* MultiBufferedDomain<T,N>::toGrid(unsigned int buffer) {
 			}
 		}
 	}
-
+	
 	return grid;
 }
 		
