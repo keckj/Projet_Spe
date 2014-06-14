@@ -270,20 +270,14 @@ void MultiGpu::releaseSubDomain(std::map<std::string, MultiBufferedSubDomain<flo
 }
 
 void MultiGpu::initDone() {
-	log_console->infoStream() << "initDoneCALL";
-	{
-		std::unique_lock<std::mutex> lock(_mutex);
-		_init = true;
-		_cond.notify_all();
-	}
-	log_console->infoStream() << "initDoneCALLED";
+	std::unique_lock<std::mutex> lock(_mutex);
+	_init = true;
+	_cond.notify_all();
 }
 
 
 void MultiGpu::stepDone() {
-	log_console->infoStream() << "stepDoneCALL";
 	renderToTextures();
-	log_console->infoStream() << "stepDoneCALLED";
 }
 
 
@@ -399,70 +393,37 @@ void MultiGpu::abort() {
 }
 
 void MultiGpu::giveStep() {
-	log_console->infoStream() << "MASTER wait lock : Give work";
 	std::unique_lock<std::mutex> lock(_mutex);
-	log_console->infoStream() << "MASTER got lock : Give work";
 	_step = true;
 	_stepDone = false;
 	_cond.notify_all();
-	log_console->infoStream() << "MASTER gave work";
 }
 void MultiGpu::lockStep() {
-	log_console->infoStream() << "SLAVE wait lock : Lock step";
 	std::unique_lock<std::mutex> lock(_mutex);
-	log_console->infoStream() << "SLAVE got lock : Lock step";
 	_step = false;
 	_cond.notify_all();
-	log_console->infoStream() << "SLAVE Locked step";
 }
 void MultiGpu::releaseStep() {
-	log_console->infoStream() << "SLAVE wait lock : Release step";
 	std::unique_lock<std::mutex> lock(_mutex);
-	log_console->infoStream() << "SLAVE got lock : Release step";
 	_stepDone = true;
 	_cond.notify_all();
-	log_console->infoStream() << "SLAVE Released step";
 }
 
+
 void MultiGpu::waitStep() {
-	log_console->infoStream() << "MASTER Waiting stepdone";
-	while(!_stepDone) std::this_thread::yield();
-	log_console->infoStream() << "MASTER Passed stepdone";
+	std::unique_lock<std::mutex> lock(_mutex);
+	_cond.wait(lock, [this]{return _stepDone;});
+	_cond.notify_all();
 }
 
 void MultiGpu::waitCompute() {
-	log_console->infoStream() << "SLAVE Waiting work";
-	while(!_step) std::this_thread::yield();
-	log_console->infoStream() << "SLAVE work taken";
+	std::unique_lock<std::mutex> lock(_mutex);
+	_cond.wait(lock, [this]{return _step;});
+	_cond.notify_all();
 }
 		
 void MultiGpu::waitInit() {
-	log_console->infoStream() << "MASTER Waiting init";
-	while(!_init) std::this_thread::yield();
-	log_console->infoStream() << "MASTER init passed";
+	std::unique_lock<std::mutex> lock(_mutex);
+	_cond.wait(lock, [this]{return _init;});
+	_cond.notify_all();
 }
-
-//tellement random les signaux 
-//void MultiGpu::waitStep() {
-	//std::unique_lock<std::mutex> lock(_mutex);
-	//log_console->infoStream() << "MASTER Waiting stepdone";
-	//_cond.wait(lock, [this]{return _stepDone;});
-	//_cond.notify_all();
-	//log_console->infoStream() << "MASTER Passed stepdone";
-//}
-
-//void MultiGpu::waitCompute() {
-	//std::unique_lock<std::mutex> lock(_mutex);
-	//log_console->infoStream() << "SLAVE Waiting work";
-	//_cond.wait(lock, [this]{return _step;});
-	//_cond.notify_all();
-	//log_console->infoStream() << "SLAVE work taken";
-//}
-		
-//void MultiGpu::waitInit() {
-	//std::unique_lock<std::mutex> lock(_mutex);
-	//log_console->infoStream() << "MASTER Waiting init";
-	//_cond.wait(lock, [this]{return _init;});
-	//_cond.notify_all();
-	//log_console->infoStream() << "MASTER init passed";
-//}

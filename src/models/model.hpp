@@ -19,7 +19,8 @@ class Model : public QObject {
 
     /* Copy signals, inheritance does not work properly */
     signals:
-        void stepComputed(const QMap<QString, GLuint> &texMap);
+        void updateDisplay(const QMap<QString, GLuint> &texMap);
+        void stepComputed();
         void finished();
 
     protected:

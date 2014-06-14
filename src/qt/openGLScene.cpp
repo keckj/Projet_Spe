@@ -56,7 +56,7 @@ void OpenGLScene::updateTextures(const QMap<QString, GLuint> &texMap) {
     // Check if we need to change layout
 	if (texMap.size() == m_texMap.size()) {
 		//Notify the GUI that we have made progress
-		emit stepRendered();
+		update();
 		return;
 	}
 
@@ -99,9 +99,7 @@ void OpenGLScene::updateTextures(const QMap<QString, GLuint> &texMap) {
 
     // Buffer new arrays
     makeArrays();
-    
-    // Notify the status bar that we have made progress
-    emit stepRendered();
+	update();
 }
 
 void OpenGLScene::drawBackground(QPainter *painter, const QRectF &) {
@@ -169,7 +167,7 @@ void OpenGLScene::drawBackground(QPainter *painter, const QRectF &) {
     }
 
     // Refresh the window once the event queue is empty 
-    QTimer::singleShot(0, this, SLOT(update()));
+    //QTimer::singleShot(0, this, SLOT(update()));
 }
 
 void OpenGLScene::makeProgram() {
@@ -251,6 +249,7 @@ void OpenGLScene::makeArrays() {
 	glBufferData(GL_ARRAY_BUFFER, 8*m_texMap.size()*sizeof(float), m_vertexCoords, GL_STATIC_DRAW);
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
+
 }
 
 

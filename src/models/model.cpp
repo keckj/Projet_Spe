@@ -34,12 +34,15 @@ void Model::startComputing() {
         }
 
         computeStep(i);
-        // Try to update only after 17 ms (~60 fps)
-        if ((screenRefreshTimer.elapsed() - 17) > 0) {
-            //updateTextures(); //          TODO TODO TODO
-            emit stepComputed(m_mappedTextures);
+        
+		// Update screen only after at least 17 ms (~60 fps)
+        if (screenRefreshTimer.hasExpired(17)) {
+            //updateTextures(); 
+            emit updateDisplay(m_mappedTextures);
             screenRefreshTimer.restart();
         }
+		
+		emit stepComputed();
     }
     
     finishComputation();

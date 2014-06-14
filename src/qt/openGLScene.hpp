@@ -26,9 +26,6 @@ class OpenGLScene : public QGraphicsScene {
 		static Window solverWindow;
 		static Colormap solverColormap;
 
-    signals:
-        void stepRendered();
-
     public slots:
         void updateTextures(const QMap<QString, GLuint> &texMap);
 		void changeColormap(const QString &colormapName);

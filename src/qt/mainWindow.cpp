@@ -53,8 +53,6 @@ MainWindow::MainWindow() {
     scene = new OpenGLScene(viewer);
     viewer->setScene(scene);
     
-    connect(scene, SIGNAL(stepRendered()), this, SLOT(onStepRender()));
-
     panel = new SidePanel(this);
 
     connect(panel, SIGNAL(childKeyEvent(QKeyEvent *)), this, SLOT(childKeyEvent(QKeyEvent *)));
@@ -117,7 +115,8 @@ void MainWindow::startComputing() {
     connect(mod, SIGNAL(finished()), panel, SLOT(stop()));                      // update GUI buttons
     connect(mod, SIGNAL(finished()), mod, SLOT(deleteLater()));
     connect(m_thread, SIGNAL(finished()), m_thread, SLOT(deleteLater()));
-	connect(mod, SIGNAL(stepComputed(const QMap<QString, GLuint> &)), scene, SLOT(updateTextures(const QMap<QString, GLuint> &)));
+	connect(mod, SIGNAL(updateDisplay(const QMap<QString, GLuint> &)), scene, SLOT(updateTextures(const QMap<QString, GLuint> &)));
+	connect(mod, SIGNAL(stepComputed()), this, SLOT(onStepRender()));
 
     m_thread->start();
 

@@ -80,25 +80,18 @@ template <unsigned int nCommandQueues>
 template <typename Ret, class... Args>
 void DeviceThread<nCommandQueues>::callOnce(std::function<Ret(Args...)> f, Fence *fence, Args... args) {
 	_called=false;
-	log_console->infoStream() << "omgFENCE blokc";
 	(*fence)();
-	log_console->infoStream() << "callOnceBegin";
 	{
 		std::unique_lock<std::mutex> lock(DeviceThread::_mutex);
 		if(!_called) {
-			log_console->infoStream() << "CALL";
 			f(args...);		
-			log_console->infoStream() << "CALLED";
 			_called = true;
 		}
 		else {
-			log_console->infoStream() << "ALREADY CALLED";
 		}
 		DeviceThread::_cond.notify_one();
 	}
-	log_console->infoStream() << "omgFENCE blokc2";
 	(*fence)();
-	log_console->infoStream() << "callOnce End";
 }
 
 #endif /* end of include guard: DEVICETHREAD_H */

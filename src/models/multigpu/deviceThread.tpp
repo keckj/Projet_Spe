@@ -32,7 +32,7 @@ DeviceThread<nCommandQueues>::DeviceThread(MultiGpu *simulation,
 	_platform(platform), _context(context),
 	_program(program), _device(device),
 	_fence(fence),
-	_dh(0.01),
+	_dh(dh),
 	_display(display),
 	_writeOnDisk(writeOnDisk)
 { 
@@ -92,7 +92,6 @@ void DeviceThread<nCommandQueues>::operator()() {
 
 		//try to get work
 		bool success = _simulation->tryToTakeSubDomain(currentDomain);
-		log_console->infoStream() << "Try to get subdomain : " << (success ? "success" : "just nop");
 
 		if(!success) {
 			lockDomains = true;
@@ -200,11 +199,8 @@ void DeviceThread<nCommandQueues>::operator()() {
 	std::function<void(MultiGpu*)> releaseStep(&MultiGpu::releaseStep);
 	unsigned int i = 1;
 	while(true) {
-		log_console->info("wait da work");
 		callOnce<void,MultiGpu*>(waitCompute, _fence, _simulation);
-		log_console->info("lock da step");
 		callOnce<void,MultiGpu*>(lockStep, _fence, _simulation);
-		log_console->info("compute");
 
 		for (unsigned int j = 0; j < _acquiredDomains.size(); j++) {
 			computeSubDomainStep(j, i);
@@ -216,9 +212,7 @@ void DeviceThread<nCommandQueues>::operator()() {
 		if(_display)
 			callOnce<void,MultiGpu*>(stepDone, _fence, _simulation);
 		
-		log_console->info("release da step");
 		callOnce<void,MultiGpu*>(releaseStep, _fence, _simulation);
-		log_console->info("end loop");
 
 		i++;
 	}
