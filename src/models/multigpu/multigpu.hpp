@@ -22,6 +22,7 @@ class MultiGpu : public Model {
 				std::map<QString, Argument> *args, 
 				std::map<QString, bool> *renderedVars);
         ~MultiGpu();
+		void killWorkerThreads();
 
 		//Model overrides
         void initComputation() override;
@@ -53,6 +54,7 @@ class MultiGpu : public Model {
 		void waitStep();
 		void waitCompute();
 		void waitInit();
+		void destroy();
 		void abort();
 	
 		//access for gui
@@ -64,7 +66,7 @@ class MultiGpu : public Model {
 		cl::Platform _platform;
 		cl::Context _context;
 		std::vector<cl::Device> _devices;
-		std::vector<DeviceThread<1u>> _deviceThreads;
+		std::vector<DeviceThread<1u>*> _deviceThreads;
 		unsigned int _nDevices;
 		void initOpenClContext();
 		
@@ -89,9 +91,7 @@ class MultiGpu : public Model {
 	
 		//model
 		std::map<QString, Argument> *_args;
-
-    signals:
-        void finished();
+		bool _kill, _destroyed;
 };
 
 #include "deviceThread.tpp"

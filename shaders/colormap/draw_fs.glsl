@@ -22,10 +22,11 @@ out vec4 out_colour;
 
 void main (void)
 {	
+	float nColors = 9.0f;
 	float val = texture(matrix, vertex_in.texCoord).r;
 	float t = (val-minVal)/(maxVal-minVal);
-	int i = int(t*9.0f);
-	float dt = 1.0f/9.0f;
+	int i = int(t*nColors);
+	float dt = 1.0f/nColors;
 	float tl = (t-float(i)*dt)/dt;
 	
 	Colormap colormap = in_colormaps.colormap[colormapId];

@@ -26,17 +26,23 @@ MultiGpu::MultiGpu(int nbIter,
 	_nFunctions(0),
 	_init(false),
 	_sliceIdX(0), _sliceIdY(0), _sliceIdZ(0),
-	_args(args)
+	_args(args),
+	_kill(false),
+	_destroyed(false)
 {
 }
 
 MultiGpu::~MultiGpu() 
 {
+	log_console->info("KILL MULTIGPU");
+	killWorkerThreads();
+	log_console->info("KILLED WORKER THREADS");
 	glXMakeCurrent(OpenGLScene::solverDisplay, 0, 0);
 	glXDestroyContext(OpenGLScene::solverDisplay, OpenGLScene::solverContext);
 	XDestroyWindow(OpenGLScene::solverDisplay, OpenGLScene::solverWindow);
 	XFreeColormap(OpenGLScene::solverDisplay, OpenGLScene::solverColormap);
 	XCloseDisplay(OpenGLScene::solverDisplay);
+	log_console->info("FINISH KILL MULTIGPU");
 }
 
 void MultiGpu::initComputation() {
@@ -202,6 +208,7 @@ void MultiGpu::initOpenClContext(){
 			break;
 		DeviceThread<1u> *dt = new DeviceThread<1u>(this, _platform, _context, program, dev, fence, _args, 1.0f/this->m_width, true);
 		std::thread t(*dt);
+		_deviceThreads.push_back(dt);
 		t.detach();
 		i++;
 	}
@@ -408,22 +415,41 @@ void MultiGpu::releaseStep() {
 	_stepDone = true;
 	_cond.notify_all();
 }
+void MultiGpu::destroy() {
+	std::unique_lock<std::mutex> lock(_mutex);
+	_destroyed = true;
+	_cond.notify_all();
+}
 
 
 void MultiGpu::waitStep() {
 	std::unique_lock<std::mutex> lock(_mutex);
-	_cond.wait(lock, [this]{return _stepDone;});
+	_cond.wait(lock, [this]{return _stepDone||_kill;});
 	_cond.notify_all();
 }
 
 void MultiGpu::waitCompute() {
 	std::unique_lock<std::mutex> lock(_mutex);
-	_cond.wait(lock, [this]{return _step;});
+	_cond.wait(lock, [this]{return _step||_kill;});
 	_cond.notify_all();
 }
 		
 void MultiGpu::waitInit() {
 	std::unique_lock<std::mutex> lock(_mutex);
-	_cond.wait(lock, [this]{return _init;});
+	_cond.wait(lock, [this]{return _init||_kill;});
 	_cond.notify_all();
 }
+
+void MultiGpu::killWorkerThreads() {
+	_kill = true;
+	for(auto t : _deviceThreads)
+		t->finish();
+	
+	log_console->info("SIGKILL SENT");
+	
+	std::unique_lock<std::mutex> lock(_mutex);
+	_cond.wait(lock, [this]{return _destroyed;});
+	_cond.notify_all();
+	log_console->info("DESTROYED OK");
+}
+		

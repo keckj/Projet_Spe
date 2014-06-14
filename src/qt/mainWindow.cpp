@@ -59,6 +59,7 @@ MainWindow::MainWindow() {
     
     connect(this, SIGNAL(progressUpdate(int)), status, SLOT(progressUpdate(int)));
 	connect(this, SIGNAL(colormapUpdate(const QString &)), scene, SLOT(changeColormap(const QString &)));
+	connect(this, SIGNAL(toggleSampler()), scene, SLOT(toggleSampler()));
 
     splitter->addWidget(viewer);
     splitter->addWidget(panel);
@@ -82,7 +83,6 @@ void MainWindow::changeNbIter(int nb) {
 }
 
 void MainWindow::startComputing() {
-    //m_stored_grids->clear();
     
     unsigned int gridWidth = panel->getGridWidth();
     unsigned int gridHeight = panel->getGridHeight();
@@ -107,17 +107,20 @@ void MainWindow::startComputing() {
             mod = (Model *) new ExampleModel(m_total_steps, panel->getVariables());
 			log_console->infoStream() << "Started an example model simulation !";
     }
-    mod->moveToThread(m_thread);
     
+	connect(this, SIGNAL(pauseThread(bool)), mod, SLOT(pauseComputing(bool)), Qt::DirectConnection);
+    connect(this, SIGNAL(stopThread()), mod, SLOT(stopComputing()), Qt::DirectConnection);
+
     connect(m_thread, SIGNAL(started()), mod, SLOT(startComputing()));
-    connect(this, SIGNAL(pauseThread(bool)), mod, SLOT(pauseComputing(bool)));
-    connect(mod, SIGNAL(finished()), m_thread, SLOT(quit()));                   // kill thread
-    connect(mod, SIGNAL(finished()), panel, SLOT(stop()));                      // update GUI buttons
-    connect(mod, SIGNAL(finished()), mod, SLOT(deleteLater()));
     connect(m_thread, SIGNAL(finished()), m_thread, SLOT(deleteLater()));
+
 	connect(mod, SIGNAL(updateDisplay(const QMap<QString, GLuint> &)), scene, SLOT(updateTextures(const QMap<QString, GLuint> &)));
 	connect(mod, SIGNAL(stepComputed()), this, SLOT(onStepRender()));
+    connect(mod, SIGNAL(destroyed()), m_thread, SLOT(quit()));                   // kill thread
+    connect(mod, SIGNAL(finished()), mod, SLOT(deleteLater()));
+    connect(mod, SIGNAL(finished()), panel, SLOT(stop()));                      // update GUI buttons
 
+    mod->moveToThread(m_thread);
     m_thread->start();
 
     // Reset current step and progress bar
@@ -154,6 +157,9 @@ void MainWindow::changeDisplayedGrid(int n) {
 
 void MainWindow::keyPressEvent(QKeyEvent *k) {
     switch (k->key()) {
+		case Qt::Key_S:
+			emit toggleSampler();
+			break;
         case Qt::Key_Escape:
             emit stopThread();
             this->close();

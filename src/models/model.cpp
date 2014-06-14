@@ -13,7 +13,6 @@ Model::Model(int nbIter, std::map<QString, bool> *renderedVars, unsigned int wid
 {}
 
 void Model::startComputing() {
-		
 	log_console->debugStream() << "Start Computing.";
 
     initComputation();
@@ -27,6 +26,7 @@ void Model::startComputing() {
             m_cond.wait(&m_mutex);
         }
         bool stop = m_stop;
+        m_cond.wakeOne();
         m_mutex.unlock();
         
         if (stop) {
@@ -46,6 +46,7 @@ void Model::startComputing() {
     }
     
     finishComputation();
+	log_console->infoStream() << "FINISH";
     emit finished();
 }
 

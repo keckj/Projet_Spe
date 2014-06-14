@@ -10,18 +10,9 @@ class Model : public QObject {
 
     public:
         Model(int nbIter, std::map<QString, bool> *renderedVars, unsigned int width = 512, unsigned int height = 512, unsigned int length = 1); 
-		virtual ~Model() {};
-
-    public slots:
-        void startComputing();
-        void pauseComputing(bool b);
-        void stopComputing();
-
-    /* Copy signals, inheritance does not work properly */
-    signals:
-        void updateDisplay(const QMap<QString, GLuint> &texMap);
-        void stepComputed();
-        void finished();
+		virtual ~Model() {
+			log_console->infoStream() << "KILL MODEL";
+		};
 
     protected:
         unsigned int m_width, m_height, m_length;
@@ -37,6 +28,16 @@ class Model : public QObject {
         QWaitCondition m_cond;
         int m_nbIter;
         bool m_pause, m_stop;
+    
+	public slots:
+        void startComputing();
+        void pauseComputing(bool b);
+        void stopComputing();
+
+    signals:
+        void updateDisplay(const QMap<QString, GLuint> &texMap);
+        void stepComputed();
+        void finished();
 };
 
 #endif

@@ -27,7 +27,8 @@ OpenGLScene::OpenGLScene(GraphicsViewer *viewer) :
     m_texMap(),
 	m_colormapsUBO(),
 	m_colorId(0),
-    m_vertexCoords()
+    m_vertexCoords(),
+	m_min_mag_filter(GL_NEAREST)
 {
         //Get and print info about qt context
 		qtDisplay = glXGetCurrentDisplay();
@@ -136,16 +137,16 @@ void OpenGLScene::drawBackground(QPainter *painter, const QRectF &) {
 	
 	//Texture unit
 	glActiveTexture(GL_TEXTURE0 + 0);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	
     // Draw textured quads
 	int i = 0;
 	for (QString key : m_texMap.keys()) {
 		glBindTexture(GL_TEXTURE_2D, m_texMap[key]);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, m_min_mag_filter);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, m_min_mag_filter);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 		glDrawArrays(GL_QUADS, 4*i, 4);
         ++i;
 	}
@@ -165,9 +166,6 @@ void OpenGLScene::drawBackground(QPainter *painter, const QRectF &) {
 	    renderString(x, y, GLUT_BITMAP_9_BY_15, key.toStdString().c_str(), 1.0, 1.0, 1.0);
         ++i;
     }
-
-    // Refresh the window once the event queue is empty 
-    //QTimer::singleShot(0, this, SLOT(update()));
 }
 
 void OpenGLScene::makeProgram() {
@@ -280,4 +278,12 @@ void OpenGLScene::renderString(float x, float y, void *font_, const char* string
   glColor4f(r,g,b,a); 
   glRasterPos2f(x, y);
   glutBitmapString(font_, (const unsigned char*)string);
+}
+		
+
+void OpenGLScene::toggleSampler() {
+	if(m_min_mag_filter == GL_NEAREST)
+		m_min_mag_filter = GL_LINEAR;
+	else
+		m_min_mag_filter = GL_NEAREST;
 }

@@ -2,6 +2,7 @@
 #include "headers.hpp"
 #include "log.hpp"
 #include "clUtils.hpp"
+#include "openGLScene.hpp"
 #include <thread>
 
 
@@ -15,7 +16,10 @@ std::condition_variable DeviceThread<nCommandQueues>::_cond;
 
 template <unsigned int nCommandQueues>
 bool DeviceThread<nCommandQueues>::_called;
-
+		
+template <unsigned int nCommandQueues>
+bool DeviceThread<nCommandQueues>::_kill=false;
+	
 template <unsigned int nCommandQueues>
 DeviceThread<nCommandQueues>::DeviceThread(MultiGpu *simulation, 
 		const cl::Platform &platform,
@@ -60,6 +64,7 @@ DeviceThread<nCommandQueues>::DeviceThread(MultiGpu *simulation,
 
 template <unsigned int nCommandQueues>
 DeviceThread<nCommandQueues>::~DeviceThread() {
+	log_console->infoStream() << "Worker thread killed !";
 }
 
 template <unsigned int nCommandQueues>
@@ -198,7 +203,7 @@ void DeviceThread<nCommandQueues>::operator()() {
 	std::function<void(MultiGpu*)> stepDone(&MultiGpu::stepDone);
 	std::function<void(MultiGpu*)> releaseStep(&MultiGpu::releaseStep);
 	unsigned int i = 1;
-	while(true) {
+	while(!_kill) {
 		callOnce<void,MultiGpu*>(waitCompute, _fence, _simulation);
 		callOnce<void,MultiGpu*>(lockStep, _fence, _simulation);
 
@@ -216,6 +221,12 @@ void DeviceThread<nCommandQueues>::operator()() {
 
 		i++;
 	}
+		
+	
+	log_console->infoStream() << "wait destroy";
+	std::function<void(MultiGpu*)> destroy(&MultiGpu::destroy);
+	callOnce<void,MultiGpu*>(destroy, _fence, _simulation);
+	log_console->infoStream() << "destroy!!!";
 }
 
 template <unsigned int nCommandQueues>
@@ -476,4 +487,9 @@ float DeviceThread<nCommandQueues>::computeOptimalTimestep() {
 		(_epsilon + _mu1/_mu2 * SQUARE(_dh)/4 * SQUARE(_alpha1 + 1));
 
 	return 0.95*std::min(lhs, rhs);
+}
+		
+template <unsigned int nCommandQueues>
+void DeviceThread<nCommandQueues>::finish() {
+	_kill = true;
 }

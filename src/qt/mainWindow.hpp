@@ -17,6 +17,7 @@ class MainWindow : public QMainWindow {
     signals:
         void progressUpdate(int p);
 		void colormapUpdate(const QString &colormapName);
+		void toggleSampler();
         void pauseThread(bool b);
         void stopThread();
 
