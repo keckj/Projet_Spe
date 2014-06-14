@@ -18,6 +18,9 @@ void Model::startComputing() {
 
     initComputation();
 
+    QElapsedTimer screenRefreshTimer;
+    screenRefreshTimer.start();
+
     for (int i = 0; i < m_nbIter; i++) {
         m_mutex.lock();
         while (m_pause) {
@@ -31,8 +34,14 @@ void Model::startComputing() {
         }
 
         computeStep(i);
-		emit stepComputed(m_mappedTextures);
+        // Try to update only after 17 ms (~60 fps)
+        if ((screenRefreshTimer.elapsed() - 17) > 0) {
+            //updateTextures(); //          TODO TODO TODO
+            emit stepComputed(m_mappedTextures);
+            screenRefreshTimer.restart();
+        }
     }
+    
     finishComputation();
     emit finished();
 }
@@ -50,14 +59,5 @@ void Model::stopComputing() {
     m_stop = true;
     m_cond.wakeAll();
     m_mutex.unlock();
-}
-
-
-void Model::addTexture(QString texName) { 
-	(*m_renderedVars)[texName] = true;
-}
-
-void Model::removeTexture(QString texName) {
-	(*m_renderedVars)[texName] = false;
 }
 

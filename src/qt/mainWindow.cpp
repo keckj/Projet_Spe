@@ -92,6 +92,7 @@ void MainWindow::startComputing() {
 
     //TODO: panel->getVariables(), panel->getArguments() for every model
     //TODO: use panel->getSaveDirectory()
+    //TODO: use panel->getInitialConditions()
 
     m_thread = new QThread;
     Model *mod;
@@ -116,9 +117,6 @@ void MainWindow::startComputing() {
     connect(mod, SIGNAL(finished()), panel, SLOT(stop()));                      // update GUI buttons
     connect(mod, SIGNAL(finished()), mod, SLOT(deleteLater()));
     connect(m_thread, SIGNAL(finished()), m_thread, SLOT(deleteLater()));
-   
-	connect(this, SIGNAL(addTextureRequest(QString)), mod, SLOT(addTexture(QString)));
-	connect(this, SIGNAL(removeTextureRequest(QString)), mod, SLOT(removeTexture(QString)));
 	connect(mod, SIGNAL(stepComputed(const QMap<QString, GLuint> &)), scene, SLOT(updateTextures(const QMap<QString, GLuint> &)));
 
     m_thread->start();
@@ -136,16 +134,6 @@ void MainWindow::stopComputing() {
     emit stopThread();
 }
        
-void MainWindow::updateRenderedVars(QListWidgetItem *item) {
-    if (item->checkState() == Qt::Unchecked) {
-        emit removeTextureRequest(item->text());
-        //qWarning() << "DEBUG :" << item->text() << " is unchecked";
-    } else {
-        emit addTextureRequest(item->text());
-        //qWarning() << "DEBUG :" << item->text() << " is checked";
-    }
-}
-
 void MainWindow::onStepRender() {
     m_current_step++;
     emit progressUpdate((float) m_current_step / m_total_steps * 100);

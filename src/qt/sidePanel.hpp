@@ -5,6 +5,7 @@
 #include "parametersDialog.hpp"
 #include "initializationDialog.hpp"
 #include "argument.hpp"
+#include "initialCond.hpp"
 
 class SidePanel : public QWidget {
     Q_OBJECT
@@ -18,9 +19,11 @@ class SidePanel : public QWidget {
         unsigned int getGridLength();
         std::map<QString, Argument> *getArguments();
         std::map<QString, bool> *getVariables();
+        std::map<QString, int> *getInitialConditions();
         QString getSaveDirectory();
 
         static const QStringList modelsList;
+        static const QStringList initialConditionsList;
         static const int defaultNumberOfSteps;
         static const std::vector<unsigned int> defaultGridSize;
 
@@ -51,7 +54,7 @@ class SidePanel : public QWidget {
         unsigned int m_gridWidth, m_gridHeight, m_gridLength;
         std::map<QString, Argument> *m_argsMap;
         std::map<QString, bool> *m_varsMap;
-        //TODO initCond
+        std::map<QString, int> *m_initialCondsMap;
         QString m_saveDirectory;
 
         InitializationDialog *initDialog;
