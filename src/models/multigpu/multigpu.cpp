@@ -13,7 +13,7 @@
 
 using namespace log4cpp;
 using namespace utils;
-		
+
 MultiGpu::MultiGpu(int nbIter, 
 		unsigned int width_, unsigned int height_, unsigned int length_,
 		std::map<QString, Argument> *args, 
@@ -40,7 +40,7 @@ MultiGpu::~MultiGpu()
 }
 
 void MultiGpu::initComputation() {
-	
+
 	FunctionInitialCond<float> *zero = new FunctionInitialCond<float>([] (float,float,float)->float {return 0;});
 	FunctionInitialCond<float> *one = new FunctionInitialCond<float>([] (float,float,float)->float {return 1;});
 	FunctionInitialCond<float> *half = new FunctionInitialCond<float>([] (float,float,float)->float {return 1/2.0;});
@@ -66,35 +66,32 @@ void MultiGpu::initComputation() {
 	initGrids(initialConds);
 
 	initOpenClContext();
+	
+	waitInit();
 }
 
 void MultiGpu::computeStep(int i) {
-	{
-		std::unique_lock<std::mutex> lock(_mutex);
-		_step = true;
-		_stepDone = false;
-		_cond.wait(lock, [this]{return _stepDone;});
-		_cond.notify_one();
-	}
+	giveStep();
+	waitStep();
 }
 
 void MultiGpu::finishComputation() {;}
 
 void MultiGpu::initOpenClContext(){
-	
+
 	cl_int err;
-	
+
 	//look for compatible platforms
 	std::vector<cl::Platform> platforms;
 	CHK_ERROR_RET(cl::Platform::get(&platforms));
-	
+
 	std::vector<cl::Device> devices;
 	bool found = false;
 
 	for(auto it : platforms) {
 		std::string name = it.getInfo<CL_PLATFORM_NAME>();
 		std::string extensions = it.getInfo<CL_PLATFORM_EXTENSIONS>();
-		
+
 		//check platforms extensions
 		std::stringstream ss(extensions);
 		std::string ext;
@@ -102,7 +99,7 @@ void MultiGpu::initOpenClContext(){
 			ss >> ext;
 			if (ext.compare(CL_GL_SHARING_EXT) == 0) {
 				log_console->infoStream() << "Platform " << name << " has openGL/openCL sharing capabilities :";
-			
+
 				//if platform supported, look for supported devices
 				CHK_ERROR_RET(it.getDevices(CL_DEVICE_TYPE_GPU, &devices));
 				for(auto dev : devices) {
@@ -119,11 +116,11 @@ void MultiGpu::initOpenClContext(){
 						}
 					}
 					if (deviceSupported) {
-							log_console->infoStream() << "\tDevice " << devName << ": supported";
-							_devices.push_back(dev);
+						log_console->infoStream() << "\tDevice " << devName << ": supported";
+						_devices.push_back(dev);
 					}
 					else {
-							log_console->infoStream() << "\tDevice " << devName << ": NOT supported";
+						log_console->infoStream() << "\tDevice " << devName << ": NOT supported";
 					}
 				}
 
@@ -133,16 +130,16 @@ void MultiGpu::initOpenClContext(){
 			}
 		}
 	}
-	
+
 	_nDevices = _devices.size();
 
 	if(!found) {
-			log_console->infoStream() << "No platform has openGL/openCL sharing capabilities, aborting !";
-			emit(finished());
+		log_console->infoStream() << "No platform has openGL/openCL sharing capabilities, aborting !";
+		emit(finished());
 	}
 	if(_nDevices == 0) {
-			log_console->infoStream() << "A platform has openGL/openCL sharing capabilities, but no supported devices found !";
-			emit(finished());
+		log_console->infoStream() << "A platform has openGL/openCL sharing capabilities, but no supported devices found !";
+		emit(finished());
 	}
 
 
@@ -197,7 +194,7 @@ void MultiGpu::initOpenClContext(){
 	utils::buildProgram(program, _devices, "", "MultiGpu Kernel");
 
 	unsigned int devicesNeeded = std::min<unsigned int>(_domains.begin()->second->nSplits(), _devices.size());
-	Fence *fence = new Fence(devicesNeeded);
+	Fence *fence = new Fence(2);
 
 	unsigned int i = 0;
 	for(auto dev : _devices) {
@@ -208,52 +205,56 @@ void MultiGpu::initOpenClContext(){
 		t.detach();
 		i++;
 	}
-	
+
 	log_console->infoStream() << "Created " << devicesNeeded << " device threads, " << _devices.size()-devicesNeeded <<" devices will be idle !";
 }
-		
+
 void MultiGpu::initGrids(const std::map<std::string, InitialCond<float>*> &initialConditions) {
-		
-		unsigned int gridWidth = this->m_width;
-		unsigned int gridHeight = this->m_height;
-		unsigned int gridLength = this->m_length;
-		_nFunctions = initialConditions.size();
-	
-		for(auto &initialConds : initialConditions) {
-			MultiBufferedDomain<float,1u> *dom = 
-				new MultiBufferedDomain<float,1u>(gridWidth, gridHeight, gridLength, 1u, 64, initialConds.second);
-			_domains.emplace(initialConds.first, dom);
-		}
-			
-		_splits = _domains.begin()->second->nSplits();		
-		resetSubDomains();
+
+	unsigned int gridWidth = this->m_width;
+	unsigned int gridHeight = this->m_height;
+	unsigned int gridLength = this->m_length;
+	_nFunctions = initialConditions.size();
+
+	for(auto &initialConds : initialConditions) {
+		MultiBufferedDomain<float,1u> *dom = 
+			new MultiBufferedDomain<float,1u>(gridWidth, gridHeight, gridLength, 1u, 4, initialConds.second);
+		_domains.emplace(initialConds.first, dom);
+	}
+
+	_splits = _domains.begin()->second->nSplits();		
+	resetSubDomains();
 }
 
 void MultiGpu::resetSubDomains() {
-		for (unsigned int i = 0; i < _splits; i++) {
-			_availableDomains.push_back(i);
-		}
+	log_console->infoStream() << "reset domains";
+	for (unsigned int i = 0; i < _splits; i++) {
+		_availableDomains.push_back(i);
+	}
+	log_console->infoStream() << "domains resetted";
 }
-		
-		
+
+
 bool MultiGpu::subDomainAvailable() {
-		return _availableDomains.size() > 0;
+	return _availableDomains.size() > 0;
 }
-		
+
 bool MultiGpu::tryToTakeSubDomain(std::map<std::string, MultiBufferedSubDomain<float,1u>*> &subDomain) {
-	
+
 	subDomain.clear();
 	unsigned int id;
 	{
-		std::unique_lock<std::mutex> lock(_mutex);
-		_cond.notify_one();
-		if (!_availableDomains.size() > 0)
+		std::unique_lock<std::mutex> lock(_domainMutex);
+		_domainCond.notify_one();
+		if (_availableDomains.size() == 0) {
+			log_console->infoStream() << "Domain not available";
 			return false;
+		}
 
 		id = _availableDomains.front();
 		_availableDomains.pop_front();
 	}
-	
+
 	for(std::pair<std::string,MultiBufferedDomain<float,1u>*> subdom : _domains) {
 		subDomain.emplace(subdom.first, (*subdom.second)[id]);
 	}
@@ -262,26 +263,27 @@ bool MultiGpu::tryToTakeSubDomain(std::map<std::string, MultiBufferedSubDomain<f
 }
 
 void MultiGpu::releaseSubDomain(std::map<std::string, MultiBufferedSubDomain<float,1u>*> subDomain){
-	std::unique_lock<std::mutex> lock(_mutex);
+	std::unique_lock<std::mutex> lock(_domainMutex);
 	assert(_availableDomains.size()<=_splits);
 	_availableDomains.push_back(subDomain.begin()->second->id());
-	_cond.notify_one();
+	_domainCond.notify_one();
 }
 
 void MultiGpu::initDone() {
-	resetSubDomains();
-	_init = true;
-	log_console->infoStream() << "Init done";
-}
-
-void MultiGpu::stepDone() {
+	log_console->infoStream() << "initDoneCALL";
 	{
 		std::unique_lock<std::mutex> lock(_mutex);
-		renderToTextures();
-		_step = false;
-		_stepDone = true;
-		_cond.notify_one();
+		_init = true;
+		_cond.notify_all();
 	}
+	log_console->infoStream() << "initDoneCALLED";
+}
+
+
+void MultiGpu::stepDone() {
+	log_console->infoStream() << "stepDoneCALL";
+	renderToTextures();
+	log_console->infoStream() << "stepDoneCALLED";
 }
 
 
@@ -292,25 +294,25 @@ void MultiGpu::renderToTextures() {
 	//DEBUG
 	//static unsigned int k = 0;
 	//k++;
-	
+
 	glActiveTexture(GL_TEXTURE0);
 	for (auto pair : _domains) {
 		float *data = _sliceZ[pair.first];
 
 		//DEBUG
 		//for (unsigned int j = 0; j < this->m_height ; j++) {
-			//for (unsigned int i = 0; i < this->m_width; i++) {
-				//float ii = float(i)/this->m_width;
-				//float jj = float(j)/this->m_height;
+		//for (unsigned int i = 0; i < this->m_width; i++) {
+		//float ii = float(i)/this->m_width;
+		//float jj = float(j)/this->m_height;
 
-				//data[j*this->m_width+i] = (k%2==0 ? 
-						//((ii<1/2.0f && jj <1/2.0f) || (ii>1/2.0f && jj>1/2.0f)) :
-						//!((ii<1/2.0f && jj <1/2.0f) || (ii>1/2.0f && jj>1/2.0f))
-						//);
-			//}
+		//data[j*this->m_width+i] = (k%2==0 ? 
+		//((ii<1/2.0f && jj <1/2.0f) || (ii>1/2.0f && jj>1/2.0f)) :
+		//!((ii<1/2.0f && jj <1/2.0f) || (ii>1/2.0f && jj>1/2.0f))
+		//);
+		//}
 		//}
 		//k++;
-		
+
 		unsigned int texture = this->m_mappedTextures[QString(pair.first.c_str())];
 		glBindTexture(GL_TEXTURE_2D, texture);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -319,32 +321,32 @@ void MultiGpu::renderToTextures() {
 				GL_LUMINANCE, GL_FLOAT, (GLvoid*) data);
 		assert(glIsTexture(texture));
 	}
-	
+
 	glBindTexture(GL_TEXTURE_2D, 0);
 	CHK_GL_ERRORS();
-		
+
 	glXMakeCurrent(OpenGLScene::solverDisplay, 0, 0);
 }
-		
+
 unsigned int MultiGpu::sliceIdX() {
-			return _sliceIdX;
+	return _sliceIdX;
 }
 unsigned int MultiGpu::sliceIdY() {
-			return _sliceIdY;
+	return _sliceIdY;
 }
 unsigned int MultiGpu::sliceIdZ() {
-			return _sliceIdZ;
+	return _sliceIdZ;
 }
 std::map<std::string, float*> MultiGpu::sliceX() {
-			return _sliceX;
+	return _sliceX;
 }
 std::map<std::string, float*> MultiGpu::sliceY() {
-			return _sliceY;
+	return _sliceY;
 }
 std::map<std::string, float*> MultiGpu::sliceZ() {
-			return _sliceZ;
+	return _sliceZ;
 }
-	
+
 void MultiGpu::allocSlices() {
 	for(auto pair : _domains) {
 		_sliceX.emplace(pair.first, pair.second->allocateSliceX());	
@@ -352,25 +354,25 @@ void MultiGpu::allocSlices() {
 		_sliceZ.emplace(pair.first, pair.second->allocateSliceZ());	
 	}
 }
-	
-void MultiGpu::createTextures() {
-	
-		unsigned int *textures = new unsigned int[_nFunctions];
-	
-		log_console->infoStream() << "Creating " << _nFunctions << " model textures...";
-		glGenTextures(_nFunctions, textures);
-		glFinish();
-		CHK_GL_ERRORS();
 
-		unsigned int i = 0;
-		for (auto pair : _domains) {
-			log_console->infoStream() << "Created texture " << textures[i];
-			this->m_mappedTextures.insert(QString(pair.first.c_str()), textures[i++]);
-		}
+void MultiGpu::createTextures() {
+
+	unsigned int *textures = new unsigned int[_nFunctions];
+
+	log_console->infoStream() << "Creating " << _nFunctions << " model textures...";
+	glGenTextures(_nFunctions, textures);
+	glFinish();
+	CHK_GL_ERRORS();
+
+	unsigned int i = 0;
+	for (auto pair : _domains) {
+		log_console->infoStream() << "Created texture " << textures[i];
+		this->m_mappedTextures.insert(QString(pair.first.c_str()), textures[i++]);
+	}
 }
 
 std::map<QString, Argument> *MultiGpu::getArguments() {
-	
+
 	std::map<QString,Argument> *args = new std::map<QString,Argument>;
 
 	args->emplace("epsilon", Argument(0.01f, 0.001f, 0.1f, WidgetType::SPINBOX));
@@ -380,18 +382,87 @@ std::map<QString, Argument> *MultiGpu::getArguments() {
 	args->emplace("mu_2",Argument(0.3f, 0.1f, 0.5f, WidgetType::SPINBOX));
 	args->emplace("alpha_1",Argument(0.2f, 0.1f, 0.5f, WidgetType::SPINBOX));
 	args->emplace("alpha_2",Argument(0.1f, 0.1f, 0.5f, WidgetType::SPINBOX));
-			
+
 	return args;
 }
-       
-std::map<QString, bool> *MultiGpu::getVariables() {
-    std::map<QString, bool> *vars = new std::map<QString, bool>;
-    vars->emplace("e", true);
-    vars->emplace("r", false);
 
-    return vars;
+std::map<QString, bool> *MultiGpu::getVariables() {
+	std::map<QString, bool> *vars = new std::map<QString, bool>;
+	vars->emplace("e", true);
+	vars->emplace("r", false);
+
+	return vars;
 }
-		
+
 void MultiGpu::abort() {
 	emit finished();
 }
+
+void MultiGpu::giveStep() {
+	log_console->infoStream() << "MASTER wait lock : Give work";
+	std::unique_lock<std::mutex> lock(_mutex);
+	log_console->infoStream() << "MASTER got lock : Give work";
+	_step = true;
+	_stepDone = false;
+	_cond.notify_all();
+	log_console->infoStream() << "MASTER gave work";
+}
+void MultiGpu::lockStep() {
+	log_console->infoStream() << "SLAVE wait lock : Lock step";
+	std::unique_lock<std::mutex> lock(_mutex);
+	log_console->infoStream() << "SLAVE got lock : Lock step";
+	_step = false;
+	_cond.notify_all();
+	log_console->infoStream() << "SLAVE Locked step";
+}
+void MultiGpu::releaseStep() {
+	log_console->infoStream() << "SLAVE wait lock : Release step";
+	std::unique_lock<std::mutex> lock(_mutex);
+	log_console->infoStream() << "SLAVE got lock : Release step";
+	_stepDone = true;
+	_cond.notify_all();
+	log_console->infoStream() << "SLAVE Released step";
+}
+
+void MultiGpu::waitStep() {
+	log_console->infoStream() << "MASTER Waiting stepdone";
+	while(!_stepDone) std::this_thread::yield();
+	log_console->infoStream() << "MASTER Passed stepdone";
+}
+
+void MultiGpu::waitCompute() {
+	log_console->infoStream() << "SLAVE Waiting work";
+	while(!_step) std::this_thread::yield();
+	log_console->infoStream() << "SLAVE work taken";
+}
+		
+void MultiGpu::waitInit() {
+	log_console->infoStream() << "MASTER Waiting init";
+	while(!_init) std::this_thread::yield();
+	log_console->infoStream() << "MASTER init passed";
+}
+
+//tellement random les signaux 
+//void MultiGpu::waitStep() {
+	//std::unique_lock<std::mutex> lock(_mutex);
+	//log_console->infoStream() << "MASTER Waiting stepdone";
+	//_cond.wait(lock, [this]{return _stepDone;});
+	//_cond.notify_all();
+	//log_console->infoStream() << "MASTER Passed stepdone";
+//}
+
+//void MultiGpu::waitCompute() {
+	//std::unique_lock<std::mutex> lock(_mutex);
+	//log_console->infoStream() << "SLAVE Waiting work";
+	//_cond.wait(lock, [this]{return _step;});
+	//_cond.notify_all();
+	//log_console->infoStream() << "SLAVE work taken";
+//}
+		
+//void MultiGpu::waitInit() {
+	//std::unique_lock<std::mutex> lock(_mutex);
+	//log_console->infoStream() << "MASTER Waiting init";
+	//_cond.wait(lock, [this]{return _init;});
+	//_cond.notify_all();
+	//log_console->infoStream() << "MASTER init passed";
+//}

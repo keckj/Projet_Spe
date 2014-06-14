@@ -80,18 +80,19 @@ void DeviceThread<nCommandQueues>::operator()() {
 		if(success)
 			this->initSubDomain(currentDomain);
 	}
-
-	std::function<void(MultiGpu*)> f(&MultiGpu::initDone);
-	callOnce<void,MultiGpu*>(f, _fence, _simulation);
-
+	
+	std::function<void(MultiGpu*)> resetSubDomains(&MultiGpu::resetSubDomains);
+	callOnce<void,MultiGpu*>(resetSubDomains, _fence, _simulation);
+	
 	//Prepare
 	bool lockDomains = false;
 
 	//Get as much work as possible, automatic device compute load management
-	while(!lockDomains && _simulation->subDomainAvailable()) { 
+	while(!lockDomains) { 
 
 		//try to get work
 		bool success = _simulation->tryToTakeSubDomain(currentDomain);
+		log_console->infoStream() << "Try to get subdomain : " << (success ? "success" : "just nop");
 
 		if(!success) {
 			lockDomains = true;
@@ -189,27 +190,36 @@ void DeviceThread<nCommandQueues>::operator()() {
 		log_console->infoStream() << "Device " << _device() << " acquired " << _acquiredDomains.size() << " domains !";
 	}
 	
+	std::function<void(MultiGpu*)> initDone(&MultiGpu::initDone);
+	callOnce<void,MultiGpu*>(initDone, _fence, _simulation);
+	
 	//Compute loop
-	std::function<void(MultiGpu*)> g(&MultiGpu::stepDone);
+	std::function<void(MultiGpu*)> waitCompute(&MultiGpu::waitCompute);
+	std::function<void(MultiGpu*)> lockStep(&MultiGpu::lockStep);
+	std::function<void(MultiGpu*)> stepDone(&MultiGpu::stepDone);
+	std::function<void(MultiGpu*)> releaseStep(&MultiGpu::releaseStep);
 	unsigned int i = 1;
 	while(true) {
-		while(!_simulation->_step) {
-			std::this_thread::sleep_for(std::chrono::milliseconds(10));
-		}
+		log_console->info("wait da work");
+		callOnce<void,MultiGpu*>(waitCompute, _fence, _simulation);
+		log_console->info("lock da step");
+		callOnce<void,MultiGpu*>(lockStep, _fence, _simulation);
+		log_console->info("compute");
+
 		for (unsigned int j = 0; j < _acquiredDomains.size(); j++) {
 			computeSubDomainStep(j, i);
 		}
 		for (unsigned int j = 0; j < nCommandQueues; j++) {
 			_commandQueues[j].finish();
 		}
-		if(_display) {
-			callOnce<void,MultiGpu*>(g, _fence, _simulation);
-		}
-		else {
-			(*_fence)();
-			_simulation->_stepDone = true;
-			_simulation->_step = false;
-		}
+
+		if(_display)
+			callOnce<void,MultiGpu*>(stepDone, _fence, _simulation);
+		
+		log_console->info("release da step");
+		callOnce<void,MultiGpu*>(releaseStep, _fence, _simulation);
+		log_console->info("end loop");
+
 		i++;
 	}
 }
@@ -409,7 +419,8 @@ void DeviceThread<nCommandQueues>::computeSubDomainStep(unsigned int domainId, u
 							   //<< "\n";
   
 			
-			
+		
+		//TODO
 		//if(sliceIdx >= offsetX && sliceIdx < offsetX+subDomainWidth) {
 			//bufferOrigin.clear(); hostOrigin.clear(); region.clear();
 

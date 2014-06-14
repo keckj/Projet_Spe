@@ -47,6 +47,12 @@ class MultiGpu : public Model {
 		//signals from worker threads
 		void initDone();
 		void stepDone();
+		void lockStep();
+		void giveStep();
+		void releaseStep();
+		void waitStep();
+		void waitCompute();
+		void waitInit();
 		void abort();
 	
 		//access for gui
@@ -63,8 +69,8 @@ class MultiGpu : public Model {
 		void initOpenClContext();
 		
 		//thread safety
-		std::mutex _mutex;
-		std::condition_variable _cond;
+		std::mutex _mutex, _domainMutex;
+		std::condition_variable _cond, _domainCond;
 		std::list<unsigned int> _availableDomains;
 
 		//domain
