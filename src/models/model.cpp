@@ -2,6 +2,7 @@
 #include "model.hpp"
 #include "model.moc"
 #include "openGLScene.hpp"
+#include "initialCondFactory.hpp"
 
 
 Display *Model::solverDisplay=0;
@@ -9,18 +10,22 @@ GLXContext Model::solverContext = 0;
 Window Model::solverWindow=0;
 Colormap Model::solverColormap=0;
 
-Model::Model(int nbIter, std::map<QString, bool> *renderedVars, unsigned int width, unsigned int height, unsigned int length) : 
-            m_width(width), m_height(height), m_length(length), 
-            m_renderedVars(renderedVars), 
-            m_nbIter(nbIter), 
-            m_pause(false), m_stop(false) 
-{}
+Model::Model(int nbIter, 
+		std::map<QString, bool> *renderedVars, 
+		std::map<QString,int> *initialCondsId, 
+		unsigned int width, unsigned int height, unsigned int length) : 
+	m_width(width), m_height(height), m_length(length), 
+	m_renderedVars(renderedVars), 
+	m_initialCondsId(initialCondsId), 
+	m_nbIter(nbIter), 
+	m_pause(false), m_stop(false) 
+{
+
+}
 
 void Model::startComputing() {
-	log_console->debugStream() << "Start Computing.";
 
-
-	//Create openGL context for the solver, try to get shared context with QT
+	//Create openGL context for the solver, try to get shared context with QT (if not already done)
 	if(!solverContext) {
 		log_console->infoStream() << "Creating openGL context for the solver...";
 		utils::createOpenGLContext(&solverDisplay, &solverContext, &solverWindow, &solverColormap, OpenGLScene::qtContext);
@@ -37,7 +42,11 @@ void Model::startComputing() {
 		<< " RenderType=" << glxSupportedRenderType
 		<< " ScreenNumber=" << glxScreenNumber;
 
-
+	//call factory for initial conditions
+	for(auto pair : *m_initialCondsId)
+		m_initialConds.emplace(pair.first, InitialCondFactory::getInitialCond(pair.second));
+	
+	log_console->debugStream() << "Start Computing.";
     initComputation();
 
     QElapsedTimer screenRefreshTimer;

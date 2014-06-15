@@ -25,23 +25,23 @@ const std::vector<unsigned int> SidePanel::defaultGridSize { 512, 512, 1};
 
 SidePanel::SidePanel(QWidget *parent_) : 
     QWidget(parent_),
+	m_paused(true),
+    m_gridWidth(defaultGridSize[0]),
+    m_gridHeight(defaultGridSize[1]),
+    m_gridLength(defaultGridSize[2]),
     m_argsMap(0),
     m_varsMap(0),
-    m_initialCondsMap(0)
+    m_initialCondsMap(0),
+	m_defaultCondsMap(0),
+    m_saveDirectory(""),
+    initDialog(0),
+    paramsDialog(0)
 {
 
     // Get parent
     MainWindow *mainWin = qobject_cast<MainWindow *>(parent_);
     if (!mainWin)
         log4cpp::log_console->errorStream() << "SidePanel does not have a parent !";
-
-    m_paused = true;
-    m_gridWidth = defaultGridSize[0];
-    m_gridHeight = defaultGridSize[1];
-    m_gridLength = defaultGridSize[2];
-    initDialog = NULL;
-    paramsDialog = NULL;
-    m_saveDirectory = "";
 
     this->setStyleSheet("QWidget {background-color: white;}");
     this->setAutoFillBackground(true);
@@ -265,7 +265,7 @@ void SidePanel::setModelOptionsStatus(bool status) {
 void SidePanel::openInitDialog() {
     if (initDialog) initDialog->deleteLater();
 
-    initDialog = new InitializationDialog(m_varsMap, m_initialCondsMap, &m_gridWidth, &m_gridHeight, &m_gridLength, this);
+    initDialog = new InitializationDialog(m_varsMap, m_initialCondsMap, m_defaultCondsMap, &m_gridWidth, &m_gridHeight, &m_gridLength, this);
     initDialog->setModal(true);
     initDialog->show();
 }
@@ -300,10 +300,11 @@ void SidePanel::changeNbIterSlider(int nbIter) {
 }
 
 void SidePanel::refreshParameters(int modelId) {
-    if (m_argsMap)
-        m_argsMap->clear();
-    if (m_varsMap)
-        m_varsMap->clear();
+
+	delete m_argsMap;
+	delete m_varsMap;
+	delete m_defaultCondsMap;
+
     switch(modelId) {
         case 0:
             m_argsMap = SimpleModel2D::getArguments();
@@ -312,6 +313,7 @@ void SidePanel::refreshParameters(int modelId) {
         case 1:
             m_argsMap = MultiGpu::getArguments();
             m_varsMap = MultiGpu::getVariables();
+            m_defaultCondsMap = MultiGpu::getDefaultInit();
             break;
         default:
             m_argsMap = new std::map<QString, Argument>;
@@ -322,8 +324,12 @@ void SidePanel::refreshParameters(int modelId) {
         m_initialCondsMap->clear();
     else
         m_initialCondsMap = new std::map<QString, int>;
+
     for (auto it = m_varsMap->begin(); it != m_varsMap->end(); ++it) {
-        m_initialCondsMap->emplace(it->first, 0);
+		if(m_defaultCondsMap && m_defaultCondsMap->find(it->first) != m_defaultCondsMap->end())
+			m_initialCondsMap->emplace(it->first, m_defaultCondsMap->at(it->first));
+		else
+			m_initialCondsMap->emplace(it->first, 0);
     }
 
     // Variables: GUI update

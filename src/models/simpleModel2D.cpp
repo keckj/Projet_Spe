@@ -52,8 +52,9 @@
 SimpleModel2D::SimpleModel2D(unsigned int nbIter,
 		std::map<QString, Argument> *args, 
         std::map<QString, bool> *vars,
+		std::map<QString,int> *initialCondsId, 
 		unsigned int width_, unsigned int height_) :
-	Model(nbIter, vars, width_, height_),
+	Model(nbIter, vars, initialCondsId, width_, height_),
 	_width(width_), _height(height_)
 {
 	_epsilon = args->at("epsilon")();

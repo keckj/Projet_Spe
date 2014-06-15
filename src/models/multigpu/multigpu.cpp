@@ -17,9 +17,9 @@ using namespace utils;
 MultiGpu::MultiGpu(int nbIter, 
 		unsigned int width_, unsigned int height_, unsigned int length_,
 		std::map<QString, Argument> *args, 
-		std::map<QString, bool> *renderedVars) : 
-
-	Model(nbIter, renderedVars, width_, height_, length_),
+		std::map<QString, bool> *renderedVars,
+		std::map<QString, int> *initialCondsId) :
+	Model(nbIter, renderedVars, initialCondsId, width_, height_, length_),
 	_step(false),
 	_stepDone(false),
 	_nDevices(0),
@@ -42,33 +42,8 @@ MultiGpu::~MultiGpu()
 }
 
 void MultiGpu::initComputation() {
-
-	FunctionInitialCond<float> *zero = new FunctionInitialCond<float>([] (float,float,float)->float {return 0;});
-	FunctionInitialCond<float> *one = new FunctionInitialCond<float>([] (float,float,float)->float {return 1;});
-	FunctionInitialCond<float> *half = new FunctionInitialCond<float>([] (float,float,float)->float {return 1/2.0;});
-	CircleInitialCond<float> *circle = new CircleInitialCond<float>(0.1,0.5,0.5,0.5);
-	FunctionInitialCond<float> *sine = new FunctionInitialCond<float>([] (float x,float y,float)->float {return abs(cos(2*3.14*2*x)*cos(2*3.14*2*y));});
-	FunctionInitialCond<float> *halfPlane = new FunctionInitialCond<float>([] (float x,float y,float)->float 
-			{return (x<=0.5 && y<=0.5)||(x>=0.5 && y>=0.5);});
-	FunctionInitialCond<float> *halfPlaneX = new FunctionInitialCond<float>([] (float x,float y,float)->float 
-			{return (x<=0.5);});
-	FunctionInitialCond<float> *halfPlaneY = new FunctionInitialCond<float>([] (float x,float y,float)->float 
-			{return (y<=0.5);});
-	FunctionInitialCond<float> *gradient = new FunctionInitialCond<float>([](float x,float y, float)->float
-			{return x*y;});
-	FunctionInitialCond<float> *gradientX = new FunctionInitialCond<float>([](float x,float y, float)->float
-			{return x;});
-	FunctionInitialCond<float> *gradientY = new FunctionInitialCond<float>([](float x,float y, float)->float
-			{return y;});
-
-	std::map<std::string, InitialCond<float>*> initialConds;
-	initialConds.emplace("e", gradientX);
-	initialConds.emplace("r", gradientY);
-
-	initGrids(initialConds);
-
+	initGrids();
 	initOpenClContext();
-	
 	waitInit();
 }
 
@@ -202,17 +177,17 @@ void MultiGpu::initOpenClContext(){
 	log_console->infoStream() << "Created " << devicesNeeded << " device threads, " << _devices.size()-devicesNeeded <<" devices will be idle !";
 }
 
-void MultiGpu::initGrids(const std::map<std::string, InitialCond<float>*> &initialConditions) {
+void MultiGpu::initGrids() {
 
 	unsigned int gridWidth = this->m_width;
 	unsigned int gridHeight = this->m_height;
 	unsigned int gridLength = this->m_length;
-	_nFunctions = initialConditions.size();
+	_nFunctions = this->m_initialConds.size();
 
-	for(auto &initialConds : initialConditions) {
+	for(auto initialConds : this->m_initialConds) {
 		MultiBufferedDomain<float,1u> *dom = 
 			new MultiBufferedDomain<float,1u>(gridWidth, gridHeight, gridLength, 1u, 4, initialConds.second);
-		_domains.emplace(initialConds.first, dom);
+		_domains.emplace(std::string((char*)initialConds.first.data()), dom);
 	}
 
 	_splits = _domains.begin()->second->nSplits();		
@@ -382,6 +357,14 @@ std::map<QString, bool> *MultiGpu::getVariables() {
 	std::map<QString, bool> *vars = new std::map<QString, bool>;
 	vars->emplace("e", true);
 	vars->emplace("r", false);
+
+	return vars;
+}
+        
+std::map<QString, int> *MultiGpu::getDefaultInit() {
+	std::map<QString, int> *vars = new std::map<QString, int>;
+	vars->emplace("e", 6);
+	vars->emplace("r", 7);
 
 	return vars;
 }

@@ -7,6 +7,7 @@
 
 InitializationDialog::InitializationDialog(std::map<QString, bool> *varsMap,
                                            std::map<QString, int> *condsMap, 
+										   std::map<QString, int> *defaultCondsMap,
                                            unsigned int *gridWidth, 
                                            unsigned int *gridHeight, 
                                            unsigned int *gridLength, 
@@ -80,7 +81,12 @@ InitializationDialog::InitializationDialog(std::map<QString, bool> *varsMap,
             box->addItem(InitialCondFactory::getInitialCondName(i));
             i++;
         }
-        box->setCurrentIndex(m_condsMap->at(it->first));
+
+		if(defaultCondsMap && defaultCondsMap->find(it->first) != defaultCondsMap->end())
+			box->setCurrentIndex(defaultCondsMap->at(it->first));
+		else
+			box->setCurrentIndex(m_condsMap->at(it->first));
+
         initGridLayout->addWidget(box, cpt / 4, cpt % 4);
         m_widgetsMap->emplace(it->first, box);
         cpt++;

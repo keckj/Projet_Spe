@@ -96,15 +96,19 @@ void MainWindow::startComputing() {
     Model *mod;
     switch (m_selected_model) {
 		case 0:
-            mod = (Model *) new SimpleModel2D(m_total_steps, panel->getArguments(), panel->getVariables(), gridWidth, gridHeight);
+            mod = (Model *) new SimpleModel2D(m_total_steps, 
+					panel->getArguments(), panel->getVariables(), panel->getInitialConditions(),
+					gridWidth, gridHeight);
 			log_console->infoStream() << "Started a simple model 2D simulation !";
 			break;
 		case 1:
-            mod = (Model *) new MultiGpu(m_total_steps, gridWidth, gridHeight, gridLength, panel->getArguments(), panel->getVariables());
+            mod = (Model *) new MultiGpu(m_total_steps, gridWidth, gridHeight, gridLength, 
+					panel->getArguments(), panel->getVariables(), panel->getInitialConditions());
 			log_console->infoStream() << "Started a multi-gpu model simulation !";
 			break;
         default:
-            mod = (Model *) new ExampleModel(m_total_steps, panel->getVariables());
+            mod = (Model *) new ExampleModel(m_total_steps, 
+					panel->getVariables(), panel->getInitialConditions());
 			log_console->infoStream() << "Started an example model simulation !";
     }
     

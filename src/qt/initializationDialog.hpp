@@ -9,6 +9,7 @@ class InitializationDialog : public QDialog {
     public:
         InitializationDialog(std::map<QString, bool> *varsMap,
                              std::map<QString, int> *condsMap,
+                             std::map<QString, int> *defaultCondsMap,
                              unsigned int *gridWidth,
                              unsigned int *gridHeight, 
                              unsigned int *gridLength, 
