@@ -27,6 +27,7 @@ class InitializationDialog : public QDialog {
         std::map<QString, QComboBox *> *m_widgetsMap;
 
         std::map<QString, int> *m_condsMap;
+        std::map<QString, int> *m_defaultCondsMap;
         unsigned int *m_gridWidth, *m_gridHeight, *m_gridLength;
 };
 

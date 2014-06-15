@@ -23,6 +23,7 @@ InitializationDialog::InitializationDialog(std::map<QString, bool> *varsMap,
 
     // Copy pointers
     m_condsMap = condsMap;
+    m_defaultCondsMap = defaultCondsMap;
     m_gridWidth = gridWidth;
     m_gridHeight = gridHeight;
     m_gridLength = gridLength;
@@ -82,7 +83,7 @@ InitializationDialog::InitializationDialog(std::map<QString, bool> *varsMap,
             i++;
         }
 
-		if(defaultCondsMap && defaultCondsMap->find(it->first) != defaultCondsMap->end())
+		if(defaultCondsMap->find(it->first) != defaultCondsMap->end())
 			box->setCurrentIndex(defaultCondsMap->at(it->first));
 		else
 			box->setCurrentIndex(m_condsMap->at(it->first));
@@ -134,7 +135,10 @@ void InitializationDialog::resetClicked() {
     
     for (auto it = m_widgetsMap->begin(); it != m_widgetsMap->end(); ++it) {
         QComboBox *box = it->second;
-        box->setCurrentIndex(0);
+		if(m_defaultCondsMap->find(it->first) != m_defaultCondsMap->end())
+			box->setCurrentIndex(m_defaultCondsMap->at(it->first));
+        else
+            box->setCurrentIndex(0);
     }
 }
 

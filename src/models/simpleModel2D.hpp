@@ -29,6 +29,7 @@ class SimpleModel2D : public Model {
 
 		static std::map<QString, Argument> *getArguments();
         static std::map<QString, bool> *getVariables();
+        static std::map<QString, int> *getDefaultInit();
 
 	private:
 		float computeOptimalTimestep();

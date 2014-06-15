@@ -362,11 +362,11 @@ std::map<QString, bool> *MultiGpu::getVariables() {
 }
         
 std::map<QString, int> *MultiGpu::getDefaultInit() {
-	std::map<QString, int> *vars = new std::map<QString, int>;
-	vars->emplace("e", 6);
-	vars->emplace("r", 7);
+	std::map<QString, int> *conds = new std::map<QString, int>;
+	conds->emplace("e", 6);
+	conds->emplace("r", 7);
 
-	return vars;
+	return conds;
 }
 
 void MultiGpu::abort() {

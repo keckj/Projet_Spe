@@ -314,14 +314,24 @@ void SidePanel::changeNbIterSlider(int nbIter) {
 
 void SidePanel::refreshParameters(int modelId) {
 
-	delete m_argsMap;
-	delete m_varsMap;
-	delete m_defaultCondsMap;
+    if (m_argsMap) {
+        m_argsMap->clear();
+    	delete m_argsMap;
+    }
+    if (m_varsMap) {
+        m_argsMap->clear();
+    	delete m_varsMap;
+    }
+    if (m_defaultCondsMap) {
+        m_defaultCondsMap->clear();
+    	delete m_defaultCondsMap;
+    }
 
     switch(modelId) {
         case 0:
             m_argsMap = SimpleModel2D::getArguments();
             m_varsMap = SimpleModel2D::getVariables();
+            m_defaultCondsMap = SimpleModel2D::getDefaultInit();
             break;
         case 1:
             m_argsMap = MultiGpu::getArguments();
@@ -331,6 +341,7 @@ void SidePanel::refreshParameters(int modelId) {
         default:
             m_argsMap = new std::map<QString, Argument>;
             m_varsMap = new std::map<QString, bool>;
+            m_defaultCondsMap = new std::map<QString, int>;
     }
     
     if (m_initialCondsMap) {
