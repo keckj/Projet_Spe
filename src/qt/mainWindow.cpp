@@ -23,6 +23,7 @@ MainWindow::MainWindow() {
     m_selected_model = 0;
     m_current_step = 0;
     m_total_steps = SidePanel::defaultNumberOfSteps;
+    m_NbStepsToSave = SidePanel::defaultNbStepsToSave;
     m_auto_render = true;
 
 	qRegisterMetaType< QMap<QString, GLuint> >("QMap<QString, GLuint>");
@@ -91,6 +92,7 @@ void MainWindow::startComputing() {
     //TODO: panel->getVariables(), panel->getArguments() for every model
     //TODO: use panel->getSaveDirectory()
     //TODO: use panel->getInitialConditions()
+    //TODO: use m_NbStepsToSave
 
     m_thread = new QThread;
     Model *mod;
@@ -119,7 +121,7 @@ void MainWindow::startComputing() {
     connect(m_thread, SIGNAL(finished()), m_thread, SLOT(deleteLater()));
 
 	connect(mod, SIGNAL(updateDisplay(const QMap<QString, GLuint> &)), scene, SLOT(updateTextures(const QMap<QString, GLuint> &)));
-	connect(mod, SIGNAL(stepComputed()), this, SLOT(onStepRender()));
+	connect(mod, SIGNAL(stepComputed()), this, SLOT(onStepCompute()));
     connect(mod, SIGNAL(destroyed()), m_thread, SLOT(quit()));                   // kill thread
     connect(mod, SIGNAL(finished()), mod, SLOT(deleteLater()));
     connect(mod, SIGNAL(finished()), panel, SLOT(stop()));                      // update GUI buttons
@@ -140,9 +142,13 @@ void MainWindow::stopComputing() {
     emit stopThread();
 }
        
-void MainWindow::onStepRender() {
+void MainWindow::onStepCompute() {
     m_current_step++;
     emit progressUpdate((float) m_current_step / m_total_steps * 100);
+}
+        
+void MainWindow::changeNbStepsToSave(int steps) {
+    m_NbStepsToSave = steps;
 }
 
 void MainWindow::changeColormap(const QString &colormapName) {

@@ -18,6 +18,7 @@
 const QStringList SidePanel::modelsList = QStringList() << "Simple Model 2D" << "->Multi-GPU<-" << "Default Model";
 const int SidePanel::defaultNumberOfSteps = 10000;
 const std::vector<unsigned int> SidePanel::defaultGridSize {512, 512, 1};
+const int SidePanel::defaultNbStepsToSave = 100;
 // ************************
 
 
@@ -116,7 +117,7 @@ SidePanel::SidePanel(QWidget *parent_) :
     iterSpinBox->setSingleStep(defaultNumberOfSteps/10);
     iterSpinBox->setValue(defaultNumberOfSteps);
     connect(iterSpinBox, SIGNAL(valueChanged(int)), mainWin, SLOT(changeNbIter(int)));
-    connect(iterSpinBox, SIGNAL(valueChanged(int)), this, SLOT(changeNbIterSlider(int)));
+    //connect(iterSpinBox, SIGNAL(valueChanged(int)), this, SLOT(changeNbIterSlider(int)));
 
     // Buttons for model parameters and model initialization with QDialog
     initButton = new QPushButton("Initialization");
@@ -143,6 +144,16 @@ SidePanel::SidePanel(QWidget *parent_) :
     // Button for QFileDialog
     saveDirButton = new QPushButton("Choose saving directory");
     connect(saveDirButton, SIGNAL(clicked()), this, SLOT(changeDirectory()));
+
+    // Steps to skip Label
+    QLabel *saveStepsLabel = new QLabel("Steps between saves :");
+
+    // Steps to skip Spinbox
+    saveStepsSpinBox = new QSpinBox();
+    saveStepsSpinBox->setRange(1, 1000000);
+    saveStepsSpinBox->setSingleStep(1);
+    saveStepsSpinBox->setValue(defaultNbStepsToSave);
+    connect(iterSpinBox, SIGNAL(valueChanged(int)), mainWin, SLOT(changeNbStepsToSave(int)));
 
     //---
 
@@ -200,6 +211,8 @@ SidePanel::SidePanel(QWidget *parent_) :
     runLayout->addWidget(stopButton, 1, 0, 1, 2);
     runLayout->addWidget(saveDirCheckBox, 2, 0);
     runLayout->addWidget(saveDirButton, 2, 1);
+    runLayout->addWidget(saveStepsLabel, 3, 0);
+    runLayout->addWidget(saveStepsSpinBox, 3, 1);
 
     renderOptionsLayout->setSpacing(10);
     renderOptionsLayout->addWidget(variablesRenderedLabel, 0, 0);
@@ -259,6 +272,7 @@ void SidePanel::setModelOptionsStatus(bool status) {
     this->paramsButton->setEnabled(status);
     this->saveDirCheckBox->setEnabled(status);
     this->saveDirButton->setEnabled(status);
+    this->saveStepsSpinBox->setEnabled(status);
 }
 
 void SidePanel::openInitDialog() {
