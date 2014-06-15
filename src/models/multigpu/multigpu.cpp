@@ -30,7 +30,6 @@ MultiGpu::MultiGpu(int nbIter,
 	_kill(false),
 	_destroyed(false)
 {
-	DeviceThread<N_COMMANDQUEUES>::_kill = false;
 }
 
 MultiGpu::~MultiGpu() 
