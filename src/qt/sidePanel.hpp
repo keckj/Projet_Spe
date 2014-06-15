@@ -25,6 +25,7 @@ class SidePanel : public QWidget {
         static const QStringList modelsList;
         static const int defaultNumberOfSteps;
         static const std::vector<unsigned int> defaultGridSize;
+        static const int defaultNbStepsToSave;
 
     signals:
         void startPushed();
@@ -59,7 +60,7 @@ class SidePanel : public QWidget {
         InitializationDialog *initDialog;
         ParametersDialog *paramsDialog;
         QComboBox *modelComboBox;
-        QSpinBox *iterSpinBox;
+        QSpinBox *iterSpinBox, *saveStepsSpinBox;
         QCheckBox *saveDirCheckBox;
         QListWidget *variablesRenderedList;
         QPushButton *initButton, *paramsButton, *saveDirButton, *startButton, *stopButton;

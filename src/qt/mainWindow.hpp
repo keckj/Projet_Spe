@@ -27,7 +27,8 @@ class MainWindow : public QMainWindow {
         void startComputing();
         void pauseComputing(bool b);
         void stopComputing();
-        void onStepRender();
+        void onStepCompute();
+        void changeNbStepsToSave(int steps);
 		void changeColormap(const QString &colormapName);
         void changeAutoRendering(int checkboxState);
 		void changeDisplayedGrid(int n);
@@ -44,6 +45,7 @@ class MainWindow : public QMainWindow {
         int m_selected_model;
         int m_current_step;
         int m_total_steps;
+        int m_NbStepsToSave;
         int m_displayed_grid;
         int m_auto_render;
 
