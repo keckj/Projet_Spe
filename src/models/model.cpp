@@ -12,7 +12,6 @@ Colormap Model::solverColormap=0;
 Model::Model(int nbIter, std::map<QString, bool> *renderedVars, unsigned int width, unsigned int height, unsigned int length) : 
             m_width(width), m_height(height), m_length(length), 
             m_renderedVars(renderedVars), 
-            m_mappedTextures(),
             m_nbIter(nbIter), 
             m_pause(false), m_stop(false) 
 {}
@@ -62,7 +61,7 @@ void Model::startComputing() {
 		// Update screen only after at least 17 ms (~60 fps)
         if (screenRefreshTimer.hasExpired(17)) {
             //updateTextures(); 
-            emit updateDisplay(m_mappedTextures);
+            emit updateDisplay(m_mappedTexturesGui);
             screenRefreshTimer.restart();
         }
 		

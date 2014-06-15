@@ -16,6 +16,7 @@ class Model : public QObject {
         unsigned int m_width, m_height, m_length;
         std::map<QString, bool> *m_renderedVars;
         QMap<QString, GLuint> m_mappedTextures;
+        QMap<QString, GLuint> m_mappedTexturesGui;
 
         virtual void initComputation() = 0;
         virtual void computeStep(int i) = 0;

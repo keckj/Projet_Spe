@@ -139,11 +139,11 @@ void MultiGpu::initOpenClContext(){
 
 	if(!found) {
 		log_console->infoStream() << "No platform has openGL/openCL sharing capabilities, aborting !";
-		emit(finished());
+		abort();
 	}
 	if(_nDevices == 0) {
 		log_console->infoStream() << "A platform has openGL/openCL sharing capabilities, but no supported devices found !";
-		emit(finished());
+		abort();
 	}
 
 
@@ -276,15 +276,38 @@ void MultiGpu::stepDone() {
 void MultiGpu::renderToTextures() {
 	assert(glXMakeCurrent(Model::solverDisplay, Model::solverWindow, Model::solverContext));
 
-	//DEBUG
-	//static unsigned int k = 0;
-	//k++;
+	this->m_mappedTexturesGui.clear();
 
 	glActiveTexture(GL_TEXTURE0);
 	for (auto pair : _domains) {
+		QString name(pair.first.c_str());
+		if(!(*this->m_renderedVars)[name])
+				continue;
+		
 		float *data = _sliceZ[pair.first];
 
-		//DEBUG
+		unsigned int texture = this->m_mappedTextures[name];
+		glBindTexture(GL_TEXTURE_2D, texture);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, 
+				this->m_width, this->m_height, 0, 
+				GL_LUMINANCE, GL_FLOAT, (GLvoid*) data);
+		assert(glIsTexture(texture));
+
+		this->m_mappedTexturesGui.insert(name, texture);
+	}
+
+	glBindTexture(GL_TEXTURE_2D, 0);
+	CHK_GL_ERRORS();
+
+	glXMakeCurrent(Model::solverDisplay, 0, 0);
+}
+		
+	//DEBUG
+	//static unsigned int k = 0;
+	//k++;
+	
+	//DEBUG
 		//for (unsigned int j = 0; j < this->m_height ; j++) {
 		//for (unsigned int i = 0; i < this->m_width; i++) {
 		//float ii = float(i)/this->m_width;
@@ -297,21 +320,6 @@ void MultiGpu::renderToTextures() {
 		//}
 		//}
 		//k++;
-
-		unsigned int texture = this->m_mappedTextures[QString(pair.first.c_str())];
-		glBindTexture(GL_TEXTURE_2D, texture);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, 
-				this->m_width, this->m_height, 0, 
-				GL_LUMINANCE, GL_FLOAT, (GLvoid*) data);
-		assert(glIsTexture(texture));
-	}
-
-	glBindTexture(GL_TEXTURE_2D, 0);
-	CHK_GL_ERRORS();
-
-	glXMakeCurrent(Model::solverDisplay, 0, 0);
-}
 
 unsigned int MultiGpu::sliceIdX() {
 	return _sliceIdX;
