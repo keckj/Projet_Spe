@@ -31,6 +31,8 @@ class DeviceThread {
 
 		void operator()();
 		void finish();
+		
+		static bool _kill;
 
 	private:
 		void initSubDomain(std::map<std::string, MultiBufferedSubDomain<float, 1u>*> subDomain);
@@ -76,7 +78,6 @@ class DeviceThread {
 		template <typename Ret, class... Args>
 		static void callOnce(std::function<Ret(Args...)> f, Fence *fence, Args... args);
 
-		static bool _kill;
 };
 		
 template <unsigned int nCommandQueues>

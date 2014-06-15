@@ -64,7 +64,13 @@ DeviceThread<nCommandQueues>::DeviceThread(MultiGpu *simulation,
 
 template <unsigned int nCommandQueues>
 DeviceThread<nCommandQueues>::~DeviceThread() {
-	log_console->infoStream() << "Worker thread killed !";
+	(*_fence)();
+	std::unique_lock<std::mutex> lock(DeviceThread::_mutex);
+	if(_kill) {
+		_kill = false;
+		log_console->infoStream() << "Worker threads killed !";
+	}
+	DeviceThread::_cond.notify_one();
 }
 
 template <unsigned int nCommandQueues>
@@ -223,10 +229,8 @@ void DeviceThread<nCommandQueues>::operator()() {
 	}
 		
 	
-	log_console->infoStream() << "wait destroy";
 	std::function<void(MultiGpu*)> destroy(&MultiGpu::destroy);
 	callOnce<void,MultiGpu*>(destroy, _fence, _simulation);
-	log_console->infoStream() << "destroy!!!";
 }
 
 template <unsigned int nCommandQueues>

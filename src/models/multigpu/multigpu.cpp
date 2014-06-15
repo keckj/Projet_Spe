@@ -30,19 +30,16 @@ MultiGpu::MultiGpu(int nbIter,
 	_kill(false),
 	_destroyed(false)
 {
+	DeviceThread<N_COMMANDQUEUES>::_kill = false;
 }
 
 MultiGpu::~MultiGpu() 
 {
-	log_console->info("KILL MULTIGPU");
 	killWorkerThreads();
-	log_console->info("KILLED WORKER THREADS");
-	glXMakeCurrent(OpenGLScene::solverDisplay, 0, 0);
-	glXDestroyContext(OpenGLScene::solverDisplay, OpenGLScene::solverContext);
-	XDestroyWindow(OpenGLScene::solverDisplay, OpenGLScene::solverWindow);
-	XFreeColormap(OpenGLScene::solverDisplay, OpenGLScene::solverColormap);
-	XCloseDisplay(OpenGLScene::solverDisplay);
-	log_console->info("FINISH KILL MULTIGPU");
+	assert(glXMakeCurrent(Model::solverDisplay, Model::solverWindow, Model::solverContext));
+	for(auto k : m_mappedTextures.keys())
+		glDeleteTextures(1, &m_mappedTextures[k]);
+	glXMakeCurrent(Model::solverDisplay, 0, 0);
 }
 
 void MultiGpu::initComputation() {
@@ -81,7 +78,8 @@ void MultiGpu::computeStep(int i) {
 	waitStep();
 }
 
-void MultiGpu::finishComputation() {;}
+void MultiGpu::finishComputation() {
+}
 
 void MultiGpu::initOpenClContext(){
 
@@ -152,24 +150,13 @@ void MultiGpu::initOpenClContext(){
 	//get solver openGL context created by qt
 	log_console->infoStream() << "Making solver openGL context current !";
 
-	assert(glXMakeCurrent(OpenGLScene::solverDisplay, OpenGLScene::solverWindow, OpenGLScene::solverContext));
+	assert(glXMakeCurrent(Model::solverDisplay, Model::solverWindow, Model::solverContext));
 	{
-		//print infos about current openGL context
-		int glxConfigXid=0, glxSupportedRenderType=0, glxScreenNumber=0;
-		glXQueryContext(OpenGLScene::solverDisplay, OpenGLScene::solverContext,  GLX_FBCONFIG_ID, &glxConfigXid);
-		glXQueryContext(OpenGLScene::solverDisplay, OpenGLScene::solverContext, GLX_RENDER_TYPE, &glxSupportedRenderType);
-		glXQueryContext(OpenGLScene::solverDisplay, OpenGLScene::solverContext, GLX_SCREEN, &glxScreenNumber);
-
-		log_console->infoStream() << "Solver openGL context : "
-			<< " XID=" << glxConfigXid
-			<< " RenderType=" << glxSupportedRenderType
-			<< " ScreenNumber=" << glxScreenNumber;
-
 		//Create context for supported devices
 		cl_context_properties contextProperties[] = { 
 			CL_CONTEXT_PLATFORM, (cl_context_properties) _platform(), 
-			CL_GL_CONTEXT_KHR, (cl_context_properties) OpenGLScene::solverContext,
-			CL_GLX_DISPLAY_KHR, (cl_context_properties) OpenGLScene::solverDisplay, 
+			CL_GL_CONTEXT_KHR, (cl_context_properties) Model::solverContext,
+			CL_GLX_DISPLAY_KHR, (cl_context_properties) Model::solverDisplay, 
 			0 
 		};
 
@@ -187,7 +174,7 @@ void MultiGpu::initOpenClContext(){
 		createTextures();
 		CHK_GL_ERRORS();
 	}
-	glXMakeCurrent(OpenGLScene::solverDisplay, 0, 0);
+	glXMakeCurrent(Model::solverDisplay, 0, 0);
 
 	//Alloc host side texture data
 	allocSlices();
@@ -200,13 +187,13 @@ void MultiGpu::initOpenClContext(){
 	utils::buildProgram(program, _devices, "", "MultiGpu Kernel");
 
 	unsigned int devicesNeeded = std::min<unsigned int>(_domains.begin()->second->nSplits(), _devices.size());
-	Fence *fence = new Fence(2);
+	Fence *fence = new Fence(devicesNeeded);
 
 	unsigned int i = 0;
 	for(auto dev : _devices) {
 		if(i >= devicesNeeded)
 			break;
-		DeviceThread<1u> *dt = new DeviceThread<1u>(this, _platform, _context, program, dev, fence, _args, 1.0f/this->m_width, true);
+		DeviceThread<N_COMMANDQUEUES> *dt = new DeviceThread<N_COMMANDQUEUES>(this, _platform, _context, program, dev, fence, _args, 1.0f/this->m_width, true);
 		std::thread t(*dt);
 		_deviceThreads.push_back(dt);
 		t.detach();
@@ -234,11 +221,9 @@ void MultiGpu::initGrids(const std::map<std::string, InitialCond<float>*> &initi
 }
 
 void MultiGpu::resetSubDomains() {
-	log_console->infoStream() << "reset domains";
 	for (unsigned int i = 0; i < _splits; i++) {
 		_availableDomains.push_back(i);
 	}
-	log_console->infoStream() << "domains resetted";
 }
 
 
@@ -254,7 +239,6 @@ bool MultiGpu::tryToTakeSubDomain(std::map<std::string, MultiBufferedSubDomain<f
 		std::unique_lock<std::mutex> lock(_domainMutex);
 		_domainCond.notify_one();
 		if (_availableDomains.size() == 0) {
-			log_console->infoStream() << "Domain not available";
 			return false;
 		}
 
@@ -290,7 +274,7 @@ void MultiGpu::stepDone() {
 
 
 void MultiGpu::renderToTextures() {
-	assert(glXMakeCurrent(OpenGLScene::solverDisplay, OpenGLScene::solverWindow, OpenGLScene::solverContext));
+	assert(glXMakeCurrent(Model::solverDisplay, Model::solverWindow, Model::solverContext));
 
 	//DEBUG
 	//static unsigned int k = 0;
@@ -326,7 +310,7 @@ void MultiGpu::renderToTextures() {
 	glBindTexture(GL_TEXTURE_2D, 0);
 	CHK_GL_ERRORS();
 
-	glXMakeCurrent(OpenGLScene::solverDisplay, 0, 0);
+	glXMakeCurrent(Model::solverDisplay, 0, 0);
 }
 
 unsigned int MultiGpu::sliceIdX() {
@@ -444,12 +428,10 @@ void MultiGpu::killWorkerThreads() {
 	_kill = true;
 	for(auto t : _deviceThreads)
 		t->finish();
-	
-	log_console->info("SIGKILL SENT");
+	_cond.notify_all();
 	
 	std::unique_lock<std::mutex> lock(_mutex);
 	_cond.wait(lock, [this]{return _destroyed;});
 	_cond.notify_all();
-	log_console->info("DESTROYED OK");
 }
 		

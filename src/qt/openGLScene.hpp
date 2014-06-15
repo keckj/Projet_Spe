@@ -21,11 +21,6 @@ class OpenGLScene : public QGraphicsScene {
 		static Display *qtDisplay;
 		static GLXContext qtContext;
 		
-		static Display *solverDisplay;
-		static GLXContext solverContext;
-		static Window solverWindow;
-		static Colormap solverColormap;
-
     public slots:
         void updateTextures(const QMap<QString, GLuint> &texMap);
 		void changeColormap(const QString &colormapName);

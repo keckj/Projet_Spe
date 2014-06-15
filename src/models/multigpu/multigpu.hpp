@@ -13,6 +13,8 @@
 #include <mutex>
 #include <condition_variable>
 
+#define N_COMMANDQUEUES 8
+
 class MultiGpu : public Model {
 	Q_OBJECT
     
@@ -66,7 +68,7 @@ class MultiGpu : public Model {
 		cl::Platform _platform;
 		cl::Context _context;
 		std::vector<cl::Device> _devices;
-		std::vector<DeviceThread<1u>*> _deviceThreads;
+		std::vector<DeviceThread<N_COMMANDQUEUES>*> _deviceThreads;
 		unsigned int _nDevices;
 		void initOpenClContext();
 		

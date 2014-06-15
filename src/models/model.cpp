@@ -1,8 +1,13 @@
 #include "headers.hpp"
 #include "model.hpp"
 #include "model.moc"
-#include "log.hpp"
+#include "openGLScene.hpp"
 
+
+Display *Model::solverDisplay=0;
+GLXContext Model::solverContext = 0;
+Window Model::solverWindow=0;
+Colormap Model::solverColormap=0;
 
 Model::Model(int nbIter, std::map<QString, bool> *renderedVars, unsigned int width, unsigned int height, unsigned int length) : 
             m_width(width), m_height(height), m_length(length), 
@@ -14,6 +19,25 @@ Model::Model(int nbIter, std::map<QString, bool> *renderedVars, unsigned int wid
 
 void Model::startComputing() {
 	log_console->debugStream() << "Start Computing.";
+
+
+	//Create openGL context for the solver, try to get shared context with QT
+	if(!solverContext) {
+		log_console->infoStream() << "Creating openGL context for the solver...";
+		utils::createOpenGLContext(&solverDisplay, &solverContext, &solverWindow, &solverColormap, OpenGLScene::qtContext);
+	}
+		
+	//print infos about current openGL context
+	int glxConfigXid=0, glxSupportedRenderType=0, glxScreenNumber=0;
+	glXQueryContext(Model::solverDisplay, Model::solverContext,  GLX_FBCONFIG_ID, &glxConfigXid);
+	glXQueryContext(Model::solverDisplay, Model::solverContext, GLX_RENDER_TYPE, &glxSupportedRenderType);
+	glXQueryContext(Model::solverDisplay, Model::solverContext, GLX_SCREEN, &glxScreenNumber);
+
+	log_console->infoStream() << "Solver openGL context : "
+		<< " XID=" << glxConfigXid
+		<< " RenderType=" << glxSupportedRenderType
+		<< " ScreenNumber=" << glxScreenNumber;
+
 
     initComputation();
 
@@ -46,7 +70,6 @@ void Model::startComputing() {
     }
     
     finishComputation();
-	log_console->infoStream() << "FINISH";
     emit finished();
 }
 

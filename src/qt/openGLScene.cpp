@@ -7,11 +7,6 @@
 Display *OpenGLScene::qtDisplay;
 GLXContext OpenGLScene::qtContext;
 
-Display *OpenGLScene::solverDisplay;
-GLXContext OpenGLScene::solverContext;
-Window OpenGLScene::solverWindow;
-Colormap OpenGLScene::solverColormap;
-
 using namespace log4cpp;
 using namespace utils;
 
@@ -44,10 +39,6 @@ OpenGLScene::OpenGLScene(GraphicsViewer *viewer) :
 			<< " RenderType=" << qtGlxSupportedRenderType
 			<< " ScreenNumber=" << qtGlxScreenNumber;
 
-		//Create openGL context for the solver, try to get shared context with QT
-		log_console->infoStream() << "Creating openGL context for the solver...";
-		utils::createOpenGLContext(&solverDisplay, &solverContext, &solverWindow, &solverColormap, qtContext);
-		
 		makeArrays();
 		makeProgram();
 		makeColorMaps();
@@ -141,13 +132,15 @@ void OpenGLScene::drawBackground(QPainter *painter, const QRectF &) {
     // Draw textured quads
 	int i = 0;
 	for (QString key : m_texMap.keys()) {
-		glBindTexture(GL_TEXTURE_2D, m_texMap[key]);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, m_min_mag_filter);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, m_min_mag_filter);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-		glDrawArrays(GL_QUADS, 4*i, 4);
+		if(glIsTexture(m_texMap[key])) {
+				glBindTexture(GL_TEXTURE_2D, m_texMap[key]);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, m_min_mag_filter);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, m_min_mag_filter);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+				glDrawArrays(GL_QUADS, 4*i, 4);
+		}
         ++i;
 	}
 

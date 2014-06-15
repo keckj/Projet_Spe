@@ -10,9 +10,7 @@ class Model : public QObject {
 
     public:
         Model(int nbIter, std::map<QString, bool> *renderedVars, unsigned int width = 512, unsigned int height = 512, unsigned int length = 1); 
-		virtual ~Model() {
-			log_console->infoStream() << "KILL MODEL";
-		};
+		virtual ~Model() {};
 
     protected:
         unsigned int m_width, m_height, m_length;
@@ -22,6 +20,11 @@ class Model : public QObject {
         virtual void initComputation() = 0;
         virtual void computeStep(int i) = 0;
         virtual void finishComputation() = 0;
+		
+		static Display *solverDisplay;
+		static GLXContext solverContext;
+		static Window solverWindow;
+		static Colormap solverColormap;
     
     private:
         QMutex m_mutex;
