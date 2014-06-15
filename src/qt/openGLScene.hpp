@@ -21,17 +21,10 @@ class OpenGLScene : public QGraphicsScene {
 		static Display *qtDisplay;
 		static GLXContext qtContext;
 		
-		static Display *solverDisplay;
-		static GLXContext solverContext;
-		static Window solverWindow;
-		static Colormap solverColormap;
-
-    signals:
-        void stepRendered();
-
     public slots:
         void updateTextures(const QMap<QString, GLuint> &texMap);
 		void changeColormap(const QString &colormapName);
+		void toggleSampler();
 
     private:
         GraphicsViewer *m_viewer;
@@ -47,6 +40,7 @@ class OpenGLScene : public QGraphicsScene {
 		unsigned int m_colormapsUBO;
 		unsigned int m_colorId;
         float *m_vertexCoords;
+		unsigned int m_min_mag_filter;
 		
 		void makeProgram();
 		void makeColorMaps();

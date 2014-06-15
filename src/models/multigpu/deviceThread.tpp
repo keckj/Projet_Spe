@@ -2,6 +2,7 @@
 #include "headers.hpp"
 #include "log.hpp"
 #include "clUtils.hpp"
+#include "openGLScene.hpp"
 #include <thread>
 
 
@@ -15,7 +16,10 @@ std::condition_variable DeviceThread<nCommandQueues>::_cond;
 
 template <unsigned int nCommandQueues>
 bool DeviceThread<nCommandQueues>::_called;
-
+		
+template <unsigned int nCommandQueues>
+bool DeviceThread<nCommandQueues>::_kill=false;
+	
 template <unsigned int nCommandQueues>
 DeviceThread<nCommandQueues>::DeviceThread(MultiGpu *simulation, 
 		const cl::Platform &platform,
@@ -32,7 +36,7 @@ DeviceThread<nCommandQueues>::DeviceThread(MultiGpu *simulation,
 	_platform(platform), _context(context),
 	_program(program), _device(device),
 	_fence(fence),
-	_dh(0.01),
+	_dh(dh),
 	_display(display),
 	_writeOnDisk(writeOnDisk)
 { 
@@ -44,6 +48,7 @@ DeviceThread<nCommandQueues>::DeviceThread(MultiGpu *simulation,
 	_alpha1 = args->at("alpha_1")();
 	_alpha2 = args->at("alpha_2")();
 	_dt = computeOptimalTimestep();
+
 	log_console->infoStream() << "DH = " << _dh << " DT = " << _dt;
 	log_console->infoStream() 
 		<< "epsilon=" << _epsilon 
@@ -53,17 +58,23 @@ DeviceThread<nCommandQueues>::DeviceThread(MultiGpu *simulation,
 		<< "\tmu_2=" << _mu2
 		<< "\talpha_1=" << _alpha1
 		<< "\talpha_2=" << _alpha2;
+
+	_kernel = cl::Kernel(_program, "computeStep");
 }
 
 template <unsigned int nCommandQueues>
 DeviceThread<nCommandQueues>::~DeviceThread() {
+	(*_fence)();
+	std::unique_lock<std::mutex> lock(DeviceThread::_mutex);
+	if(_kill) {
+		_kill = false;
+		log_console->infoStream() << "Worker threads killed !";
+	}
+	DeviceThread::_cond.notify_one();
 }
 
 template <unsigned int nCommandQueues>
 void DeviceThread<nCommandQueues>::operator()() {
-
-
-	log_console->infoStream() << "THREAD RUN !";
 
 	cl_int err;
 	for (int i = 0; i < nCommandQueues; i++) {
@@ -72,7 +83,6 @@ void DeviceThread<nCommandQueues>::operator()() {
 	}
 
 	(*_fence)();
-	log_console->infoStream() << "THREAD commandQueues !";
 
 	std::map<std::string, MultiBufferedSubDomain<float,1u>*> currentDomain; 
 
@@ -81,20 +91,15 @@ void DeviceThread<nCommandQueues>::operator()() {
 		if(success)
 			this->initSubDomain(currentDomain);
 	}
-
-	log_console->infoStream() << "THREAD initdone!";
-	std::function<void(MultiGpu*)> f(&MultiGpu::initDone);
-	callOnce<void,MultiGpu*>(f, _fence, _simulation);
-
-	//Make _kernel
-	_kernel = cl::Kernel(_program, "computeStep");
-
+	
+	std::function<void(MultiGpu*)> resetSubDomains(&MultiGpu::resetSubDomains);
+	callOnce<void,MultiGpu*>(resetSubDomains, _fence, _simulation);
+	
 	//Prepare
 	bool lockDomains = false;
 
-	log_console->infoStream() << "THREAD ACQUIRE SUBDOMAINS !";
 	//Get as much work as possible, automatic device compute load management
-	while(!lockDomains && _simulation->subDomainAvailable()) { 
+	while(!lockDomains) { 
 
 		//try to get work
 		bool success = _simulation->tryToTakeSubDomain(currentDomain);
@@ -195,34 +200,37 @@ void DeviceThread<nCommandQueues>::operator()() {
 		log_console->infoStream() << "Device " << _device() << " acquired " << _acquiredDomains.size() << " domains !";
 	}
 	
-	log_console->infoStream() << "THREAD ENTER INFINITE LOOP !";
+	std::function<void(MultiGpu*)> initDone(&MultiGpu::initDone);
+	callOnce<void,MultiGpu*>(initDone, _fence, _simulation);
+	
 	//Compute loop
-	std::function<void(MultiGpu*)> g(&MultiGpu::stepDone);
+	std::function<void(MultiGpu*)> waitCompute(&MultiGpu::waitCompute);
+	std::function<void(MultiGpu*)> lockStep(&MultiGpu::lockStep);
+	std::function<void(MultiGpu*)> stepDone(&MultiGpu::stepDone);
+	std::function<void(MultiGpu*)> releaseStep(&MultiGpu::releaseStep);
 	unsigned int i = 1;
-	while(true) {
-		log_console->infoStream() << "THREAD WAIT !";
-		while(!_simulation->_step) {
-			std::this_thread::sleep_for(std::chrono::milliseconds(10));
-		}
-		log_console->infoStream() << "THREAD COMPUTE !";
+	while(!_kill) {
+		callOnce<void,MultiGpu*>(waitCompute, _fence, _simulation);
+		callOnce<void,MultiGpu*>(lockStep, _fence, _simulation);
+
 		for (unsigned int j = 0; j < _acquiredDomains.size(); j++) {
 			computeSubDomainStep(j, i);
 		}
-		log_console->infoStream() << "THREAD FINISH COMMAND QUEUE !";
 		for (unsigned int j = 0; j < nCommandQueues; j++) {
 			_commandQueues[j].finish();
 		}
-		if(_display) {
-			log_console->infoStream() << "THREAD CALL DISPLAY!";
-			callOnce<void,MultiGpu*>(g, _fence, _simulation);
-		}
-		else {
-			(*_fence)();
-			_simulation->_stepDone = true;
-			_simulation->_step = false;
-		}
+
+		if(_display)
+			callOnce<void,MultiGpu*>(stepDone, _fence, _simulation);
+		
+		callOnce<void,MultiGpu*>(releaseStep, _fence, _simulation);
+
 		i++;
 	}
+		
+	
+	std::function<void(MultiGpu*)> destroy(&MultiGpu::destroy);
+	callOnce<void,MultiGpu*>(destroy, _fence, _simulation);
 }
 
 template <unsigned int nCommandQueues>
@@ -265,8 +273,7 @@ void DeviceThread<nCommandQueues>::computeSubDomainStep(unsigned int domainId, u
 	unsigned long edgeBytesZ = currentDomain.begin()->second->edgeBytesZ();
 	unsigned long edgeBytes[3] = {edgeBytesX, edgeBytesY, edgeBytesZ};
 
-	//cl::CommandQueue currentCommandQueue = _commandQueues[domainId%nCommandQueues];
-	cl::CommandQueue currentCommandQueue = _commandQueues[0];
+	cl::CommandQueue currentCommandQueue = _commandQueues[domainId%nCommandQueues];
 			
 	//Send initial func data
 	if(!_acquiredDomainsIsInitialDataSent[domainId]) {
@@ -336,7 +343,7 @@ void DeviceThread<nCommandQueues>::computeSubDomainStep(unsigned int domainId, u
 	//currentCommandQueue.enqueueReadBuffer(varBuffers["e"][(stepId+1)%2], CL_FALSE, 0, bytes, *(currentDomain["e"]->data()));
 
 	//get slices to generate texture
-	if(_display && stepId%1==0) {
+	if(_display) {
 		unsigned int sliceIdx = _simulation->sliceIdX();
 		unsigned int sliceIdy = _simulation->sliceIdY();
 		unsigned int sliceIdz = _simulation->sliceIdZ();
@@ -370,18 +377,16 @@ void DeviceThread<nCommandQueues>::computeSubDomainStep(unsigned int domainId, u
 			region.push_back(subDomainHeight);
 			region.push_back(1);
 			
-			log_console->infoStream() << "THREAD GET SUBDOMAIN DATA!";
-
-
 			for(auto pair : currentDomain) {
 				CHK_ERROR_RET(
 				currentCommandQueue.enqueueReadBufferRect( 
-							varBuffers[pair.first][(stepId+1)%2], CL_FALSE, 
+							varBuffers[pair.first][stepId%2], CL_FALSE, 
 							bufferOrigin, hostOrigin, region,
 							bufferPitch[0], bufferPitch[1],
 							hostPitch[0], hostPitch[1],
 							(void*)_simulation->sliceZ()[pair.first])
 				);
+				//DEBUG
 				//for (unsigned int j = 0; j < subDomainHeight; j++) {
 				//for (unsigned int i = 0; i < subDomainWidth; i++) {
 				//_simulation->sliceZ()[pair.first][j*subDomainWidth+i] = (j*subDomainWidth+i)/(float)(subDomainWidth*subDomainHeight);
@@ -390,7 +395,21 @@ void DeviceThread<nCommandQueues>::computeSubDomainStep(unsigned int domainId, u
 			}
 
 		}
-				
+	
+		//actualize internal host borders
+		for(auto pair : currentDomain) {
+			for (int j = 0; j < 6; j++) {
+				float* const* edgeData = internalEdgeHostData[pair.first][j];
+
+				if(*edgeData) {
+					CHK_ERROR_RET(currentCommandQueue.enqueueReadBuffer(
+								internalEdgeBuffers[pair.first][j], CL_FALSE, 0, 
+								edgeBytes[j/2], *edgeData));
+				}
+			}
+		}
+			
+		//DEBUG
 		//log_console->infoStream()
 							   //<< "Subdomain " << currentDomain.begin()->second->id()
 							   //<< "\n sliceIds " << toStringVec3<unsigned int>(sliceIdx,sliceIdy,sliceIdz)
@@ -409,7 +428,8 @@ void DeviceThread<nCommandQueues>::computeSubDomainStep(unsigned int domainId, u
 							   //<< "\n";
   
 			
-			
+		
+		//TODO
 		//if(sliceIdx >= offsetX && sliceIdx < offsetX+subDomainWidth) {
 			//bufferOrigin.clear(); hostOrigin.clear(); region.clear();
 
@@ -460,18 +480,6 @@ void DeviceThread<nCommandQueues>::computeSubDomainStep(unsigned int domainId, u
 		//}
 	}
 
-	//actualize internal host borders
-	for(auto pair : currentDomain) {
-		for (int j = 0; j < 6; j++) {
-			float* const* edgeData = internalEdgeHostData[pair.first][j];
-
-			if(edgeData) {
-				CHK_ERROR_RET(currentCommandQueue.enqueueReadBuffer(
-							internalEdgeBuffers[pair.first][j], CL_FALSE, 0, 
-							edgeBytes[j/2], *edgeData));
-			}
-		}
-	}
 }
 
 template <unsigned int nCommandQueues>
@@ -483,4 +491,9 @@ float DeviceThread<nCommandQueues>::computeOptimalTimestep() {
 		(_epsilon + _mu1/_mu2 * SQUARE(_dh)/4 * SQUARE(_alpha1 + 1));
 
 	return 0.95*std::min(lhs, rhs);
+}
+		
+template <unsigned int nCommandQueues>
+void DeviceThread<nCommandQueues>::finish() {
+	_kill = true;
 }

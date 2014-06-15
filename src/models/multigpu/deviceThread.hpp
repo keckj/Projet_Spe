@@ -30,6 +30,9 @@ class DeviceThread {
 			~DeviceThread();
 
 		void operator()();
+		void finish();
+		
+		static bool _kill;
 
 	private:
 		void initSubDomain(std::map<std::string, MultiBufferedSubDomain<float, 1u>*> subDomain);
@@ -70,24 +73,27 @@ class DeviceThread {
 
 		static std::mutex _mutex;
 		static std::condition_variable _cond;
-		static bool _called;
+		static bool _called, _abort;
 
 		template <typename Ret, class... Args>
 		static void callOnce(std::function<Ret(Args...)> f, Fence *fence, Args... args);
+
 };
 		
 template <unsigned int nCommandQueues>
 template <typename Ret, class... Args>
 void DeviceThread<nCommandQueues>::callOnce(std::function<Ret(Args...)> f, Fence *fence, Args... args) {
+	_called=false;
 	(*fence)();
-	_called = false;
 	{
 		std::unique_lock<std::mutex> lock(DeviceThread::_mutex);
 		if(!_called) {
 			f(args...);		
 			_called = true;
 		}
-		_cond.notify_one();
+		else {
+		}
+		DeviceThread::_cond.notify_one();
 	}
 	(*fence)();
 }

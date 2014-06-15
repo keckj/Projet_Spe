@@ -4,6 +4,7 @@
 
 #include <mutex>
 #include <condition_variable>
+#include <boost/thread/barrier.hpp>
 
 class Fence {
 public:
@@ -13,11 +14,7 @@ public:
 	void operator()();
 
 private:
-	std::mutex _mutex;
-	std::condition_variable _cond;
-
-	unsigned int _N;
-	unsigned int _counter, _passed;
+	boost::barrier barrier;
 };
 
 	

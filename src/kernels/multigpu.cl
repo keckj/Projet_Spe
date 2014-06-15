@@ -80,4 +80,44 @@ __kernel void computeStep(
 	if(idy==0               && domainIdy>0)		   	 E_internalEdgesTop[idx]   = newE;
 	if(idy==subGridHeight-1 && domainIdy<nSplitsY-1) E_internalEdgesDown[idx]  = newE;
 }
+	
+	//DEBUG 1
+	/*E_2[id] = 1;*/
+	/*R_2[id] = 1;*/
 
+	/*E_2[id] = (idy == 0               ? (domainIdy == 0          ? 0 : 0.5)  : E_2[id]);	*/
+	/*E_2[id] = (idy == subGridHeight-1 ? (domainIdy == nSplitsY-1 ? 0 : 0.5)  : E_2[id]);	*/
+	/*E_2[id] = (idx == 0               ? (domainIdx == 0          ? 0 : 0.5)  : E_2[id]);	*/
+	/*E_2[id] = (idx == subGridWidth-1  ? (domainIdx == nSplitsX-1 ? 0 : 0.5)  : E_2[id]);	*/
+	
+	/*R_2[id] = (idx == 0               ? (domainIdx == 0          ? 0 : 0.5)  : R_2[id]);	*/
+	/*R_2[id] = (idx == subGridWidth-1  ? (domainIdx == nSplitsX-1 ? 0 : 0.5)  : R_2[id]);	*/
+	/*R_2[id] = (idy == 0               ? (domainIdy == 0          ? 0 : 0.5)  : R_2[id]);	*/
+	/*R_2[id] = (idy == subGridHeight-1 ? (domainIdy == nSplitsY-1 ? 0 : 0.5)  : R_2[id]);	*/
+	
+	//DEBUG 2
+	/*E_2[id] = 1;*/
+	/*R_2[id] = 1;*/
+	/*if(idx==0			    && domainIdx>0)			 E_2[id]=0;*/
+	/*if(idx==subGridWidth-1  && domainIdx<nSplitsX-1) E_2[id]=0;*/
+	/*if(idy==0               && domainIdy>0)		   	 E_2[id]=0;*/
+	/*if(idy==subGridHeight-1 && domainIdy<nSplitsY-1) E_2[id]=0;*/
+
+	//DEBUG 3	
+	/*E_2[id] = 1;*/
+	/*R_2[id] = 1;*/
+	
+	/*if(idx==0			    && domainIdx>0)			 E_2[id-1] = E_externalEdgesLeft[idy];*/
+	/*if(idx==subGridWidth-1  && domainIdx<nSplitsX-1) E_2[id+1] = E_externalEdgesRight[idy];*/
+	/*if(idy==0               && domainIdy>0)		   	 E_2[id-subGridWidth] = E_externalEdgesTop[idx];  */
+	/*if(idy==subGridHeight-1 && domainIdy<nSplitsY-1) E_2[id+subGridWidth] = E_externalEdgesDown[idx]; */
+	
+	/*if(idx==0			    && domainIdx>0)			 E_internalEdgesLeft[idy]  = E_2[id];*/
+	/*if(idx==subGridWidth-1  && domainIdx<nSplitsX-1) E_internalEdgesRight[idy] = E_2[id];*/
+	/*if(idy==0               && domainIdy>0)		   	 E_internalEdgesTop[idx]   = E_2[id];*/
+	/*if(idy==subGridHeight-1 && domainIdy<nSplitsY-1) E_internalEdgesDown[idx]  = E_2[id];*/
+	
+	/*if(domainIdx==0)		  E_2[id] = 0.75;*/
+	/*if(domainIdx==nSplitsX-1) E_2[id] = 0.75;*/
+	/*if(domainIdy==0)		  E_2[id] = 0.75;  */
+	/*if(domainIdy==nSplitsY-1) E_2[id] = 0.75; */

@@ -7,11 +7,6 @@
 Display *OpenGLScene::qtDisplay;
 GLXContext OpenGLScene::qtContext;
 
-Display *OpenGLScene::solverDisplay;
-GLXContext OpenGLScene::solverContext;
-Window OpenGLScene::solverWindow;
-Colormap OpenGLScene::solverColormap;
-
 using namespace log4cpp;
 using namespace utils;
 
@@ -27,7 +22,8 @@ OpenGLScene::OpenGLScene(GraphicsViewer *viewer) :
     m_texMap(),
 	m_colormapsUBO(),
 	m_colorId(0),
-    m_vertexCoords()
+    m_vertexCoords(),
+	m_min_mag_filter(GL_NEAREST)
 {
         //Get and print info about qt context
 		qtDisplay = glXGetCurrentDisplay();
@@ -43,10 +39,6 @@ OpenGLScene::OpenGLScene(GraphicsViewer *viewer) :
 			<< " RenderType=" << qtGlxSupportedRenderType
 			<< " ScreenNumber=" << qtGlxScreenNumber;
 
-		//Create openGL context for the solver, try to get shared context with QT
-		log_console->infoStream() << "Creating openGL context for the solver...";
-		utils::createOpenGLContext(&solverDisplay, &solverContext, &solverWindow, &solverColormap, qtContext);
-		
 		makeArrays();
 		makeProgram();
 		makeColorMaps();
@@ -56,7 +48,7 @@ void OpenGLScene::updateTextures(const QMap<QString, GLuint> &texMap) {
     // Check if we need to change layout
 	if (texMap.size() == m_texMap.size()) {
 		//Notify the GUI that we have made progress
-		emit stepRendered();
+		update();
 		return;
 	}
 
@@ -99,9 +91,7 @@ void OpenGLScene::updateTextures(const QMap<QString, GLuint> &texMap) {
 
     // Buffer new arrays
     makeArrays();
-    
-    // Notify the status bar that we have made progress
-    emit stepRendered();
+	update();
 }
 
 void OpenGLScene::drawBackground(QPainter *painter, const QRectF &) {
@@ -138,17 +128,19 @@ void OpenGLScene::drawBackground(QPainter *painter, const QRectF &) {
 	
 	//Texture unit
 	glActiveTexture(GL_TEXTURE0 + 0);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	
     // Draw textured quads
 	int i = 0;
 	for (QString key : m_texMap.keys()) {
-		glBindTexture(GL_TEXTURE_2D, m_texMap[key]);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		glDrawArrays(GL_QUADS, 4*i, 4);
+		if(glIsTexture(m_texMap[key])) {
+				glBindTexture(GL_TEXTURE_2D, m_texMap[key]);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, m_min_mag_filter);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, m_min_mag_filter);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+				glDrawArrays(GL_QUADS, 4*i, 4);
+		}
         ++i;
 	}
 
@@ -167,9 +159,6 @@ void OpenGLScene::drawBackground(QPainter *painter, const QRectF &) {
 	    renderString(x, y, GLUT_BITMAP_9_BY_15, key.toStdString().c_str(), 1.0, 1.0, 1.0);
         ++i;
     }
-
-    // Refresh the window once the event queue is empty 
-    QTimer::singleShot(0, this, SLOT(update()));
 }
 
 void OpenGLScene::makeProgram() {
@@ -251,6 +240,7 @@ void OpenGLScene::makeArrays() {
 	glBufferData(GL_ARRAY_BUFFER, 8*m_texMap.size()*sizeof(float), m_vertexCoords, GL_STATIC_DRAW);
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
+
 }
 
 
@@ -281,4 +271,12 @@ void OpenGLScene::renderString(float x, float y, void *font_, const char* string
   glColor4f(r,g,b,a); 
   glRasterPos2f(x, y);
   glutBitmapString(font_, (const unsigned char*)string);
+}
+		
+
+void OpenGLScene::toggleSampler() {
+	if(m_min_mag_filter == GL_NEAREST)
+		m_min_mag_filter = GL_LINEAR;
+	else
+		m_min_mag_filter = GL_NEAREST;
 }

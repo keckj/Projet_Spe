@@ -13,6 +13,8 @@
 #include <mutex>
 #include <condition_variable>
 
+#define N_COMMANDQUEUES 8
+
 class MultiGpu : public Model {
 	Q_OBJECT
     
@@ -22,6 +24,7 @@ class MultiGpu : public Model {
 				std::map<QString, Argument> *args, 
 				std::map<QString, bool> *renderedVars);
         ~MultiGpu();
+		void killWorkerThreads();
 
 		//Model overrides
         void initComputation() override;
@@ -47,6 +50,13 @@ class MultiGpu : public Model {
 		//signals from worker threads
 		void initDone();
 		void stepDone();
+		void lockStep();
+		void giveStep();
+		void releaseStep();
+		void waitStep();
+		void waitCompute();
+		void waitInit();
+		void destroy();
 		void abort();
 	
 		//access for gui
@@ -58,13 +68,13 @@ class MultiGpu : public Model {
 		cl::Platform _platform;
 		cl::Context _context;
 		std::vector<cl::Device> _devices;
-		std::vector<DeviceThread<1u>> _deviceThreads;
+		std::vector<DeviceThread<N_COMMANDQUEUES>*> _deviceThreads;
 		unsigned int _nDevices;
 		void initOpenClContext();
 		
 		//thread safety
-		std::mutex _mutex;
-		std::condition_variable _cond;
+		std::mutex _mutex, _domainMutex;
+		std::condition_variable _cond, _domainCond;
 		std::list<unsigned int> _availableDomains;
 
 		//domain
@@ -83,9 +93,7 @@ class MultiGpu : public Model {
 	
 		//model
 		std::map<QString, Argument> *_args;
-
-    signals:
-        void finished();
+		bool _kill, _destroyed;
 };
 
 #include "deviceThread.tpp"
