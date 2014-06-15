@@ -181,8 +181,8 @@ namespace utils {
 		XFree(vi);
 		XStoreName((*display), (*win), "GL 3.0 window");
 
-		log_console->infoStream() <<  "Mapping window...";
-		XMapWindow((*display), (*win));
+		//log_console->infoStream() <<  "Mapping window...";
+		//XMapWindow((*display), (*win));
 
 		const char *glxExts = glXQueryExtensionsString((*display), DefaultScreen((*display)));
 		glXCreateContextAttribsARBProc glXCreateContextAttribsARB = 0;

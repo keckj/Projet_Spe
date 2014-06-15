@@ -43,12 +43,6 @@ int main(int argc, char** argv) {
 	application.exec();
 	Py_Finalize();
 
-	glXMakeCurrent(Model::solverDisplay, 0, 0);
-	glXDestroyContext(Model::solverDisplay, Model::solverContext);
-	XDestroyWindow(Model::solverDisplay, Model::solverWindow);
-	XFreeColormap(Model::solverDisplay, Model::solverColormap);
-	XCloseDisplay(Model::solverDisplay);
-
 	return EXIT_SUCCESS;
 }
 

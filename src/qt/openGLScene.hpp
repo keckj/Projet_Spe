@@ -15,6 +15,7 @@ class OpenGLScene : public QGraphicsScene {
 
     public:
         OpenGLScene(GraphicsViewer *viewer);
+		~OpenGLScene();
 
         void drawBackground(QPainter *painter, const QRectF &);
 		

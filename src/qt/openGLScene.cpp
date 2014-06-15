@@ -3,6 +3,7 @@
 #include "openGLScene.moc" 
 #include "globals.hpp"
 #include "colormap.hpp"
+#include "model.hpp"
 		
 Display *OpenGLScene::qtDisplay;
 GLXContext OpenGLScene::qtContext;
@@ -44,6 +45,17 @@ OpenGLScene::OpenGLScene(GraphicsViewer *viewer) :
 		makeArrays();
 		makeProgram();
 		makeColorMaps();
+}
+
+
+OpenGLScene::~OpenGLScene() {
+	if(Model::solverContext != 0) {
+		glXMakeCurrent(Model::solverDisplay, 0, 0);
+		glXDestroyContext(Model::solverDisplay, Model::solverContext);
+		XDestroyWindow(Model::solverDisplay, Model::solverWindow);
+		XFreeColormap(Model::solverDisplay, Model::solverColormap);
+		XCloseDisplay(Model::solverDisplay);
+	}
 }
 
 void OpenGLScene::updateTextures(const QMap<QString, GLuint> &texMap) {
