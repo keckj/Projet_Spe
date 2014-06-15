@@ -90,7 +90,6 @@ SimpleModel2D::SimpleModel2D(unsigned int nbIter,
 
 
 SimpleModel2D::~SimpleModel2D() {
-	log_console->infoStream() << "Delete simplemodel2D";
 	delete _e1;
 	delete _e2;
 	delete _r1;
