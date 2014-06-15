@@ -8,7 +8,7 @@
 class InitialCondFactory {
 
     public:
-        static const InitialCond<float> &getInitialCond(int i);
+        static const InitialCond<float> *getInitialCond(int i);
         static const QString getInitialCondName(int i);
 };
 
