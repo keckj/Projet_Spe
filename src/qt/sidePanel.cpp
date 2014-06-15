@@ -17,7 +17,7 @@
 // ************************
 const QStringList SidePanel::modelsList = QStringList() << "Simple Model 2D" << "->Multi-GPU<-" << "Default Model";
 const int SidePanel::defaultNumberOfSteps = 10000;
-const std::vector<unsigned int> SidePanel::defaultGridSize { 512, 512, 1};
+const std::vector<unsigned int> SidePanel::defaultGridSize {512, 512, 1};
 // ************************
 
 
@@ -299,10 +299,14 @@ void SidePanel::changeNbIterSlider(int nbIter) {
 }
 
 void SidePanel::refreshParameters(int modelId) {
-    if (m_argsMap)
+    if (m_argsMap) {
         m_argsMap->clear();
-    if (m_varsMap)
+        delete m_argsMap;
+    }
+    if (m_varsMap) {
         m_varsMap->clear();
+        delete m_varsMap;
+    }
     switch(modelId) {
         case 0:
             m_argsMap = SimpleModel2D::getArguments();
@@ -317,10 +321,11 @@ void SidePanel::refreshParameters(int modelId) {
             m_varsMap = new std::map<QString, bool>;
     }
     
-    if (m_initialCondsMap)
+    if (m_initialCondsMap) {
         m_initialCondsMap->clear();
-    else
+    } else {
         m_initialCondsMap = new std::map<QString, int>;
+    }
     for (auto it = m_varsMap->begin(); it != m_varsMap->end(); ++it) {
         m_initialCondsMap->emplace(it->first, 0);
     }
@@ -329,7 +334,7 @@ void SidePanel::refreshParameters(int modelId) {
     this->variablesRenderedList->clear();    
     QListWidgetItem *item;
     for (auto it = m_varsMap->begin(); it !=m_varsMap->end(); ++it) {
-        item = new QListWidgetItem(it->first, variablesRenderedList);
+        item = new QListWidgetItem(it->first);
         item->setFlags(item->flags() | Qt::ItemIsUserCheckable);
         if (it->second) {
             item->setCheckState(Qt::Checked);
