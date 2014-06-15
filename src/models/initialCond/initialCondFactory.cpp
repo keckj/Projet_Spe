@@ -6,7 +6,10 @@
 
 using namespace log4cpp;
 
-const InitialCond<float> *InitialCondFactory::getInitialCond(int i) {
+InitialCond<float> *InitialCondFactory::getInitialCond(int i) {
+
+	log_console->infoStream() << "Creating a '" << getInitialCondName(i).toUtf8().constData() << "' initial condition...";
+
     switch (i) {
 		case 0:
 			return new FunctionInitialCond<float>([] (float,float,float)->float {return 0;});

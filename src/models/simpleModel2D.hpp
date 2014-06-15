@@ -18,6 +18,7 @@ class SimpleModel2D : public Model {
 		SimpleModel2D(unsigned int nbIter,
 				std::map<QString, Argument> *args, 
                 std::map<QString, bool> *vars,
+				std::map<QString,int> *initialCondsId, 
 				unsigned int width = 200, unsigned int height = 200);
 
         ~SimpleModel2D();

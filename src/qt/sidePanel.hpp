@@ -55,6 +55,7 @@ class SidePanel : public QWidget {
         std::map<QString, Argument> *m_argsMap;
         std::map<QString, bool> *m_varsMap;
         std::map<QString, int> *m_initialCondsMap;
+        std::map<QString, int> *m_defaultCondsMap;
         QString m_saveDirectory;
 
         InitializationDialog *initDialog;

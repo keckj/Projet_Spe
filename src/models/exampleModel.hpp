@@ -9,7 +9,9 @@ class ExampleModel : public Model {
     Q_OBJECT
 
     public:
-        ExampleModel(int nbIter, std::map<QString, bool> *renderedVars);
+        ExampleModel(int nbIter, 
+				std::map<QString, bool> *renderedVars,
+				std::map<QString, int> *initialCondIds);
         ~ExampleModel();
 
         void initComputation() override;

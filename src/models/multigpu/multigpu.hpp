@@ -22,7 +22,9 @@ class MultiGpu : public Model {
 		MultiGpu(int nbIter, 
 				unsigned int width_, unsigned int height_, unsigned int length_,
 				std::map<QString, Argument> *args, 
-				std::map<QString, bool> *renderedVars);
+				std::map<QString, bool> *renderedVars,
+				std::map<QString, int> *initialCondsId);
+
         ~MultiGpu();
 		void killWorkerThreads();
 
@@ -47,7 +49,7 @@ class MultiGpu : public Model {
 		void releaseSubDomain(std::map<std::string, MultiBufferedSubDomain<float,1u>*> subDomain);
 		void resetSubDomains();
 		
-		//signals from worker threads
+		//"signals" from worker threads
 		void initDone();
 		void stepDone();
 		void lockStep();
@@ -62,6 +64,7 @@ class MultiGpu : public Model {
 		//access for gui
 		static std::map<QString, Argument> *getArguments();
         static std::map<QString, bool> *getVariables();
+        static std::map<QString, int> *getDefaultInit();
 
 	private:
 		//openCL context
@@ -82,7 +85,7 @@ class MultiGpu : public Model {
 		std::map<std::string, MultiBufferedDomain<float,1u>*> _domains;
 		unsigned int _splits;
 		bool _init;
-		void initGrids(const std::map<std::string, InitialCond<float>*> &initialConditions);
+		void initGrids();
 
 		//draw & save on disk
 		unsigned int _sliceIdX, _sliceIdY, _sliceIdZ;

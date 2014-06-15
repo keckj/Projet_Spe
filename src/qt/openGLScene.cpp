@@ -20,6 +20,8 @@ OpenGLScene::OpenGLScene(GraphicsViewer *viewer) :
 	m_vertexCoordsVBO(0),
 	m_texture(0),
     m_texMap(),
+	m_nTexturesWidth(0),
+	m_nTexturesHeight(0),
 	m_colormapsUBO(),
 	m_colorId(0),
     m_vertexCoords(),
