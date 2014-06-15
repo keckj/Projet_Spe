@@ -15,7 +15,7 @@ class Model : public QObject {
 			std::map<QString,int> *initialCondsId, 
 			unsigned int width = 512, unsigned int height = 512, unsigned int length = 1); 
 
-		virtual ~Model() {};
+		virtual ~Model();
 		
 		static Display *solverDisplay;
 		static GLXContext solverContext;
@@ -48,6 +48,9 @@ class Model : public QObject {
         void updateDisplay(const QMap<QString, GLuint> &texMap);
         void stepComputed();
         void finished();
+
+		void showCodeEditor(int);
+		void codeSubmitted(const QString &);
 };
 
 #endif

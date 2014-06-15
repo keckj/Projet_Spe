@@ -10,11 +10,11 @@
 using namespace log4cpp;
 
 template <typename T>
-class PythonInitialCond : public InitialCond<T> {
+class PythonFuncInitialCond : public InitialCond<T> {
 
 public:
-	PythonInitialCond(const std::string &expr);
-	~PythonInitialCond();
+	PythonFuncInitialCond(const std::string &expr);
+	~PythonFuncInitialCond();
 
 private:
 	T F(T x, T y, T z) const;
@@ -27,11 +27,9 @@ private:
 
 
 template <typename T>
-PythonInitialCond<T>::PythonInitialCond(const std::string &expr) :
+PythonFuncInitialCond<T>::PythonFuncInitialCond(const std::string &expr) :
 	_expression(0), _args(0) {
 	
-	log_console->infoStream() << "INIT !";
-
 	std::stringstream funcNameSS;
 	funcNameSS << "func" << hash(expr.c_str());
 	std::string funcName = funcNameSS.str();
@@ -39,10 +37,10 @@ PythonInitialCond<T>::PythonInitialCond(const std::string &expr) :
 	std::stringstream pgm;
 	pgm << "import math" << std::endl
 	<< "def " << funcName << "(x,y,z):" << std::endl
-	<< "\treturn " << expr << std::endl;
+	<< "\t" << expr << std::endl;
 	PyRun_SimpleString(pgm.str().c_str());
 
-	log_console->infoStream() << "PYTHON pgm : " << pgm.str();
+	log_console->infoStream() << "PYTHON function :\n" << pgm.str();
     
 	PyObject*    main_module, * global_dict;
     main_module = PyImport_AddModule("__main__");
@@ -58,17 +56,17 @@ PythonInitialCond<T>::PythonInitialCond(const std::string &expr) :
 }
 
 template <typename T>
-PythonInitialCond<T>::~PythonInitialCond() {
+PythonFuncInitialCond<T>::~PythonFuncInitialCond() {
 	delete [] _args;
 }
 
 template <typename T>
-T PythonInitialCond<T>::F(T x, T y, T z) const {
+T PythonFuncInitialCond<T>::F(T x, T y, T z) const {
 	return T(PyFloat_AsDouble(PyObject_CallFunction(_expression, _args, x,y,z)));
 }
 
 template <typename T>
-unsigned int PythonInitialCond<T>::hash(const char *str)
+unsigned int PythonFuncInitialCond<T>::hash(const char *str)
 {
     unsigned int h = 0;
     while (*str)

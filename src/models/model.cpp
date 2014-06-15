@@ -22,6 +22,11 @@ Model::Model(int nbIter,
 {
 
 }
+		
+Model::~Model() {
+	for(auto pair : m_initialConds)
+		delete pair.second;
+}
 
 void Model::startComputing() {
 
@@ -43,10 +48,13 @@ void Model::startComputing() {
 		<< " ScreenNumber=" << glxScreenNumber;
 
 	//call factory for initial conditions
+	InitialCondFactory *factory = new InitialCondFactory();
+	connect(factory, SIGNAL(showCodeEditor(int)), this, SIGNAL(showCodeEditor(int)));
+	connect(this, SIGNAL(codeSubmitted(const QString &)), factory, SLOT(codeSubmitted(const QString &)), Qt::DirectConnection);
 	for(auto pair : *m_initialCondsId)
-		m_initialConds.emplace(pair.first, InitialCondFactory::getInitialCond(pair.second));
+		m_initialConds.emplace(pair.first, factory->getInitialCond(pair.second));
 	
-	log_console->debugStream() << "Start Computing.";
+	log_console->infoStream() << "Start Computing.";
     initComputation();
 
     QElapsedTimer screenRefreshTimer;
@@ -95,4 +103,4 @@ void Model::stopComputing() {
     m_cond.wakeAll();
     m_mutex.unlock();
 }
-
+		

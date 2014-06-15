@@ -55,6 +55,7 @@ MainWindow::MainWindow() {
     viewer->setScene(scene);
     
     panel = new SidePanel(this);
+	codeEditorGui = new CodeEditorGui();
 
     connect(panel, SIGNAL(childKeyEvent(QKeyEvent *)), this, SLOT(childKeyEvent(QKeyEvent *)));
     
@@ -72,6 +73,7 @@ MainWindow::MainWindow() {
 }
 
 MainWindow::~MainWindow() {
+	delete codeEditorGui;
 }
 
 
@@ -119,12 +121,16 @@ void MainWindow::startComputing() {
 
     connect(m_thread, SIGNAL(started()), mod, SLOT(startComputing()));
     connect(m_thread, SIGNAL(finished()), m_thread, SLOT(deleteLater()));
-
+	
+	connect(mod, SIGNAL(showCodeEditor(int)), codeEditorGui, SLOT(showCodeEditor(int)));
+	connect(codeEditorGui, SIGNAL(codeSubmitted(const QString &)), mod, SIGNAL(codeSubmitted(const QString &)), Qt::DirectConnection); 
+	
 	connect(mod, SIGNAL(updateDisplay(const QMap<QString, GLuint> &)), scene, SLOT(updateTextures(const QMap<QString, GLuint> &)));
 	connect(mod, SIGNAL(stepComputed()), this, SLOT(onStepCompute()));
     connect(mod, SIGNAL(destroyed()), m_thread, SLOT(quit()));                   // kill thread
     connect(mod, SIGNAL(finished()), mod, SLOT(deleteLater()));
     connect(mod, SIGNAL(finished()), panel, SLOT(stop()));                      // update GUI buttons
+    
 
     mod->moveToThread(m_thread);
     m_thread->start();
@@ -181,4 +187,3 @@ void MainWindow::childKeyEvent(QKeyEvent *k) {
     keyPressEvent(k);
 }
 		
-

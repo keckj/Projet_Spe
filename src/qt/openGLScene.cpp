@@ -26,7 +26,7 @@ OpenGLScene::OpenGLScene(GraphicsViewer *viewer) :
 	m_colormapsUBO(),
 	m_colorId(0),
     m_vertexCoords(),
-	m_min_mag_filter(GL_NEAREST)
+	m_min_mag_filter(GL_LINEAR)
 {
         //Get and print info about qt context
 		qtDisplay = glXGetCurrentDisplay();

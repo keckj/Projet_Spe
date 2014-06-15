@@ -1,5 +1,4 @@
 
-#include "pythonInitialCond.hpp"
 #include "headers.hpp"
 #include "simpleModel2D.hpp"
 #include "simpleModel2D.moc"
@@ -120,9 +119,6 @@ void SimpleModel2D::initComputation() {
 	
 	CircleInitialCond<float> circle(0.1,0.75,0.75,0.5);
 	circle.initializeGrid(_e1);
-
-	PythonInitialCond<float> test("((x-0.5)*(x-0.5)+(y-0.5)*(y-0.5) < 0.05*0.05)");
-	test.initializeGrid(_e1);
 	
 }
 

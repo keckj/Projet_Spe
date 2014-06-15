@@ -6,6 +6,7 @@
 #include "sidePanel.hpp"
 #include <vector>
 #include "grid2D.hpp"
+#include "codeEditorGui.hpp"
 
 class MainWindow : public QMainWindow {
 	Q_OBJECT
@@ -38,6 +39,7 @@ class MainWindow : public QMainWindow {
 
         OpenGLScene *scene;
         SidePanel *panel;
+		CodeEditorGui *codeEditorGui;
 
         QThread *m_thread;
         std::vector<Grid2D<float>> *m_stored_grids;
