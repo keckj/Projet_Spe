@@ -23,7 +23,6 @@ class SidePanel : public QWidget {
         QString getSaveDirectory();
 
         static const QStringList modelsList;
-        static const QStringList initialConditionsList;
         static const int defaultNumberOfSteps;
         static const std::vector<unsigned int> defaultGridSize;
 

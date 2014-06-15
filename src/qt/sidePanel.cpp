@@ -16,7 +16,6 @@
 
 // ************************
 const QStringList SidePanel::modelsList = QStringList() << "Simple Model 2D" << "->Multi-GPU<-" << "Default Model";
-const QStringList SidePanel::initialConditionsList = QStringList() << "TODO1" << "TODO2" << "TODO3" << "TODO4";
 const int SidePanel::defaultNumberOfSteps = 100;
 const std::vector<unsigned int> SidePanel::defaultGridSize { 512, 512, 1};
 // ************************
@@ -332,7 +331,11 @@ void SidePanel::refreshParameters(int modelId) {
     for (auto it = m_varsMap->begin(); it !=m_varsMap->end(); ++it) {
         item = new QListWidgetItem(it->first, variablesRenderedList);
         item->setFlags(item->flags() | Qt::ItemIsUserCheckable);
-        item->setCheckState(Qt::Unchecked);
+        if (it->second) {
+            item->setCheckState(Qt::Checked);
+        } else {
+            item->setCheckState(Qt::Unchecked);
+        }
         this->variablesRenderedList->addItem(item);
     }
 }
