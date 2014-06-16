@@ -16,22 +16,26 @@ public:
 	PythonFuncInitialCond(const std::string &expr);
 	~PythonFuncInitialCond();
 
+	static unsigned long id;
+
 private:
 	T F(T x, T y, T z) const;
-
+	
 	unsigned int hash(const char *str);
 
 	PyObject *_expression;
 	char *_args;
 };
 
+template <typename T>
+unsigned long PythonFuncInitialCond<T>::id = 0ul;
 
 template <typename T>
 PythonFuncInitialCond<T>::PythonFuncInitialCond(const std::string &expr) :
-	_expression(0), _args(0) {
+	InitialCond<T>(true), _expression(0), _args(0) {
 	
 	std::stringstream funcNameSS;
-	funcNameSS << "func" << hash(expr.c_str());
+	funcNameSS << "func" << hash(expr.c_str()) << id++;
 	std::string funcName = funcNameSS.str();
 
 	std::stringstream pgm;
@@ -42,11 +46,13 @@ PythonFuncInitialCond<T>::PythonFuncInitialCond(const std::string &expr) :
 
 	log_console->infoStream() << "PYTHON function :\n" << pgm.str();
     
-	PyObject*    main_module, * global_dict;
+	PyObject *main_module, *global_dict;
     main_module = PyImport_AddModule("__main__");
+	assert(main_module != 0);
     global_dict = PyModule_GetDict(main_module);
-
+	assert(global_dict != 0);
 	_expression = PyDict_GetItemString(global_dict, funcName.c_str());
+	assert(_expression != 0);
 	
 	_args = new char[4];
 	_args[0] = 'f';
@@ -73,5 +79,5 @@ unsigned int PythonFuncInitialCond<T>::hash(const char *str)
        h = h << 1 ^ *str++;
     return h;
 }
-
+	
 #endif /* end of include guard: PYTHONINITIALCOND_H */

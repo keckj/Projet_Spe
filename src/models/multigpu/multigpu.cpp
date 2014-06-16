@@ -186,7 +186,7 @@ void MultiGpu::initGrids() {
 
 	for(auto initialConds : this->m_initialConds) {
 		MultiBufferedDomain<float,1u> *dom = 
-			new MultiBufferedDomain<float,1u>(gridWidth, gridHeight, gridLength, 1u, 4, initialConds.second);
+			new MultiBufferedDomain<float,1u>(gridWidth, gridHeight, gridLength, 1u, 2, initialConds.second);
 		_domains.emplace(std::string((char*)initialConds.first.data()), dom);
 	}
 

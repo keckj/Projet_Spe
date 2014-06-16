@@ -1,8 +1,16 @@
 
 #include "initialCond.hpp"
+		
+template <typename T>
+std::mutex InitialCond<T>::mutex;
 
 template <typename T>
-InitialCond<T>::InitialCond() {
+std::condition_variable InitialCond<T>::cond;
+
+template <typename T>
+InitialCond<T>::InitialCond(bool lock):
+	_lock(lock)
+{
 }
 
 template <typename T>
@@ -25,25 +33,50 @@ void InitialCond<T>::initializeSubGrid(
 		unsigned int subGridWidth, unsigned int subGridHeight, unsigned int subGridLength,
 		unsigned int gridWidth, unsigned int gridHeight, unsigned int gridLength) const
 {
+		
 	T x,y,z;
 
-	for (unsigned int k = 0; k < subGridLength; k++) {
-		for (unsigned int j = 0; j < subGridHeight; j++) {
-			for (unsigned int i = 0; i < subGridWidth; i++) {
-				unsigned long offset = 0ul
-					+ k*subGridHeight*subGridWidth 
-					+ j*subGridWidth 
-					+ i;
+	if(_lock) {
+		std::unique_lock<std::mutex> lock(mutex);
+		for (unsigned int k = 0; k < subGridLength; k++) {
+			for (unsigned int j = 0; j < subGridHeight; j++) {
+				for (unsigned int i = 0; i < subGridWidth; i++) {
+					unsigned long offset = 0ul
+						+ k*subGridHeight*subGridWidth 
+						+ j*subGridWidth 
+						+ i;
 
-				x = (gridWidth -1u==0u ? T(0.5) : (T)(offsetX + i) / (T)(gridWidth -1));
-				y = (gridHeight-1u==0u ? T(0.5) : (T)(offsetY + j) / (T)(gridHeight-1));
-				z = (gridLength-1u==0u ? T(0.5) : (T)(offsetZ + k) / (T)(gridLength-1));
+					x = (gridWidth -1u==0u ? T(0.5) : (T)(offsetX + i) / (T)(gridWidth -1));
+					y = (gridHeight-1u==0u ? T(0.5) : (T)(offsetY + j) / (T)(gridHeight-1));
+					z = (gridLength-1u==0u ? T(0.5) : (T)(offsetZ + k) / (T)(gridLength-1));
 
-				data[offset] = F(x,y,z);
+					data[offset] = F(x,y,z);
+				}
 			}
-		}
+		}	
+		cond.notify_one();
 	}
+	else {
+		for (unsigned int k = 0; k < subGridLength; k++) {
+			for (unsigned int j = 0; j < subGridHeight; j++) {
+				for (unsigned int i = 0; i < subGridWidth; i++) {
+					unsigned long offset = 0ul
+						+ k*subGridHeight*subGridWidth 
+						+ j*subGridWidth 
+						+ i;
 
+					x = (gridWidth -1u==0u ? T(0.5) : (T)(offsetX + i) / (T)(gridWidth -1));
+					y = (gridHeight-1u==0u ? T(0.5) : (T)(offsetY + j) / (T)(gridHeight-1));
+					z = (gridLength-1u==0u ? T(0.5) : (T)(offsetZ + k) / (T)(gridLength-1));
+
+					data[offset] = F(x,y,z);
+				}
+			}
+		}	
+	}
+}
+	
+	//DEBUG
 	//if(i==0 && j==0 && k==0) {
 		//log_console->debugStream() << "Initialize grid offset=" << offset << " , grid size=" 
 			//<< utils::toStringDimension(gridWidth,gridHeight,gridLength) << " subgrid size="
@@ -56,4 +89,3 @@ void InitialCond<T>::initializeSubGrid(
 							   //<< F(0.6,0,0.5) << " " << F(0.7,0,0.5) << " "
 							   //<< F(0.8,0,0.5) << " " << F(0.9,0,0.5) << " "
 							   //<< F(1.0,0,0.5);
-}
