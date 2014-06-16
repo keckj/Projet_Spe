@@ -31,14 +31,16 @@ DeviceThread<nCommandQueues>::DeviceThread(MultiGpu *simulation,
 		float dh,
 		bool display,
 		bool writeOnDisk,
-		const std::string &rep) :
+		const std::string &rep,
+		unsigned int saveRate) :
 	_simulation(simulation), 
 	_platform(platform), _context(context),
 	_program(program), _device(device),
 	_fence(fence),
 	_dh(dh),
 	_display(display),
-	_writeOnDisk(writeOnDisk)
+	_writeOnDisk(writeOnDisk),
+	_saveRate(saveRate)
 { 
 	_epsilon = args->at("epsilon")();
 	_dd = args->at("d")();
@@ -220,9 +222,9 @@ void DeviceThread<nCommandQueues>::operator()() {
 			_commandQueues[j].finish();
 		}
 
-		if(_display)
+		if(_display||_writeOnDisk)
 			callOnce<void,MultiGpu*>(stepDone, _fence, _simulation);
-		
+
 		callOnce<void,MultiGpu*>(releaseStep, _fence, _simulation);
 
 		i++;
@@ -339,10 +341,11 @@ void DeviceThread<nCommandQueues>::computeSubDomainStep(unsigned int domainId, u
 	//compute kernel
 	currentCommandQueue.enqueueNDRangeKernel(_kernel, cl::NullRange, global, local);
 
-	//get data to display
-	//currentCommandQueue.enqueueReadBuffer(varBuffers["e"][(stepId+1)%2], CL_FALSE, 0, bytes, *(currentDomain["e"]->data()));
+	//get data to write on disk
+	if(_writeOnDisk && stepId % _saveRate == 0)
+		currentCommandQueue.enqueueReadBuffer(varBuffers["e"][(stepId+1)%2], CL_FALSE, 0, bytes, *(currentDomain["e"]->data()));
 
-	//get slices to generate texture
+	//get slices to generate texture for gui
 	if(_display) {
 		unsigned int sliceIdx = _simulation->sliceIdX();
 		unsigned int sliceIdy = _simulation->sliceIdY();

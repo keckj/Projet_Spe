@@ -107,7 +107,8 @@ void MainWindow::startComputing() {
 			break;
 		case 1:
             mod = (Model *) new MultiGpu(m_total_steps, gridWidth, gridHeight, gridLength, 
-					panel->getArguments(), panel->getVariables(), panel->getInitialConditions());
+					panel->getArguments(), panel->getVariables(), panel->getInitialConditions(),
+					panel->getSaveDirectory()!="", panel->getSaveDirectory(), m_NbStepsToSave);
 			log_console->infoStream() << "Started a multi-gpu model simulation !";
 			break;
         default:

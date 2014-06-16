@@ -10,17 +10,18 @@ GLXContext Model::solverContext = 0;
 Window Model::solverWindow=0;
 Colormap Model::solverColormap=0;
 
-Model::Model(int nbIter, 
+Model::Model(unsigned int nbIter, 
 		std::map<QString, bool> *renderedVars, 
 		std::map<QString,int> *initialCondsId, 
-		unsigned int width, unsigned int height, unsigned int length) : 
+		unsigned int width, unsigned int height, unsigned int length,
+		bool save, const QString &directory, unsigned int saveRate):
 	m_width(width), m_height(height), m_length(length), 
 	m_renderedVars(renderedVars), 
 	m_initialCondsId(initialCondsId), 
-	m_nbIter(nbIter), 
-	m_pause(false), m_stop(false) 
+	m_save(save), m_saveDirectory(directory), m_saveRate(saveRate),
+	m_nbIter(nbIter),
+	m_pause(false), m_stop(false)
 {
-
 }
 		
 Model::~Model() {
@@ -59,8 +60,9 @@ void Model::startComputing() {
 
     QElapsedTimer screenRefreshTimer;
     screenRefreshTimer.start();
+	
 
-    for (int i = 0; i < m_nbIter; i++) {
+    for (m_stepId = 0; m_stepId < m_nbIter; m_stepId++) {
         m_mutex.lock();
         while (m_pause) {
             m_cond.wait(&m_mutex);
@@ -73,14 +75,20 @@ void Model::startComputing() {
             break;
         }
 
-        computeStep(i);
+        computeStep(m_stepId);
         
 		// Update screen only after at least 17 ms (~60 fps)
         if (screenRefreshTimer.hasExpired(17)) {
-            //updateTextures(); 
             emit updateDisplay(m_mappedTexturesGui);
             screenRefreshTimer.restart();
         }
+
+		if(m_save && m_stepId%m_saveRate==0) {
+			for(auto pair : *m_renderedVars) {
+				if(pair.second)
+					saveGrid(pair.first.toStdString(), "grid_", ".data");
+			}
+		}
 		
 		emit stepComputed();
     }
@@ -104,3 +112,11 @@ void Model::stopComputing() {
     m_mutex.unlock();
 }
 		
+void Model::saveGrid(std::string varName, std::string prefix, std::string suffix) {
+	std::stringstream ss;
+	ss << m_saveDirectory.toStdString() << "/" << prefix
+			<< varName << "_" << m_stepId << suffix;
+	if(m_gridsToSave[varName])
+		log_console->debugStream() << "WRITE" << ss.str();
+		m_gridsToSave[varName]->exportGrid(ss.str());
+}

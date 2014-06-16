@@ -153,7 +153,7 @@ SidePanel::SidePanel(QWidget *parent_) :
     saveStepsSpinBox->setRange(1, 1000000);
     saveStepsSpinBox->setSingleStep(1);
     saveStepsSpinBox->setValue(defaultNbStepsToSave);
-    connect(iterSpinBox, SIGNAL(valueChanged(int)), mainWin, SLOT(changeNbStepsToSave(int)));
+    connect(saveStepsSpinBox, SIGNAL(valueChanged(int)), mainWin, SLOT(changeNbStepsToSave(int)));
 
     //---
 
@@ -314,18 +314,9 @@ void SidePanel::changeNbIterSlider(int nbIter) {
 
 void SidePanel::refreshParameters(int modelId) {
 
-    if (m_argsMap) {
-        m_argsMap->clear();
-    	delete m_argsMap;
-    }
-    if (m_varsMap) {
-        m_argsMap->clear();
-    	delete m_varsMap;
-    }
-    if (m_defaultCondsMap) {
-        m_defaultCondsMap->clear();
-    	delete m_defaultCondsMap;
-    }
+	delete m_argsMap;
+	delete m_varsMap;
+	delete m_defaultCondsMap;
 
     switch(modelId) {
         case 0:

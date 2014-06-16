@@ -25,7 +25,8 @@ class DeviceThread {
 				float dh,
 				bool display=true,
 				bool writeOnDisk=false,
-				const std::string &rep="");
+				const std::string &rep="",
+				unsigned int saveRate=0);
 
 			~DeviceThread();
 
@@ -58,6 +59,8 @@ class DeviceThread {
 
 		bool _display;
 		bool _writeOnDisk;
+
+		unsigned int _saveRate;
 
 		cl::CommandQueue _commandQueues[nCommandQueues];
 

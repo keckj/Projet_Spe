@@ -171,7 +171,7 @@ Grid<T>* MultiBufferedDomain<T,N>::toGrid(unsigned int buffer) {
 
 	Grid<T> *grid;
 
-	log_console->infoStream() << "Creating a grid from domain : " << toStringDimension(_domainWidth, _domainHeight, _domainLength);
+	log_console->debugStream() << "Creating a grid from domain : " << toStringDimension(_domainWidth, _domainHeight, _domainLength);
 
 	if(_domainLength == 1u && _domainHeight == 1u) 
 		grid = new Grid1D<T>(1.0f, _domainWidth, true);

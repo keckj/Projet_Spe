@@ -18,8 +18,10 @@ MultiGpu::MultiGpu(int nbIter,
 		unsigned int width_, unsigned int height_, unsigned int length_,
 		std::map<QString, Argument> *args, 
 		std::map<QString, bool> *renderedVars,
-		std::map<QString, int> *initialCondsId) :
-	Model(nbIter, renderedVars, initialCondsId, width_, height_, length_),
+		std::map<QString, int> *initialCondsId,
+		bool save, const QString &saveDirectory, unsigned int saveRate):
+	Model(nbIter, renderedVars, initialCondsId, width_, height_, length_,
+			save, saveDirectory, saveRate),
 	_step(false),
 	_stepDone(false),
 	_nDevices(0),
@@ -30,6 +32,7 @@ MultiGpu::MultiGpu(int nbIter,
 	_kill(false),
 	_destroyed(false)
 {
+	log_console->infoStream() << "Steps" << nbIter << " modulo " << saveRate;
 }
 
 MultiGpu::~MultiGpu() 
@@ -167,7 +170,7 @@ void MultiGpu::initOpenClContext(){
 	for(auto dev : _devices) {
 		if(i >= devicesNeeded)
 			break;
-		DeviceThread<N_COMMANDQUEUES> *dt = new DeviceThread<N_COMMANDQUEUES>(this, _platform, _context, program, dev, fence, _args, 1.0f/this->m_width, true);
+		DeviceThread<N_COMMANDQUEUES> *dt = new DeviceThread<N_COMMANDQUEUES>(this, _platform, _context, program, dev, fence, _args, 1.0f/this->m_width, true, this->m_save, this->m_saveDirectory.toStdString(), this->m_saveRate);
 		std::thread t(*dt);
 		_deviceThreads.push_back(dt);
 		t.detach();
@@ -243,6 +246,8 @@ void MultiGpu::initDone() {
 
 void MultiGpu::stepDone() {
 	renderToTextures();
+	if(this->m_save && this->m_stepId%this->m_saveRate == 0)
+		generateGrids();
 }
 
 
@@ -294,6 +299,16 @@ void MultiGpu::renderToTextures() {
 		//}
 		//}
 		//k++;
+		
+void MultiGpu::generateGrids() {
+	for(auto pair : *(this->m_renderedVars)) {
+		if(pair.second) {
+			Grid<float> *grid = _domains[pair.first.toStdString()]->toGrid(0);
+			delete this->m_gridsToSave[pair.first.toStdString()];
+			this->m_gridsToSave[pair.first.toStdString()] = grid;
+		}
+	}
+}
 
 unsigned int MultiGpu::sliceIdX() {
 	return _sliceIdX;

@@ -23,7 +23,8 @@ class MultiGpu : public Model {
 				unsigned int width_, unsigned int height_, unsigned int length_,
 				std::map<QString, Argument> *args, 
 				std::map<QString, bool> *renderedVars,
-				std::map<QString, int> *initialCondsId);
+				std::map<QString, int> *initialCondsId,
+				bool save, const QString &saveDirectory, unsigned int saveRate); 
 
         ~MultiGpu();
 		void killWorkerThreads();
@@ -93,6 +94,7 @@ class MultiGpu : public Model {
 		void allocSlices();
 		void createTextures();
 		void renderToTextures();
+		void generateGrids();
 	
 		//model
 		std::map<QString, Argument> *_args;
