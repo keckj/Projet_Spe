@@ -1,8 +1,8 @@
 
+#include "pythonCodeInitialCond.hpp"
 #include "headers.hpp"
 #include "codeEditorGui.hpp"
 #include "codeEditorGui.moc"
-#include "pythonCodeInitialCond.hpp"
 
 CodeEditorGui::CodeEditorGui(QWidget *parent_) : 
 	QWidget(parent_),

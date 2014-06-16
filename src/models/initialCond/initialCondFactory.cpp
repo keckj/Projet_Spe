@@ -1,3 +1,7 @@
+#include "pythonFuncInitialCond.hpp"
+#include "pythonCodeInitialCond.hpp"
+#include "codeEditorGui.hpp"
+
 #include "headers.hpp"
 
 #include "initialCondFactory.hpp"
@@ -6,9 +10,6 @@
 #include "initialCond.hpp"
 #include "circleInitialCond.hpp"
 #include "functionInitialCond.hpp"
-#include "pythonFuncInitialCond.hpp"
-#include "pythonCodeInitialCond.hpp"
-#include "codeEditorGui.hpp"
 
 #include <thread>
 
