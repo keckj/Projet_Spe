@@ -83,7 +83,7 @@ subdirs = $(shell find $1 -type d)
 # Source et destination des fichiers
 SRCDIR = $(realpath .)/src
 OBJDIR = $(realpath .)/obj
-EXCL=deprecated/ #excluded dirs 
+EXCL= #excluded dirs 
 EXCLUDED_SUBDIRS = $(foreach DIR, $(EXCL), $(call subdirs, $(SRCDIR)/$(DIR)))
 
 SUBDIRS =  $(filter-out $(EXCLUDED_SUBDIRS), $(call subdirs, $(SRCDIR)))
