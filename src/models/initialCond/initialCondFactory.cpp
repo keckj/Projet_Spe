@@ -38,9 +38,9 @@ InitialCond<float> *InitialCondFactory::getInitialCond(int i) {
 		case 8:
 			return new FunctionInitialCond<float>([] (float x,float y, float)->float {return x*y;});
 		case 9:
-			return new FunctionInitialCond<float>([] (float x,float y,float)->float {return abs(cos(2*3.14*2*x)*cos(2*3.14*2*y));});
+			return new FunctionInitialCond<float>([] (float x,float y,float)->float {return utils::abs<float>(cos(2*3.14*5*x)*cos(2*3.14*5*y));});
 		case 10:
-			return new FunctionInitialCond<float>([] (float x,float y,float)->float {return abs(sin(2*3.14*2*x)*sin(2*3.14*2*y));});
+			return new FunctionInitialCond<float>([] (float x,float y,float)->float {return utils::abs<float>(sin(2*3.14*5*x)*sin(2*3.14*5*y));});
 		case 11:
 			return new CircleInitialCond<float>(0.05,0.5,0.5,0.5);
 		case 12:
