@@ -215,3 +215,12 @@ std::map<QString, bool> *SimpleModel2D::getVariables() {
 
     return vars;
 }
+
+std::map<QString, int> *SimpleModel2D::getDefaultInit() {
+    std::map<QString, int> *conds = new std::map<QString, int>;
+    conds->emplace("e", 6);
+	conds->emplace("r", 7);
+
+	return conds;
+}
+
