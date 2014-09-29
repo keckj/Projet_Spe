@@ -1,5 +1,6 @@
 *.o
 *.moc
+build/
 *~
 .*.swp
 .DS_Store

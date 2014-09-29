@@ -27,7 +27,7 @@ static const char* CL_GL_SHARING_EXT ="cl_khr_gl_sharing";
 #endif
 
 //wrapper C++ pour opencl 1.1 (nvidia supporte pas mieux !) 
-#include "utils/opencl/cl_1_1.hpp"
+#include "cl_1_1.hpp"
 
 // QT
 #include <QApplication>

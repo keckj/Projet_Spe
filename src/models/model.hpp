@@ -1,7 +1,7 @@
 #ifndef MODEL_HPP_
 #define MODEL_HPP_
 
-#include "utils/headers.hpp"
+#include "headers.hpp"
 #include "grid2D.hpp"
 #include "grid3D.hpp"
 #include "initialCond.hpp"

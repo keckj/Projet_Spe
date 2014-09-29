@@ -1,7 +1,7 @@
 #ifndef EXAMPLE_MODEL_HPP
 #define EXAMPLE_MODEL_HPP
 
-#include "utils/headers.hpp"
+#include "headers.hpp"
 #include "model.hpp"
 #include "grid2D.hpp"
 

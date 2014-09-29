@@ -1,4 +1,4 @@
-#include "utils/headers.hpp"
+#include "headers.hpp"
 #include "exampleModel.hpp"
 #include "exampleModel.moc"
 #include "grid2D.hpp"
