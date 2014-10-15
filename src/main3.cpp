@@ -16,15 +16,12 @@
 #include <iostream>
 #include <map>
 
-
 #if _N_MAIN == 3
-
 
 using namespace utils;
 
 int main(int argc, char** argv) {
 	log4cpp::initLogs();
-	std::cout << "Je suis le main 3 !" << std::endl;
 
 	Argument arg(true, true);
 

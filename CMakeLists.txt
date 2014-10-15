@@ -7,7 +7,6 @@ set(GPGPU_VERSION_MINOR 2)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/modules/")
 set(EXECUTABLE_OUTPUT_PATH "${CMAKE_SOURCE_DIR}")
-set(LIBRARY_OUTPUT_PATH "${CMAKE_SOURCE_DIR}/lib/${CMAKE_BUILD_TYPE}")
 
 #EXTERNAL LIBRARIES
 find_package(OpenCL REQUIRED )
@@ -21,8 +20,8 @@ set(Boost_USE_STATIC_LIBS ON)
 set(Boost_USE_MULTITHREADED ON)
 set(CMAKE_THREAD_PREFER_PTHREAD ON)
 
+find_package(Threads REQUIRED)
 find_package(Boost REQUIRED system thread)
-find_package(Threads)
 find_package(OpenGL REQUIRED)
 find_package(GLEW REQUIRED)
 find_package(GLUT REQUIRED)
@@ -52,6 +51,7 @@ set(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}")
 #Find source files
 file(GLOB_RECURSE header_files src/*.hpp)
 file(GLOB_RECURSE source_files src/*.cpp)
+file(GLOB_RECURSE test_files test/*.cpp)
 file(GLOB_RECURSE template_files src/*.tpp)
 file(GLOB_RECURSE kernel_files src/*.cu)
 
@@ -61,8 +61,6 @@ foreach(header ${header_files})
     list(APPEND LOCAL_INCLUDE_DIRS ${dir})
 endforeach()
 list(REMOVE_DUPLICATES LOCAL_INCLUDE_DIRS)
-
-
 
 #Header directories
 include_directories(
@@ -84,10 +82,13 @@ link_directories(
 
 #Executables
 add_executable(main ${header_files} ${source_files} ${template_files})
+add_executable(main2 ${header_files} ${source_files} ${template_files})
+add_executable(main3 ${header_files} ${source_files} ${template_files})
+add_executable(main4 ${header_files} ${source_files} ${template_files})
 
 #Link executable
-target_link_libraries(
-    main 
+
+set(LINK
     ${Boost_LIBRARIES}
     ${OPENCL_LIBRARIES}
     ${OPENGL_LIBRARIES}
@@ -102,5 +103,15 @@ target_link_libraries(
     ${CMAKE_THREAD_LIBS_INIT}
 )
 
+target_link_libraries(main ${LINK})
+target_link_libraries(main2 ${LINK})
+target_link_libraries(main3 ${LINK})
+target_link_libraries(main4 ${LINK})
+
 #Properties
-set_target_properties(main PROPERTIES COMPILE_FLAGS "-DN_MAIN=0")
+set_target_properties(main PROPERTIES COMPILE_DEFINITIONS _N_MAIN=0)
+set_target_properties(main2 PROPERTIES COMPILE_DEFINITIONS _N_MAIN=1)
+set_target_properties(main3 PROPERTIES COMPILE_DEFINITIONS _N_MAIN=2)
+set_target_properties(main4 PROPERTIES COMPILE_DEFINITIONS _N_MAIN=3)
+
+enable_testing()
